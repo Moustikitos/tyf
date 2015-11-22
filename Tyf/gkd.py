@@ -91,8 +91,15 @@ class GkdTag(ifd.TiffTag):
 		restricted = getattr(values, self.key, None)
 
 		if restricted:
-			if value in restricted: self.meaning = restricted.get(value)
-			else: raise ValueError('"%s" value must be one of %s, get %s instead' % (self.key, list(restricted.keys()), value))
+			if value in restricted:
+				self.meaning = restricted.get(value)
+			else:
+				reverse = dict((v,k) for k,v in restricted.items())
+				if value in reverse:
+					value = reverse[value]
+					self.meaning = value
+				else:
+					raise ValueError('"%s" value must be one of %s, get %s instead' % (self.key, list(restricted.keys()), value))
 
 		self.type, self.count, self.value = self._fix(value, types)
 		

@@ -90,10 +90,6 @@ See all tags contained in a single ``JPEG`` file :
 514
 >>> tif[0,"ImageWidth"] # beautifull !
 514
->>> type(tif)
-<class 'Tyf.TiffFile'>
->>> isinstance(tif, list)
-True
 
 See all tags contained in the first image file directory of a ``TIFF`` file :
 
@@ -148,3 +144,10 @@ Changes
 0.8a4
 
 + first consistant release
+
+Todo
+====
+
++ ``save`` method for JpegFile and TiffFile ``class``
++ overcast of __add__ and __radd__ operator of TiffFile ``class``
++ command line utility script
