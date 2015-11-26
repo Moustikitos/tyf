@@ -1,4 +1,4 @@
-http://bruno.thoorens.free.fr/img/tyf.png
+<img src="http://bruno.thoorens.free.fr/img/tyf.png" height="100px" />
 
 # `Tyf`
 [![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/Tyf.html)
@@ -19,17 +19,19 @@ Tyf package provides pythonic way to view and edit Exif data from TIFF and JPEG 
 >>> geotiff = Tyf.gkd.Gkd(tif[0])
 >>> print(tif[0]["ImageWidth"])
 514
->>> print(tif[0]["ShutterSpeedValue"])
-7.0
+>>> print(jpg["GPSLatitude"])
+(51.2095416, 0.0, 0.0)
 >>> print(geotiff["GeographicTypeGeoKey"])
 4267
 ```
 
 ## Contributing
+Guidance words: keep it simple and solid
 
+1. open a issue to propose your contribution
+2. once issue is granted, fork this repository and start a pull request
 
 ## TODO
-
 + ``save`` method for JpegFile and TiffFile ``class``
 + overcast of __add__ and __radd__ operator of TiffFile ``class``
 + command line utility script
