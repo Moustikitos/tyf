@@ -12,6 +12,8 @@
 ## Why this package ?
 Tyf package provides pythonic way to view Exif data from TIFF and JPEG files.
 
+<img src="https://assets.gratipay.com/gratipay.svg?etag=3tGiSB5Uw_0-oWiLLxAqpQ~~" href="https://gratipay.com/Tyf" />
+
 ```python
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
