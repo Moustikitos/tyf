@@ -10,7 +10,7 @@
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 
 ## Why this package ?
-Tyf package provides pythonic way to view and edit Exif data from TIFF and JPEG files.
+Tyf package provides pythonic way to view Exif data from TIFF and JPEG files.
 
 ```python
 >>> import Tyf
@@ -29,9 +29,13 @@ Tyf package provides pythonic way to view and edit Exif data from TIFF and JPEG 
 Guidance words: keep it simple and solid
 
 1. open a issue to propose your contribution
-2. once issue is granted, fork this repository and start a pull request
+2. once issue is granted
+  + fork this repository
+  + edit your contribution
+  + start a pull request
 
 ## TODO
++ add possibility to edit tag data
 + ``save`` method for JpegFile and TiffFile ``class``
 + overcast of __add__ and __radd__ operator of TiffFile ``class``
 + command line utility script
