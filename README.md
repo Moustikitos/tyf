@@ -26,7 +26,11 @@ Tyf package provides pythonic way to view Exif data from TIFF and JPEG files.
 ```
 
 ## Contributing
-Guidance words: keep it simple and solid
+### Bug report & feedback
+Use project issues.
+
+### Add / modify / fix code
+Guidance words: keep it simple and solid!
 
 1. open a issue to propose your contribution
 2. once issue is granted
