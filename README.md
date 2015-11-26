@@ -1,7 +1,7 @@
 <img src="http://bruno.thoorens.free.fr/img/tyf.png" height="100px" />
 
 # `Tyf`
-[![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/Tyf.html)
+[![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/tyf.html)
 
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 
