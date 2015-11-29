@@ -40,6 +40,4 @@ Guidance words: keep it simple and solid!
 
 ## TODO
 + add possibility to edit tag data
-+ ``save`` method for JpegFile and TiffFile ``class``
-+ overcast of __add__ and __radd__ operator of TiffFile ``class``
 + command line utility script

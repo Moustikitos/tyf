@@ -74,6 +74,10 @@ _TAGS = {
 	4099: ("VerticalUnitsGeoKey", [3], None, None),
 }
 
+_2TAG = dict((v[0], t) for t,v in _TAGS.items())
+_2KEY = dict((v, k) for k,v in _2TAG.items())
+
+
 if sys.version_info[0] >= 3:
 	import functools
 	reduce = functools.reduce
@@ -122,18 +126,14 @@ class Gkd(dict):
 
 	def __init__(self, value={}, **pairs):
 		dict.__init__(self)
-
-		self.key2tag = dict((v[0], t) for t,v in _TAGS.items())
-		self.tag2key = dict((v, k) for k,v in self.key2tag.items())
-
 		self.from_ifd(value, **pairs)
 
 	def __getitem__(self, tag):
-		if isinstance(tag, str): tag = self.key2tag[tag]
+		if isinstance(tag, str): tag = _2TAG[tag]
 		return dict.__getitem__(self, tag)._unfix()
 
 	def __setitem__(self, tag, value):
-		if isinstance(tag, str): tag = self.key2tag[tag]
+		if isinstance(tag, str): tag = _2TAG[tag]
 		dict.__setitem__(self, tag, GkdTag(tag, value))
 
 	def get(self, tag, error=None):
@@ -207,3 +207,7 @@ class Gkd(dict):
 				0., 0. , 0., 1.
 			)
 		return lambda x,y,z1=0.,z2=1.,m=matrix: Transform(m, x,y,z1,z2)
+
+	def tags(self):
+		for v in sorted(dict.values(self), key=lambda e:e.tag):
+			yield v

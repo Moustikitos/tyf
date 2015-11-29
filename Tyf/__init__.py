@@ -38,123 +38,149 @@ else:
 
 from . import ifd, gkd
 
+
 def _read_IFD(obj, fileobj, offset, byteorder="<", name="Tiff tag"):
 	# fileobj seek must be is on the start offset
 	fileobj.seek(offset)
+	# get number of entry
 	nb_entry, = unpack(byteorder+"H", fileobj)
 
+	# for each entry 
 	for i in range(nb_entry):
+		# read tag, type and cound values
 		tag, typ, count = unpack(byteorder+"HHL", fileobj)
+		# extract data
 		data = fileobj.read(struct.calcsize("L"))
+		if not isinstance(data, bytes):
+			data = data.encode()
 		_typ = TYPES[typ][0]
 
-		if (typ == 2 and count <= 3) or (typ == 7 and count <= 4): 
-			if not isinstance(data, bytes): data = data.encode()
-			obj.set(tag, typ, count, data[:count], name=name)
+		# create a tifftag
+		tt = ifd.TiffTag(tag, name=name)
+		# initialize what we already know
+		tt.type = typ
+		tt.count = count
+		# to know if ifd entry value is an offset
+		tt._determine_if_offset()
 
-		elif count > 1 or typ in [5, 10]:
+		# if value is offset
+		if tt.value_is_offset:
+			# read offset value
 			value, = struct.unpack(byteorder+"L", data)
 			fmt = byteorder + _typ*count
 			bckp = fileobj.tell()
+			# go to offset in the file
 			fileobj.seek(value)
-			if typ == 2: obj.set(tag, typ, count, b"".join(e for e in unpack(fmt, fileobj)), name=name)
-			elif typ == 7: obj.set(tag, typ, count, fileobj.read(count), name=name)
-			else: obj.set(tag, typ, count, unpack(fmt, fileobj), name=name)
+			# if ascii type, convert to bytes
+			if typ == 2: tt.value = b"".join(e for e in unpack(fmt, fileobj))
+			# else if undefined type, read data
+			elif typ == 7: tt.value = fileobj.read(count)
+			# else unpack data
+			else: tt.value = unpack(fmt, fileobj)
+			# go back to ifd entry
 			fileobj.seek(bckp)
 
+		# if value is in the ifd entry
 		else:
-			fmt = byteorder + _typ
-			if typ in [1, 6]: value, = struct.unpack(fmt, data[:struct.calcsize(_typ)])
-			elif typ in [3, 8]: value, = struct.unpack(fmt, data[:struct.calcsize(_typ)])
-			elif typ == 7: value = data
-			else: value, = struct.unpack(fmt, data)
-			obj.set(tag, typ, count, value, name=name)
+			if typ in [2, 7]:
+				tt.value = data[:count]
+			else:
+				fmt = byteorder + _typ*count
+				tt.value = struct.unpack(fmt, data[:count*struct.calcsize(_typ)])
 
+		obj.addtag(tt)
 
 def from_buffer(obj, fileobj, offset, byteorder="<"):
+	# read data from offset
 	_read_IFD(obj, fileobj, offset, byteorder)
+	# get next ifd offset
 	next_ifd, = unpack(byteorder+"L", fileobj)
 
-	# manage "Exif IFD"
+	## read private ifd if any
+	# Exif IFD
 	if 34665 in obj:
 		obj.private_ifd[34665] = ifd.Ifd()
 		_read_IFD(obj.private_ifd[34665], fileobj, obj[34665], byteorder, name="Exif tag")
-
-	# Manage "GPS IFD"
+	# GPS IFD
 	if 34853 in obj:
 		obj.private_ifd[34853] = ifd.Ifd()
 		_read_IFD(obj.private_ifd[34853], fileobj, obj[34853], byteorder, name="GPS tag")
 
-	# get strip image data
+	## read raster data if any
+	# striped raster data
 	if 273 in obj:
 		for offset,bytecount in zip(obj[273], obj[279]):
 			fileobj.seek(offset)
 			obj.stripes += (fileobj.read(bytecount), )
-	# get free image data
+	# free raster data
 	elif 288 in obj:
 		for offset,bytecount in zip(obj[288], obj[289]):
 			fileobj.seek(offset)
 			obj.free += (fileobj.read(bytecount), )
-	# get tile image data
+	# tiled raster data
 	elif 324 in obj:
 		for offset,bytecount in zip(obj[324], obj[325]):
 			fileobj.seek(offset)
 			obj.tiles += (fileobj.read(bytecount), )
+	# get interExchange (thumbnail data for JPEG/EXIF data)
+	if 513 in obj:
+		fileobj.seek(obj[513])
+		obj.jpegIF = fileobj.read(obj[514])
 
-	# fileobj.seek(next_ifd)
 	return next_ifd
 
 def _write_IFD(obj, fileobj, offset, byteorder="<"):
 	# go where obj have to be written
 	fileobj.seek(offset)
 	# sort data to be writen
-	tags = sorted(list(obj.values()), key=lambda e:e.tag)
+	tags = sorted(list(dict.values(obj)), key=lambda e:e.tag)
 	# write number of entries
 	pack(byteorder+"H", fileobj, (len(tags),))
 
 	first_entry_offset = fileobj.tell()
-	# write all obj first
+	# write all ifd entries
 	for t in tags:
+		# write tag, type & count
 		pack(byteorder+"HHL", fileobj, (t.tag, t.type, t.count))
-		if t.type in [1, 6] and t.count == 1:
-			pack(byteorder+TYPES[t.type][0]*4, fileobj, t.value + (0,0,0))
-		elif t.type in [3, 8] and t.count == 1:
-			pack(byteorder+TYPES[t.type][0]*2, fileobj, t.value + (0,))
-		elif (t.type == 2 and t.count <= 3) or (t.type == 7 and t.count <= 4):
-			pack(byteorder+ ("4%s"%TYPES[t.type][0] if sys.version_info[0] >= 3 else 4*TYPES[t.type][0]), fileobj, t.value + b"\x00"*(4-count))
-		elif t.count > 1 or t.type in [5, 10]:
-			pack(byteorder+"L", fileobj, (0,))
+		# if value is not an offset
+		if not t.value_is_offset:
+			value = t._fill()
+			n = len(value)
+			if sys.version_info[0] >= 3 and t.type in [2, 7]:
+				fmt = str(n)+TYPES[t.type][0]
+				value = (value,)
+			else:
+				fmt = n*TYPES[t.type][0]
+			pack(byteorder+fmt, fileobj, value)
 		else:
-			pack(byteorder+"L", fileobj, t.value)
+			pack(byteorder+"L", fileobj, (0,))
 
 	next_ifd_offset = fileobj.tell()
 	pack(byteorder+"L", fileobj, (0,))
-	data_offset = fileobj.tell()
 
-	# to prepare jumps
+	# prepare jumps
+	data_offset = fileobj.tell()
 	step1 = struct.calcsize("HHLL")
 	step2 = struct.calcsize("HHL")
 
 	# comme back to first ifd entry
 	fileobj.seek(first_entry_offset)
 	for t in tags:
-		if t.count > 1 or t.type in [5, 10, 7]:
-			if (t.type == 2 and t.count <= 3) or \
-			   (t.type == 7 and t.count <= 4): # or \
-			   # (t.type in [1,6] and t.count <= 4) or \
-			   # (t.type in [3,8] and t.count <= 2):
-				fileobj.seek(step1, 1)
+		if t.value_is_offset:
+			fileobj.seek(step2, 1)
+			pack(byteorder+"L", fileobj, (data_offset,))
+			bckp = fileobj.tell()
+			fileobj.seek(data_offset)
+			if sys.version_info[0] >= 3 and t.type in [2, 7]:
+				fmt = str(t.count)+TYPES[t.type][0]
+				value = (t.value,)
 			else:
-				fileobj.seek(step2, 1)
-				pack(byteorder+"L", fileobj, (data_offset,))
-				bckp = fileobj.tell()
-				fileobj.seek(data_offset)
-				if sys.version_info[0] >= 3 and isinstance(t.value, bytes):
-					pack(byteorder+str(t.count)+TYPES[t.type][0], fileobj, (t.value, ))
-				else:
-					pack(byteorder+TYPES[t.type][0]*t.count, fileobj, t.value)
-				data_offset = fileobj.tell()
-				fileobj.seek(bckp)
+				fmt = t.count*TYPES[t.type][0]
+				value = t.value
+
+			pack(byteorder+fmt, fileobj, value)
+			data_offset = fileobj.tell()
+			fileobj.seek(bckp)
 		else:
 			fileobj.seek(step1, 1)
 
@@ -164,10 +190,10 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 	size = obj.size
 	raw_offset = offset + size["ifd"] + size["data"]
 	# add GPS and Exif IFD sizes...
-	for tag, p_ifd in obj.private_ifd.items():
-		obj[tag] = raw_offset
+	for tag, p_ifd in sorted(obj.private_ifd.items(), key=lambda e:e[0]):
+		obj.set(tag, 4, 1, raw_offset)
 		size = p_ifd.size
-		raw_offset += size["ifd"] + size["data"]
+		raw_offset = raw_offset + size["ifd"] + size["data"]
 
 	# knowing where raw image have to be writen, update [Strip/Free/Tile]Offsets
 	if 273 in obj:
@@ -191,11 +217,17 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 			tileoffsets += (tileoffsets[-1]+bytecount, )
 		obj.set(324, 4, len(tileoffsets), tileoffsets)
 		next_ifd = tileoffsets[-1] + _325[-1]
+	elif 513 in obj:
+		interexchangeoffset = raw_offset
+		obj.set(513, 4, 1, raw_offset)
+		next_ifd = interexchangeoffset + obj[514]
+	else:
+		next_ifd = raw_offset
 
 	next_ifd_offset = _write_IFD(obj, fileobj, offset, byteorder)
 	# write "Exif IFD" and "GPS IFD"
-	for tag, p_ifd in obj.private_ifd.items():
-		_write_IFD(p_ifd, fileobj, self[tag], byteorder)
+	for tag, p_ifd in sorted(obj.private_ifd.items(), key=lambda e:e[0]):
+		_write_IFD(p_ifd, fileobj, obj[tag], byteorder)
 
 	# write raw data
 	if len(obj.stripes):
@@ -210,19 +242,20 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 		for offset,data in zip(obj[324], obj.tiles):
 			fileobj.seek(offset)
 			fileobj.write(data)
+	elif obj.jpegIF != b"":
+		fileobj.seek(obj[513])
+		fileobj.write(obj.jpegIF)
 
 	fileobj.seek(next_ifd_offset)
-	return next_ifd_offset
+	return next_ifd
 
 
 class TiffFile(list):
 
-	def __init__(self, filepath, byteorder=0x4949):
-		self.src = os.path.abspath(filepath)
-		fileobj = io.open(filepath, "rb")
-		fileobj.seek(2)
-
+	def __init__(self, fileobj, byteorder=0x4949):
 		byteorder = "<" if byteorder == 0x4949 else ">"
+
+		fileobj.seek(2)
 		magic_number, = unpack(byteorder+"H", fileobj)
 		if magic_number != 0x2A: # 42
 			fileobj.close()
@@ -242,52 +275,91 @@ class TiffFile(list):
 		if isinstance(item, tuple): return list.__getitem__(self, item[0])[item[-1]]
 		else: return list.__getitem__(self, item)
 
+	def __add__(self, value):
+		if isinstance(value, JpegFile):
+			for i in value: self.append(i)
+		elif isinstance(value, ifd.Ifd):
+			self.append(value)
+		return self
+
+	def save(self, f, byteorder="<"):
+		if hasattr(f, "close"): out = f
+		else: out = io.open(f, "wb")
+		pack(byteorder+"HH", out, (0x4949 if byteorder == "<" else 0x4d4d, 0x2A,))
+		next_ifd = 8
+		for i in self:
+			pack(byteorder+"L", out, (next_ifd,))
+			next_ifd = to_buffer(i, out, next_ifd, byteorder)
+		if not isinstance(out, StringIO): out.close()
+
+
 class JpegFile(collections.OrderedDict):
+	"""
+	This class is an oredered dictionary mapping all marker of JPEG file. All
+	values are binary data except for marker 0xffe1 that is an Ifd class.
+	"""
 
-	raster = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffda), None, None, "JPEG raster")
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
+	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")
+	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Exif data")
 
-	def __init__(self, filepath):
-		self.src = os.path.abspath(filepath)
-		fileobj = io.open(filepath, "rb")
-		self.ifd = ifd.Ifd()
-
+	def __init__(self, fileobj):
 		markers = collections.OrderedDict()
 		marker, = unpack(">H", fileobj)
 		while marker != 0xffd9: # EOI (End Of Image) Marker
 			marker, count = unpack(">HH", fileobj)
+			# here is raster data marker, copy all after marker id
 			if marker == 0xffda:
 				fileobj.seek(-2, 1)
 				markers[0xffda] = fileobj.read()
+				# say it is the end of the file
 				marker = 0xffd9
+			elif marker == 0xffe1:
+				string = StringIO(fileobj.read(count-2)[6:])
+				first, = unpack(">H", string)
+				string.seek(0)
+				markers[marker] = TiffFile(string, first)
 			else:
 				markers[marker] = fileobj.read(count-2)
-				if marker == 0xffe1:
-					string = StringIO(markers[marker][6:])
-					first, = unpack(">H", string)
-					if first in [0x4D4D, 0x4949]:
-						byteorder = "<" if first == 0x4949 else ">"
-						magic_number, = unpack(byteorder+"H", string)
-						i = ifd.Ifd()
-						if magic_number == 0x2A:
-							next_ifd, = unpack(byteorder+"L", string)
-							from_buffer(i, string, next_ifd, byteorder)		
-							setattr(self, "ifd", i)
 
+		fileobj.close()
 		collections.OrderedDict.__init__(self, markers)
 
 	def __getitem__(self, item):
-		try: return self.ifd[item]
+		try: return collections.OrderedDict.__getitem__(self, 0xffe1)[0,item]
 		except KeyError: return collections.OrderedDict.__getitem__(self, item)
 
+	def _pack(self, marker, fileobj):
+		data = self[marker]
+		if marker == 0xffda:
+			pack(">H", fileobj, (marker,))
+		elif marker == 0xffe1:
+			string = StringIO()
+			self[marker].save(string)
+			data = b"Exif\x00\x00" + string.getvalue()
+			pack(">HH", fileobj, (marker, len(data) + 2))
+		else:
+			pack(">HH", fileobj, (marker, len(data) + 2))
+		fileobj.write(data)
 
-def open(filepath):
-	fileobj = io.open(filepath, "rb")
+	def save(self, f):
+		if hasattr(f, "close"): out = f
+		else: out = io.open(f, "wb")
+		pack(">H", out, (0xffd8,))
+		for key in self: self._pack(key, out)
+		pack(">H", out, (0xffd9,))
+		if not isinstance(out, StringIO): out.close()
+
+
+def open(f):
+	if hasattr(f, "close"): fileobj = f
+	else: fileobj = io.open(f, "rb")
+		
 	first, = unpack(">H", fileobj)
-	fileobj.close()
+	fileobj.seek(0)
 
 	if first == 0xffd8:
-		return JpegFile(filepath)
+		return JpegFile(fileobj)
 
 	elif first in [0x4d4d, 0x4949]:
-		return TiffFile(filepath, first)
+		return TiffFile(fileobj, first)

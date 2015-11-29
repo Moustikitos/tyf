@@ -208,8 +208,8 @@ YCbCrSubSampling = {
 }
 
 YCbCrPositioning = {
-	1:"Centered", 
-	2:"Co-sited"
+	1: "Centered", 
+	2: "Co-sited"
 }
 
 ## EXIF tag values
@@ -258,6 +258,11 @@ LightSource = {
 	23:  "D50",
 	24:  "ISO studio tungsten",
 	255: "Other light source"
+}
+
+ColorSpace = {
+	1:     "RGB",
+	65535: "Uncalibrated"
 }
 
 Flash = {
