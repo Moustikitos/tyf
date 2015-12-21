@@ -14,6 +14,77 @@ _TAGS.update(tags.gpsT)
 _2TAG = dict((v[0], t) for t,v in _TAGS.items())
 _2KEY = dict((v, k) for k,v in _2TAG.items())
 
+_m_short = 0
+_M_short = 2**8
+def _1(value):
+	value = int(value)
+	return (_m_short, ) if value < _m_short else \
+	       (_M_short, ) if value > _M_short else \
+	       (value, )
+
+def _2(value):
+	if not isinstance(value, bytes):
+		value = value.encode()
+		if value[-1] != b"\x00":
+			value +=  b"\x00"
+	return value
+
+_m_byte = 0
+_M_byte = 2**16
+def _3(value):
+	value = int(value)
+	return (_m_byte, ) if value < _m_byte else \
+	       (_M_byte, ) if value > _M_byte else \
+	       (value, )
+
+_m_long = 0
+_M_long = 2**32
+def _4(value):
+	value = int(value)
+	return (_m_long, ) if value < _m_long else \
+	       (_M_long, ) if value > _M_long else \
+	       (value, )
+
+def _5(value):
+	if not isinstance(value, tuple): value = (value, )
+	return reduce(tuple.__add__, [(f.numerator, f.denominator) for f in [fractions.Fraction(str(v)) for v in value]])
+
+_m_s_short = -_M_short/2
+_M_s_short = _M_short/2-1
+def _6(value):
+	value = int(value)
+	return (_m_s_short, ) if value < _m_s_short else \
+	       (_M_s_short, ) if value > _M_s_short else \
+	       (value, )
+
+def _7(value):
+	if not isinstance(value, bytes):
+		value = value.encode()
+	return value
+
+_m_s_byte = -_M_byte/2
+_M_s_byte = _M_byte/2-1
+def _8(value):
+	value = int(value)
+	return (_m_s_byte, ) if value < _m_s_byte else \
+	       (_M_s_byte, ) if value > _M_s_byte else \
+	       (value, )
+
+_m_s_long = -_M_long/2
+_M_s_long = _M_long/2-1
+def _9(value):
+	value = int(value)
+	return (_m_s_long, ) if value < _m_s_long else \
+	       (_M_s_long, ) if value > _M_s_long else \
+	       (value, )
+
+_10 = _5
+
+def _11(value):
+	return (float(value), )
+
+_12 = _11
+
 class TiffTag(object):
 	# defaults values
 	comment = "Undefined tag"
@@ -25,14 +96,20 @@ class TiffTag(object):
 	value = None
 	name = "Tag"
 
-	def __init__(self, tag=0x0, value=None, name="Tiff tag"):
-		self.key, typ_, default, self.comment = _TAGS.get(tag, ("Unknown", -1, None, "Undefined tag 0x%x"%tag))
+	def __init__(self, tag=0x0, value=None, type=None, name="Tiff tag"):
+		self.key, _typ, default, self.comment = _TAGS.get(tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tag))
+		self.type = _typ[-1] if type == None else type
 		self.tag = tag
 		self.name = name
+		if value: self._fix(value)
+
+	def _fix(self, value):
+		exec("self.value = _%d(value)" % self.type)
+		self.count = len(self.value) // (1 if self.type not in [5,10] else 2)
 		self._determine_if_offset()
 
 	def _unfix(self):
-		if self.type in [5,10]:
+		if self.type in [5, 10]:
 			result = tuple((float(n)/(1 if d==0 else d)) for n,d in zip(self.value[0::2], self.value[1::2]))
 			return result[0] if self.count == 1 else result
 		elif self.type in [2]:
@@ -59,24 +136,43 @@ class TiffTag(object):
 		elif self.type in [1, 3, 6, 8]: return self.value + ((0,)*voidspace)
 		return self.value
 
+	def calcsize(self):
+		return struct.calcsize(TYPES[self.type][0] * (self.count*(2 if self.type in [5,10] else 1))) if self.value_is_offset else 0
 
 class Ifd(dict):
+	tagname = "Tiff Tag"
 	readonly = [259, 270, 271, 272, 301, 306, 318, 319, 529, 532, 33432]
 
 	size = property(
 		lambda obj: {
-			"ifd": struct.calcsize("H" + len(obj)*"HHLL" + "L"),
-			"data": struct.calcsize("".join(TYPES[typ][0]*count for (typ,count) in [(t.type,t.count) for t in dict.values(obj) if t.value_is_offset]))
+			"ifd": struct.calcsize("H" + (len(obj)*"HHLL") + "L"),
+			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
 		}, None, None, "")
 
 	def __init__(self, *args, **kwargs):
 		dict.__init__(self)
+		setattr(self, "tagname", kwargs.get("tagname", "Tiff tag"))
 
 		self.private_ifd = {}
 		self.stripes = ()
 		self.tiles = ()
 		self.free = ()
 		self.jpegIF = b""
+
+	def __setitem__(self, tag, value):
+		if isinstance(tag, str): tag = _2TAG[tag]
+		if tag in tags.exfT:
+			if not 34665 in self.private_ifd:
+				self.private_ifd[34665] = Ifd(tagname="Exif tag")
+			self.private_ifd[34665].addtag(TiffTag(tag, value))
+			self.addtag(TiffTag(34665, 0, name=self.tagname))
+		elif tag in tags.gpsT:
+			if not 34853 in self.private_ifd:
+				self.private_ifd[34853] = Ifd(tagname="GPS tag")
+			self.private_ifd[34853].addtag(TiffTag(tag, value))
+			self.addtag(TiffTag(34853, 0, name=self.tagname))
+		else:
+			dict.__setitem__(self, tag, TiffTag(tag, value, name=self.tagname))
 
 	def __getitem__(self, tag):
 		for i in self.private_ifd.values():
@@ -85,22 +181,24 @@ class Ifd(dict):
 		if isinstance(tag, str): tag = _2TAG[tag]
 		return dict.__getitem__(self, tag)._unfix()
 
-	def set(self, tag, typ, count, value, name="Tiff tag"):
-		tifftag = TiffTag(tag=tag, name=name)
+	def set(self, tag, typ, count, value):
+		tifftag = TiffTag(tag=tag, name=self.tagname)
 		tifftag.type = typ
 		tifftag.count = count
 		tifftag.value = (value,) if count == 1 and typ not in [5, 10] else value
-		tifftag._determine_if_offset()
 		restricted = getattr(values, tifftag.key, None)
 		if restricted: tifftag.meaning = restricted.get(value, "no description found")
+		tifftag._determine_if_offset()
 		dict.__setitem__(self, tag, tifftag)
 	
 	def addtag(self, tifftag):
 		if isinstance(tifftag, TiffTag):
-			tifftag.key, typ_, default, tifftag.comment = _TAGS.get(tifftag.tag, ("Unknown", -1, None, "Undefined tag 0x%x"%tifftag.tag))
+			tifftag.key, typ_, default, tifftag.comment = _TAGS.get(tifftag.tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tifftag.tag))
 			restricted = getattr(values, tifftag.key, None)
 			if restricted:
 				tifftag.meaning = restricted.get(tifftag.value[0])
+			tifftag.name = self.tagname
+			tifftag._determine_if_offset()
 			dict.__setitem__(self, tifftag.tag, tifftag)
 
 	def tags(self):

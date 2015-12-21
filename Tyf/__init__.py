@@ -39,7 +39,7 @@ else:
 from . import ifd, gkd
 
 
-def _read_IFD(obj, fileobj, offset, byteorder="<", name="Tiff tag"):
+def _read_IFD(obj, fileobj, offset, byteorder="<"):
 	# fileobj seek must be is on the start offset
 	fileobj.seek(offset)
 	# get number of entry
@@ -56,7 +56,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<", name="Tiff tag"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		tt = ifd.TiffTag(tag, name=name)
+		tt = ifd.TiffTag(tag)
 		# initialize what we already know
 		tt.type = typ
 		tt.count = count
@@ -99,12 +99,12 @@ def from_buffer(obj, fileobj, offset, byteorder="<"):
 	## read private ifd if any
 	# Exif IFD
 	if 34665 in obj:
-		obj.private_ifd[34665] = ifd.Ifd()
-		_read_IFD(obj.private_ifd[34665], fileobj, obj[34665], byteorder, name="Exif tag")
+		obj.private_ifd[34665] = ifd.Ifd(tagname="Exif tag")
+		_read_IFD(obj.private_ifd[34665], fileobj, obj[34665], byteorder)
 	# GPS IFD
 	if 34853 in obj:
-		obj.private_ifd[34853] = ifd.Ifd()
-		_read_IFD(obj.private_ifd[34853], fileobj, obj[34853], byteorder, name="GPS tag")
+		obj.private_ifd[34853] = ifd.Ifd(tagname="GPS tag")
+		_read_IFD(obj.private_ifd[34853], fileobj, obj[34853], byteorder)
 
 	## read raster data if any
 	# striped raster data
@@ -142,6 +142,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 	for t in tags:
 		# write tag, type & count
 		pack(byteorder+"HHL", fileobj, (t.tag, t.type, t.count))
+
 		# if value is not an offset
 		if not t.value_is_offset:
 			value = t._fill()
@@ -166,21 +167,30 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 	# comme back to first ifd entry
 	fileobj.seek(first_entry_offset)
 	for t in tags:
+		# for each tag witch value needs offset
 		if t.value_is_offset:
+			# go to offset value location (jump over tag, type, count)
 			fileobj.seek(step2, 1)
+			# write offset where value is about to be stored
 			pack(byteorder+"L", fileobj, (data_offset,))
+			# remember where i am in ifd entries
 			bckp = fileobj.tell()
+			# go to offset where value is about to be stored
 			fileobj.seek(data_offset)
+			# prepare value according to python version
 			if sys.version_info[0] >= 3 and t.type in [2, 7]:
 				fmt = str(t.count)+TYPES[t.type][0]
 				value = (t.value,)
 			else:
 				fmt = t.count*TYPES[t.type][0]
 				value = t.value
-
+			# write value
 			pack(byteorder+fmt, fileobj, value)
+			# remmember where to put next value
 			data_offset = fileobj.tell()
+			# go to where I was in ifd entries
 			fileobj.seek(bckp)
+			lastt = t #
 		else:
 			fileobj.seek(step1, 1)
 
@@ -188,6 +198,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 
 def to_buffer(obj, fileobj, offset, byteorder="<"):
 	size = obj.size
+
 	raw_offset = offset + size["ifd"] + size["data"]
 	# add GPS and Exif IFD sizes...
 	for tag, p_ifd in sorted(obj.private_ifd.items(), key=lambda e:e[0]):
@@ -252,6 +263,8 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 
 class TiffFile(list):
 
+	gkd = property(lambda obj: [gkd.Gkd(ifd) for ifd in obj], None, None, "list of geotiff directory")
+
 	def __init__(self, fileobj, byteorder=0x4949):
 		byteorder = "<" if byteorder == 0x4949 else ">"
 
@@ -294,10 +307,6 @@ class TiffFile(list):
 
 
 class JpegFile(collections.OrderedDict):
-	"""
-	This class is an oredered dictionary mapping all marker of JPEG file. All
-	values are binary data except for marker 0xffe1 that is an Ifd class.
-	"""
 
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
 	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")

@@ -1,6 +1,9 @@
 ``Tyf`` package provides simple way to view and edit (future) Exif data from ``TIFF``
 and ``JPEG`` files.
 
+.. image:: https://assets.gratipay.com/gratipay.svg?etag=3tGiSB5Uw_0-oWiLLxAqpQ~~
+   :target: https://gratipay.com/tyf
+
 Quick view
 ==========
 
@@ -39,7 +42,7 @@ Make (0x10f) = b'Google'>}
 
 All information, including GPS and Exif IFD are available using ``.tags()`` method of its first item.
 
->>> for tag in jpg[0xffe1][0].tags(): print(tag)
+>>> for tag in jpg.exif.tags(): print(tag)
 ...
 <Tiff tag : ImageWidth (0x100) = 2560>
 <Tiff tag : ImageLength (0x101) = 1920>
@@ -118,7 +121,7 @@ Each IFD is a dictionary containing tag-value pair and raster data if any is fou
 
 Geotiff data can also be extracted from IFD.
 
->>> geotiff = Tyf.gkd.Gkd(tif[0])
+>>> geotiff = tif.gkd[0] # geotiff from the first ifd
 >>> for tag in geotiff.tags(): print(tag)
 ...
 <GeoTiff Tag : GTModelTypeGeoKey (0x400) = 1> :: "Projection Coordinate System"
@@ -139,7 +142,12 @@ Geotiff data can also be extracted from IFD.
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
 
-Use the dictionary to access usable value.
+Changes
+=======
+
+0.8a4
+
++ first consistant release
 
 >>> tif[0]["ImageWidth"]
 514
@@ -151,13 +159,6 @@ Use the dictionary to access usable value.
 b'N'
 >>> jpg["GPSLatitude"]
 (51.2095416, 0.0, 0.0)
-
-Changes
-=======
-
-0.8a4
-
-+ first consistant release
 
 0.9a1
 
@@ -171,8 +172,23 @@ Changes
 >>> out.write(jpg.thumbnail)
 >>> out.close()
 
+1.0b
+
++ added ``gkd`` property for ``TiffFile`` class
++ added ``exif`` property for ``JpegFile`` class
++ read/write ifd and exif data
+
+>>> tif[0]["Copyright"] = b"Simple commentaire en ascii"
+>>> tif[0]["UserComment"] = b"ASCII\x00\x00\x00Simple commentaire en ascii"
+
++ ``TiffFile`` concatenation using ``+`` operator (ie multi image ``TIFF`` file)
+
+>>> tif2 = Tyf.open(r".\SP27GTIF.tif")
+>>> tif += tif2
+>>> tif.save(r".\test.tif")
+
 Todo
 ====
 
-+ in-place edition of exif data
 + command line utility script
++ API documentation

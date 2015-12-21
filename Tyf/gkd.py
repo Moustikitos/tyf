@@ -121,6 +121,7 @@ class GkdTag(ifd.TiffTag):
 
 
 class Gkd(dict):
+	tagname = "Geotiff Tag"
 	version = __geotiff__[0]
 	revision = __geotiff__[1:]
 
@@ -134,7 +135,7 @@ class Gkd(dict):
 
 	def __setitem__(self, tag, value):
 		if isinstance(tag, str): tag = _2TAG[tag]
-		dict.__setitem__(self, tag, GkdTag(tag, value))
+		dict.__setitem__(self, tag, GkdTag(tag, value, name=self.tagname))
 
 	def get(self, tag, error=None):
 		if hasattr(self, "_%s" % tag): return getattr(self, "_%s" % tag)

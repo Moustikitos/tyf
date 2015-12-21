@@ -41,5 +41,5 @@ Guidance words: keep it simple and solid!
   + start a pull request
 
 ## TODO
-+ add possibility to edit tag data
 + command line utility script
++ API documentation
