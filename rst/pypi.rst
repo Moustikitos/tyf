@@ -1,4 +1,4 @@
-``Tyf`` package provides simple way to view and edit (future) Exif data from ``TIFF``
+``Tyf`` package provides simple way to view and edit (beta) Exif data from ``TIFF``
 and ``JPEG`` files.
 
 .. image:: https://assets.gratipay.com/gratipay.svg?etag=3tGiSB5Uw_0-oWiLLxAqpQ~~
@@ -11,7 +11,13 @@ Quick view
 
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
+
+.. image:: https://github.com/Moustikitos/tyf/blob/master/test/IMG_20150730_210115.jpg
+
 >>> tif = Tyf.open(r".\CEA.tif")
+
+.. image:: https://github.com/Moustikitos/tyf/blob/master/test/CEA.tif
+
 >>> type(jpg)
 <class 'Tyf.JpegFile'>
 >>> isinstance(tif, dict)
@@ -33,14 +39,15 @@ L'>, 274: <Tiff tag : Orientation (0x112) = 1>, 531: <Tiff tag : YCbCrPositionin
  1920>, 34665: <Tiff tag : Exif IFD (0x8769) = 176>, 306: <Tiff tag : DateTime (0x132) = 
 b'2015:07:30 21:01:16'>, 272: <Tiff tag : Model (0x110) = b'Nexus S'>, 271: <Tiff tag : 
 Make (0x10f) = b'Google'>}
->>> jpg[0xffe1][1] # thumbnail information
+>>> jpg[0xffe1][1] # thumbnail info
 {256: <Tiff tag : ImageWidth (0x100) = 320>, 257: <Tiff tag : ImageLength (0x101) = 240>,
  274: <Tiff tag : Orientation (0x112) = 1>, 259: <Tiff tag : Compression (0x103) = 6>, 51
 3: <Tiff tag : JPEGInterchangeFormat (0x201) = 966>, 296: <Tiff tag : ResolutionUnit (0x1
 28) = 2>, 282: <Tiff tag : XResolution (0x11a) = 72.0>, 283: <Tiff tag : YResolution (0x1
 1b) = 72.0>, 514: <Tiff tag : JPEGInterchangeFormatLength (0x202) = 9624>}
 
-All information, including GPS and Exif IFD are available using ``.tags()`` method of its first item.
+All information, including GPS and Exif IFD are available using ``.tags()`` method of its first item
+(``exif`` attribute is a shortcut to first ifd).
 
 >>> for tag in jpg.exif.tags(): print(tag)
 ...
@@ -172,7 +179,9 @@ b'N'
 >>> out.write(jpg.thumbnail)
 >>> out.close()
 
-1.0b
+.. image:: https://github.com/Moustikitos/tyf/blob/master/test/test_thumb.jpg
+
+1.0b0
 
 + added ``gkd`` property for ``TiffFile`` class
 + added ``exif`` property for ``JpegFile`` class
@@ -181,11 +190,21 @@ b'N'
 >>> tif[0]["Copyright"] = b"Simple commentaire en ascii"
 >>> tif[0]["UserComment"] = b"ASCII\x00\x00\x00Simple commentaire en ascii"
 
-+ ``TiffFile`` concatenation using ``+`` operator (ie multi image ``TIFF`` file)
++ ``TiffFile`` concatenation using ``+`` operator (i.e. multi image ``TIFF`` file)
 
 >>> tif2 = Tyf.open(r".\SP27GTIF.tif")
+
+.. image:: https://github.com/Moustikitos/tyf/blob/master/test/SP27GTIF.tif
+
 >>> tif += tif2
 >>> tif.save(r".\test.tif")
+
+.. image:: https://github.com/Moustikitos/tyf/blob/master/test/test.tif
+
+1.0b1
+
++ fixed bug with Exif data modified by windows explorer
++ added XP tags
 
 Todo
 ====

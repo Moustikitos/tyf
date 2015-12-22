@@ -21,7 +21,7 @@ TYPES = {
 	9:  ("l",  "LONG"),
 	10: ("ll", "RATIONAL"),
 	11: ("f",  "FLOAT"),
-	12: ("d"   "DOUBLE"),
+	12: ("d",  "DOUBLE"),
 }
 
 # assure compatibility python 2 & 3
@@ -40,6 +40,8 @@ from . import ifd, gkd
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<"):
+	""
+
 	# fileobj seek must be is on the start offset
 	fileobj.seek(offset)
 	# get number of entry
@@ -56,7 +58,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		tt = ifd.TiffTag(tag)
+		tt = ifd.TiffTag(tag, name=obj.tagname)
 		# initialize what we already know
 		tt.type = typ
 		tt.count = count
@@ -80,7 +82,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 			# go back to ifd entry
 			fileobj.seek(bckp)
 
-		# if value is in the ifd entry
+	# if value is in the ifd entry
 		else:
 			if typ in [2, 7]:
 				tt.value = data[:count]
@@ -289,7 +291,7 @@ class TiffFile(list):
 		else: return list.__getitem__(self, item)
 
 	def __add__(self, value):
-		if isinstance(value, JpegFile):
+		if isinstance(value, TiffFile):
 			for i in value: self.append(i)
 		elif isinstance(value, ifd.Ifd):
 			self.append(value)
@@ -309,8 +311,10 @@ class TiffFile(list):
 class JpegFile(collections.OrderedDict):
 
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
-	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")
 	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Exif data")
+	
+	has_thumbnail = property(lambda obj: bool(len(collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF)), None, None, "")
+	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")
 
 	def __init__(self, fileobj):
 		markers = collections.OrderedDict()
@@ -327,7 +331,10 @@ class JpegFile(collections.OrderedDict):
 				string = StringIO(fileobj.read(count-2)[6:])
 				first, = unpack(">H", string)
 				string.seek(0)
-				markers[marker] = TiffFile(string, first)
+				if first in [0x4d4d, 0x4949]:
+					markers[marker] = TiffFile(string, first)
+				elif first == 0x2f6e: #to determine later (maybee windows special marker)
+					print("marker 0xffe1 found but may not be valid IFD data")
 			else:
 				markers[marker] = fileobj.read(count-2)
 

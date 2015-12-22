@@ -14,6 +14,7 @@ _TAGS.update(tags.gpsT)
 _2TAG = dict((v[0], t) for t,v in _TAGS.items())
 _2KEY = dict((v, k) for k,v in _2TAG.items())
 
+# here are some functions to convert python value
 _m_short = 0
 _M_short = 2**8
 def _1(value):
@@ -25,8 +26,7 @@ def _1(value):
 def _2(value):
 	if not isinstance(value, bytes):
 		value = value.encode()
-		if value[-1] != b"\x00":
-			value +=  b"\x00"
+		value += b"\x00" if value[-1] != b"\x00" else ""
 	return value
 
 _m_byte = 0
@@ -85,7 +85,10 @@ def _11(value):
 
 _12 = _11
 
+
 class TiffTag(object):
+
+
 	# defaults values
 	comment = "Undefined tag"
 	meaning = None
@@ -101,10 +104,14 @@ class TiffTag(object):
 		self.type = _typ[-1] if type == None else type
 		self.tag = tag
 		self.name = name
-		if value: self._fix(value)
+		if value != None:
+			self._fix(value)
 
 	def _fix(self, value):
 		exec("self.value = _%d(value)" % self.type)
+		restricted = getattr(values, self.key, None)
+		if restricted != None:
+			self.meaning = restricted.get(value, "no description found [%r]" % (self.value,))
 		self.count = len(self.value) // (1 if self.type not in [5,10] else 2)
 		self._determine_if_offset()
 
@@ -139,9 +146,13 @@ class TiffTag(object):
 	def calcsize(self):
 		return struct.calcsize(TYPES[self.type][0] * (self.count*(2 if self.type in [5,10] else 1))) if self.value_is_offset else 0
 
+
 class Ifd(dict):
 	tagname = "Tiff Tag"
 	readonly = [259, 270, 271, 272, 301, 306, 318, 319, 529, 532, 33432]
+
+	has_raster = property(lambda obj: bool(len(obj.stripes+obj.tiles+obj.free)), None, None, "")
+	raster = property(lambda obj: reduce(bytes.__add__, obj.stripes+obj.tiles+obj.free), None, None, "")
 
 	size = property(
 		lambda obj: {
@@ -163,14 +174,14 @@ class Ifd(dict):
 		if isinstance(tag, str): tag = _2TAG[tag]
 		if tag in tags.exfT:
 			if not 34665 in self.private_ifd:
+				self.addtag(TiffTag(34665, 0, name=self.tagname))
 				self.private_ifd[34665] = Ifd(tagname="Exif tag")
 			self.private_ifd[34665].addtag(TiffTag(tag, value))
-			self.addtag(TiffTag(34665, 0, name=self.tagname))
 		elif tag in tags.gpsT:
 			if not 34853 in self.private_ifd:
+				self.addtag(TiffTag(34853, 0, name=self.tagname))
 				self.private_ifd[34853] = Ifd(tagname="GPS tag")
 			self.private_ifd[34853].addtag(TiffTag(tag, value))
-			self.addtag(TiffTag(34853, 0, name=self.tagname))
 		else:
 			dict.__setitem__(self, tag, TiffTag(tag, value, name=self.tagname))
 
@@ -182,23 +193,20 @@ class Ifd(dict):
 		return dict.__getitem__(self, tag)._unfix()
 
 	def set(self, tag, typ, count, value):
-		tifftag = TiffTag(tag=tag, name=self.tagname)
-		tifftag.type = typ
+		tifftag = TiffTag(tag=tag, type=typ, name=self.tagname)
 		tifftag.count = count
 		tifftag.value = (value,) if count == 1 and typ not in [5, 10] else value
-		restricted = getattr(values, tifftag.key, None)
-		if restricted: tifftag.meaning = restricted.get(value, "no description found")
 		tifftag._determine_if_offset()
+		restricted = getattr(values, tifftag.key, None)
+		if restricted != None:
+			tifftag.meaning = restricted.get(value, "no description found  [%r]" % (tifftag.value,))
 		dict.__setitem__(self, tag, tifftag)
-	
+
 	def addtag(self, tifftag):
 		if isinstance(tifftag, TiffTag):
-			tifftag.key, typ_, default, tifftag.comment = _TAGS.get(tifftag.tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tifftag.tag))
 			restricted = getattr(values, tifftag.key, None)
-			if restricted:
-				tifftag.meaning = restricted.get(tifftag.value[0])
-			tifftag.name = self.tagname
-			tifftag._determine_if_offset()
+			if restricted != None:
+				tifftag.meaning = restricted.get(tifftag.value[0], "no description found [%r]" % (tifftag.value,))
 			dict.__setitem__(self, tifftag.tag, tifftag)
 
 	def tags(self):

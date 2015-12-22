@@ -18,7 +18,8 @@ lib64/
 parts/
 sdist/
 var/
-test/
+test/*.txt
+test/*.py
 *.egg-info/
 .installed.cfg
 *.egg
