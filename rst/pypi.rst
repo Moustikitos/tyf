@@ -1,8 +1,19 @@
 ``Tyf`` package provides simple way to view and edit (beta) Exif data from ``TIFF``
 and ``JPEG`` files.
 
-.. image:: https://assets.gratipay.com/gratipay.svg?etag=3tGiSB5Uw_0-oWiLLxAqpQ~~
+Support this project
+====================
+
+.. image:: http://bruno.thoorens.free.fr/img/gratipay.png
    :target: https://gratipay.com/tyf
+
+---
+
+.. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
+
+1WJfDP1F2QTgqQhCT53KmhRwQSUkKRHgh
+
+.. image:: http://bruno.thoorens.free.fr/img/wallet.png
 
 Quick view
 ==========
