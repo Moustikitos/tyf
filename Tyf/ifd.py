@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
-from . import tags, reduce, values, TYPES
+from . import tags, encoders, decoders, reduce, values, TYPES
 import struct, fractions
 
 _TAGS = {}
@@ -14,80 +14,8 @@ _TAGS.update(tags.gpsT)
 _2TAG = dict((v[0], t) for t,v in _TAGS.items())
 _2KEY = dict((v, k) for k,v in _2TAG.items())
 
-# here are some functions to convert python value
-_m_short = 0
-_M_short = 2**8
-def _1(value):
-	value = int(value)
-	return (_m_short, ) if value < _m_short else \
-	       (_M_short, ) if value > _M_short else \
-	       (value, )
-
-def _2(value):
-	if not isinstance(value, bytes):
-		value = value.encode()
-		value += b"\x00" if value[-1] != b"\x00" else ""
-	return value
-
-_m_byte = 0
-_M_byte = 2**16
-def _3(value):
-	value = int(value)
-	return (_m_byte, ) if value < _m_byte else \
-	       (_M_byte, ) if value > _M_byte else \
-	       (value, )
-
-_m_long = 0
-_M_long = 2**32
-def _4(value):
-	value = int(value)
-	return (_m_long, ) if value < _m_long else \
-	       (_M_long, ) if value > _M_long else \
-	       (value, )
-
-def _5(value):
-	if not isinstance(value, tuple): value = (value, )
-	return reduce(tuple.__add__, [(f.numerator, f.denominator) for f in [fractions.Fraction(str(v)) for v in value]])
-
-_m_s_short = -_M_short/2
-_M_s_short = _M_short/2-1
-def _6(value):
-	value = int(value)
-	return (_m_s_short, ) if value < _m_s_short else \
-	       (_M_s_short, ) if value > _M_s_short else \
-	       (value, )
-
-def _7(value):
-	if not isinstance(value, bytes):
-		value = value.encode()
-	return value
-
-_m_s_byte = -_M_byte/2
-_M_s_byte = _M_byte/2-1
-def _8(value):
-	value = int(value)
-	return (_m_s_byte, ) if value < _m_s_byte else \
-	       (_M_s_byte, ) if value > _M_s_byte else \
-	       (value, )
-
-_m_s_long = -_M_long/2
-_M_s_long = _M_long/2-1
-def _9(value):
-	value = int(value)
-	return (_m_s_long, ) if value < _m_s_long else \
-	       (_M_s_long, ) if value > _M_s_long else \
-	       (value, )
-
-_10 = _5
-
-def _11(value):
-	return (float(value), )
-
-_12 = _11
-
 
 class TiffTag(object):
-
 
 	# defaults values
 	comment = "Undefined tag"
@@ -99,35 +27,41 @@ class TiffTag(object):
 	value = None
 	name = "Tag"
 
-	def __init__(self, tag=0x0, value=None, type=None, name="Tiff tag"):
+	def __init__(self, tag=0x0, type=None, value=None, name="Tiff tag"):
 		self.key, _typ, default, self.comment = _TAGS.get(tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tag))
-		self.type = _typ[-1] if type == None else type
 		self.tag = tag
 		self.name = name
-		if value != None:
-			self._fix(value)
 
-	def _fix(self, value):
-		exec("self.value = _%d(value)" % self.type)
-		restricted = getattr(values, self.key, None)
-		if restricted != None:
-			self.meaning = restricted.get(value, "no description found [%r]" % (self.value,))
-		self.count = len(self.value) // (1 if self.type not in [5,10] else 2)
-		self._determine_if_offset()
+		self.type = _typ[-1] if type == None else type
+		if value != None: self._encoder(value)
 
-	def _unfix(self):
-		if self.type in [5, 10]:
-			result = tuple((float(n)/(1 if d==0 else d)) for n,d in zip(self.value[0::2], self.value[1::2]))
-			return result[0] if self.count == 1 else result
-		elif self.type in [2]:
-			return self.value[:-1]
-		elif self.count == 1:
-			return self.value[0]
-		else:
-			return self.value
+	def __setattr__(self, attr, value):
+		if attr == "type":
+			try:
+				object.__setattr__(self, "_encode", getattr(encoders, "_%s"%hex(self.tag)))
+			except AttributeError:
+				object.__setattr__(self, "_encode", getattr(encoders, "_%s"%value))
+			try:
+				object.__setattr__(self, "_decode", getattr(decoders, "_%s"%hex(self.tag)))
+			except AttributeError:
+				object.__setattr__(self, "_decode", getattr(decoders, "_%s"%value))
+		elif attr == "value":
+			restricted = getattr(values, self.key, None)
+			if restricted != None:
+				v = value[0] if isinstance(value, tuple) else value
+				self.meaning = restricted.get(v, "no description found [%r]" % (v,))
+			self.count = len(value) // (1 if self.type not in [5,10] else 2)
+			self._determine_if_offset()
+		object.__setattr__(self, attr, value)
+
+	def _encoder(self, value):
+		self.value = self._encode(value)
+
+	def _decoder(self):
+		return self._decode(self.value)
 
 	def __repr__(self):
-		return "<%s : %s (0x%x) = %s>" % (self.name, self.key, self.tag, self._unfix()) + ("" if not self.meaning else ' :: "%s"'%self.meaning)
+		return "<%s : %s (0x%x) = %s>" % (self.name, self.key, self.tag, self._decoder()) + ("" if not self.meaning else ' :: "%s"'%self.meaning)
 
 	def _determine_if_offset(self):
 		if self.count == 1 and self.type in [1, 2, 3, 4, 6, 7, 8, 9]: setattr(self, "value_is_offset", False)
@@ -174,39 +108,32 @@ class Ifd(dict):
 		if isinstance(tag, str): tag = _2TAG[tag]
 		if tag in tags.exfT:
 			if not 34665 in self.private_ifd:
-				self.addtag(TiffTag(34665, 0, name=self.tagname))
+				self.addtag(TiffTag(34665, 4, 0, name=self.tagname))
 				self.private_ifd[34665] = Ifd(tagname="Exif tag")
-			self.private_ifd[34665].addtag(TiffTag(tag, value))
+			self.private_ifd[34665].addtag(TiffTag(tag, value=value))
 		elif tag in tags.gpsT:
 			if not 34853 in self.private_ifd:
-				self.addtag(TiffTag(34853, 0, name=self.tagname))
+				self.addtag(TiffTag(34853, 4, 0, name=self.tagname))
 				self.private_ifd[34853] = Ifd(tagname="GPS tag")
-			self.private_ifd[34853].addtag(TiffTag(tag, value))
+			self.private_ifd[34853].addtag(TiffTag(tag, value=value))
 		else:
-			dict.__setitem__(self, tag, TiffTag(tag, value, name=self.tagname))
+			dict.__setitem__(self, tag, TiffTag(tag, value=value, name=self.tagname))
 
 	def __getitem__(self, tag):
 		for i in self.private_ifd.values():
 			try: return i[tag]
 			except KeyError: pass
 		if isinstance(tag, str): tag = _2TAG[tag]
-		return dict.__getitem__(self, tag)._unfix()
+		return dict.__getitem__(self, tag)._decoder()
 
 	def set(self, tag, typ, count, value):
 		tifftag = TiffTag(tag=tag, type=typ, name=self.tagname)
 		tifftag.count = count
 		tifftag.value = (value,) if count == 1 and typ not in [5, 10] else value
-		tifftag._determine_if_offset()
-		restricted = getattr(values, tifftag.key, None)
-		if restricted != None:
-			tifftag.meaning = restricted.get(value, "no description found  [%r]" % (tifftag.value,))
 		dict.__setitem__(self, tag, tifftag)
 
 	def addtag(self, tifftag):
 		if isinstance(tifftag, TiffTag):
-			restricted = getattr(values, tifftag.key, None)
-			if restricted != None:
-				tifftag.meaning = restricted.get(tifftag.value[0], "no description found [%r]" % (tifftag.value,))
 			dict.__setitem__(self, tifftag.tag, tifftag)
 
 	def tags(self):

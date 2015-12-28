@@ -23,11 +23,11 @@ Quick view
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
 
-.. image:: https://github.com/Moustikitos/tyf/blob/master/test/IMG_20150730_210115.jpg
+https://raw.githubusercontent.com/Moustikitos/tyf/master/test/IMG_20150730_210115.jpg
 
 >>> tif = Tyf.open(r".\CEA.tif")
 
-.. image:: https://github.com/Moustikitos/tyf/blob/master/test/CEA.tif
+https://github.com/Moustikitos/tyf/blob/master/test/CEA.tif?raw=true
 
 >>> type(jpg)
 <class 'Tyf.JpegFile'>
@@ -148,7 +148,7 @@ b'N'
 >>> out.write(jpg.thumbnail)
 >>> out.close()
 
-.. image:: https://github.com/Moustikitos/tyf/blob/master/test/test_thumb.jpg
+https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
 
 1.0b0
 
@@ -163,17 +163,22 @@ b'N'
 
 >>> tif2 = Tyf.open(r".\SP27GTIF.tif")
 
-.. image:: https://github.com/Moustikitos/tyf/blob/master/test/SP27GTIF.tif
+https://github.com/Moustikitos/tyf/blob/master/test/SP27GTIF.TIF?raw=true
 
 >>> tif += tif2
 >>> tif.save(r".\test.tif")
 
-.. image:: https://github.com/Moustikitos/tyf/blob/master/test/test.tif
+https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 
 1.0b1
 
 + fixed bug with Exif data modified by windows explorer
 + added XP tags
+
+1.1b0
+
++ added 0x9c9b, _0x9c9c, _0x9c9d tags decoders
++ added 0x9c9b, _0x9c9c, _0x9c9d tags encoders
 
 Todo
 ====

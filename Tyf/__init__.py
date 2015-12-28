@@ -58,9 +58,9 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		tt = ifd.TiffTag(tag, name=obj.tagname)
+		tt = ifd.TiffTag(tag, typ, name=obj.tagname)
 		# initialize what we already know
-		tt.type = typ
+		# tt.type = typ
 		tt.count = count
 		# to know if ifd entry value is an offset
 		tt._determine_if_offset()
