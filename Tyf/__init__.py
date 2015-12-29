@@ -36,7 +36,7 @@ else:
 	from StringIO import StringIO
 	reduce = __builtins__["reduce"]
 
-from . import ifd, gkd
+from . import ifd, gkd, tags
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<"):
@@ -357,6 +357,15 @@ class JpegFile(collections.OrderedDict):
 		else:
 			pack(">HH", fileobj, (marker, len(data) + 2))
 		fileobj.write(data)
+
+	def strip_exif(self):
+		for key in self.exif.private_ifd:
+			if key in self.exif: self.exif.pop(key)
+		self.exif.private_ifd = {}
+		for key in list(k for k in self.exif if k not in tags.bTT):
+			self.exif.pop(key)
+		while len(self[0xffe1]) > 1:
+			self[0xffe1].pop(-1)
 
 	def save(self, f):
 		if hasattr(f, "close"): out = f

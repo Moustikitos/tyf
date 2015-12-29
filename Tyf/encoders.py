@@ -1,7 +1,10 @@
 # -*- encding:utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 from . import reduce
-import math, fractions
+import math, fractions, datetime
+
+###############
+# type encoders
 
 _m_short = 0
 _M_short = 2**8
@@ -73,15 +76,16 @@ def _11(value):
 
 _12 = _11
 
+#######################
+# Tag-specific encoders
+
 # XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value])
-
 # UserComment GPSProcessingMethod
 _0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode() if not isinstance(value, bytes) else value)
-
-#GPSLatitudeRef
+# GPSLatitudeRef
 _0x1 = lambda value: b"N\x00" if bool(value >= 0) == True else b"S\x00"
-#GPSLatitude
+# GPSLatitude
 def _0x2(value):
 	value = abs(value)
 
@@ -99,8 +103,13 @@ def _0x2(value):
 		degrees += 1
 
 	return _5((degrees, minutes, seconds))
-
 #GPSLongitudeRef
 _0x3 = lambda value: b"E\x00" if bool(value >= 0) == True else b"W\x00"
 #GPSLongitude
 _0x4 = _0x2
+# GPSTimeStamp
+_0x7 = lambda value: _5(tuple(float(e) for e in [value.hour, value.minute, value.second]))
+# GPSDateStamp
+_0x1d = lambda value: _2(value.strftime("%Y:%m:%d"))
+# DateTime DateTimeOriginal DateTimeDigitized
+_0x132 = _0x9003 = _0x9004 = lambda value: _2(value.strftime("%Y:%m:%d %H:%M:%S"))

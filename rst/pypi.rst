@@ -1,5 +1,5 @@
-``Tyf`` package provides simple way to view and edit (beta) Exif data from ``TIFF``
-and ``JPEG`` files.
+``Tyf`` package provides simple way to view and edit (beta) Exif data from 
+``TIFF`` and ``JPEG`` files.
 
 Support this project
 ====================
@@ -19,7 +19,8 @@ Support this project
 Quick view
 ==========
 
-``Tyf`` package exports ``open`` function. It returns ``JpegFile`` or ``TiffFile`` class that enables metadata reading and writing(soon).
+``Tyf`` package exports ``open`` function. It returns ``JpegFile`` or 
+``TiffFile`` class that enables metadata reading and writing(soon).
 
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
@@ -39,7 +40,10 @@ True
 >>> isinstance(tif, list)
 True
 
-``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file. Values are stored as binary data except ``0xffe1`` one stored as a ``TiffFile`` instance. It contains two image file directories (IFD), one for the image and another one for the thumbnail.
+``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG``
+ file. Values are stored as binary data except ``0xffe1`` one stored as a 
+ ``TiffFile`` instance. It contains two image file directories (IFD), one for 
+ the image and another one for the thumbnail.
 
 >>> type(jpg[0xffe1])
 <class 'Tyf.TiffFile'>
@@ -58,40 +62,26 @@ iff tag : ResolutionUnit (0x128) = 2> :: "Inch", 274: <Tiff tag : Orientation (0
 > :: "Normal", 282: <Tiff tag : XResolution (0x11a) = 72.0>, 283: <Tiff tag : YResolution
  (0x11b) = 72.0>}
 
-All information, including GPS and Exif IFD are available using ``.tags()`` method of its first item
+All information, including GPS and Exif IFD are available using ``.tags()`` 
+method of its first item
 
 >>> for tag in jpg.exif.tags(): print(tag)
 ...
 <Tiff tag : ImageWidth (0x100) = 2560>
 <Tiff tag : ImageLength (0x101) = 1920>
-<Tiff tag : Make (0x10f) = Google>
-<Tiff tag : Model (0x110) = Nexus S>
-<Tiff tag : Orientation (0x112) = 1> :: "Normal"
 [...]
-<GPS tag : GPSTimeStamp (0x7) = (19.0, 1.0, 7.0)>
-<GPS tag : GPSImgDirectionRef (0x10) = M> :: "Magnetic direction"
-<GPS tag : GPSImgDirection (0x11) = 33.0>
 <GPS tag : GPSProcessingMethod (0x1b) = NETWORK>
 <GPS tag : GPSDateStamp (0x1d) = 2015:07:30>
 
-``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker ``0xffe1``.
-Each IFD is a dictionary containing tag-value pair and raster data if any is found.
+``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker 
+``0xffe1``. Each IFD is a dictionary containing tag-value pair and raster data 
+if any is found.
 
 >>> for tag in tif[0].tags(): print(tag)
 ...
 <Tiff tag : ImageWidth (0x100) = 514>
 <Tiff tag : ImageLength (0x101) = 515>
-<Tiff tag : BitsPerSample (0x102) = 8>
-<Tiff tag : Compression (0x103) = 1> :: "Uncompressed"
-<Tiff tag : PhotometricInterpretation (0x106) = 1> :: "BlackIsZero"
 [...]
-<Tiff tag : ModelPixelScaleTag (0x830e) = (60.02213698319374, 60.02213698319374, 0.0)>
-<Tiff tag : ModelTiepointTag (0x8482) = (0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438
-021915, 0.0)>
-<Tiff tag : GeoKeyDirectoryTag (0x87af) = (1, 1, 0, 14, 1024, 0, 1, 1, 1025, 0, 1, 1, 102
-6, 34737, 8, 0, 2048, 0, 1, 4267, 2049, 34737, 6, 8, 2054, 0, 1, 9102, 3072, 0, 1, 32767,
- 3074, 0, 1, 32767, 3075, 0, 1, 28, 3076, 0, 1, 9001, 3078, 34736, 1, 1, 3080, 34736, 1, 
-0, 3082, 34736, 1, 2, 3083, 34736, 1, 3)>
 <Tiff tag : GeoDoubleParamsTag (0x87b0) = (-117.333333333333, 33.75, 0.0, 0.0)>
 <Tiff tag : GeoAsciiParamsTag (0x87b1) = b'unnamed|NAD27|'>
 
@@ -102,21 +92,39 @@ Geotiff data can also be extracted from IFD.
 ...
 <GeoTiff Tag : GTModelTypeGeoKey (0x400) = 1> :: "Projection Coordinate System"
 <GeoTiff Tag : GTRasterTypeGeoKey (0x401) = 1> :: "Raster pixel is area"
-<GeoTiff Tag : GTCitationGeoKey (0x402) = b'unnamed'>
-<GeoTiff Tag : GeographicTypeGeoKey (0x800) = 4267> :: "GCS_NAD27"
-<GeoTiff Tag : GeogCitationGeoKey (0x801) = b'NAD27'>
-<GeoTiff Tag : GeogAngularUnitsGeoKey (0x806) = 9102> :: "Degree"
-<GeoTiff Tag : ProjectedCSTypeGeoKey (0xc00) = 32767> :: "User-defined"
-<GeoTiff Tag : ProjectionGeoKey (0xc02) = 32767> :: "User-defined"
-<GeoTiff Tag : ProjCoordTransGeoKey (0xc03) = 28> :: "User-defined"
-<GeoTiff Tag : ProjLinearUnitsGeoKey (0xc04) = 9001> :: "Linear_Meter"
-<GeoTiff Tag : ProjStdParallel1GeoKey (0xc06) = 33.75>
-<GeoTiff Tag : ProjNatOriginLongGeoKey (0xc08) = -117.333333333333>
+[...]
 <GeoTiff Tag : ProjFalseEastingGeoKey (0xc0a) = 0.0>
 <GeoTiff Tag : ProjFalseNorthingGeoKey (0xc0b) = 0.0>
 >>> mt = geotiff.getModelTransformation()
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
+
+API basics
+==========
+
+This package is based on ``TiffTag`` and ``Ifd`` class implementing `TIFF specification`_.
+
+``Tyf.ifd.TiffTag``
+-------------------
+
+>>> tifftag = Tyf.ifd.TiffTag(0x132) # base line tag number for Datetime
+>>> tifftag.value = b'2015:12:29 08:55:23\x00'
+>>> tifftag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': <function <lambda> at 0x012BE46
+8>, '_encoder': <function <lambda> at 0x012B75D0>, 'tag': 306, 'count': 19, 'comment': "D
+ate and time of image creation, aray size = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'v
+alue': b'2015:12:29 08:55:23\x00', 'key': 'DateTime'}
+>>> import datetime
+>>> tifftag = Tyf.ifd.TiffTag(0x132, value=datetime.datetime(2015, 12, 29, 8, 55, 23))
+>>> tifftag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': <function <lambda> at 0x012BE46
+8>, '_encoder': <function <lambda> at 0x012B75D0>, 'tag': 306, 'count': 20, 'comment': "D
+ate and time of image creation, aray size = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'v
+alue': b'2015:12:29 08:55:23\x00', 'key': 'DateTime'}
+>>> tifftag.value     # bytes array to be stored in IFD data
+b'2015:12:29 08:55:23\x00'
+>>> tifftag._decode() # python datetime value decoded on the fly
+2015-12-29 08:55:02
 
 Changes
 =======
@@ -187,3 +195,5 @@ Todo
 
 + command line utility script
 + API documentation
+
+.. _TIFF specification :: https://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf

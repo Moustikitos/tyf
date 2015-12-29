@@ -1,5 +1,9 @@
 # -*- encding:utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+import datetime
+
+###############
+# type decoders
 
 _1 = _3 = _4 = _6 = _8 = _9 = _11 = _12 = lambda value: value[0] if len(value) == 1 else value
 
@@ -13,12 +17,13 @@ _7 = lambda value: value
 
 _10 = _5
 
+#######################
+# Tag-specific decoders
+
 # XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : "".join(chr(e) for e in value[0::2]).encode()[:-1]
-
 # UserComment GPSProcessingMethod
 _0x9286 = _0x1b = lambda value: value[8:]
-
 #GPSLatitudeRef
 _0x1 = lambda value: 1 if value in [b"N\x00", b"N"] else -1
 #GPSLatitude
@@ -29,3 +34,9 @@ def _0x2(value):
 _0x3 = lambda value: 1 if value in [b"E\x00", b"E"] else -1
 #GPSLongitude
 _0x4 = _0x2
+# GPSTimeStamp
+_0x7 = lambda value: datetime.time(*[int(e) for e in _5(value)])
+# GPSDateStamp
+_0x1d = lambda value: datetime.datetime.strptime(_2(value).decode(), "%Y:%m:%d")
+# DateTime DateTimeOriginal DateTimeDigitized
+_0x132 = _0x9003 = _0x9004 = lambda value: datetime.datetime.strptime(_2(value).decode(), "%Y:%m:%d %H:%M:%S")

@@ -27,7 +27,7 @@ class TiffTag(object):
 	value = None
 	name = "Tag"
 
-	def __init__(self, tag=0x0, type=None, value=None, name="Tiff tag"):
+	def __init__(self, tag, type=None, value=None, name="Tiff tag"):
 		self.key, _typ, default, self.comment = _TAGS.get(tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tag))
 		self.tag = tag
 		self.name = name
@@ -57,13 +57,12 @@ class TiffTag(object):
 		return self._decoder(self.value)
 
 	def __repr__(self):
-		return "<%s : %s (0x%x) = %s>" % (self.name, self.key, self.tag, self._decode()) + ("" if not self.meaning else ' :: "%s"'%self.meaning)
+		return "<%s 0x%x: %s = %r>" % (self.name, self.tag, self.key, self.value) + ("" if not self.meaning else ' := %r'%self.meaning)
 
 	def _determine_if_offset(self):
 		if self.count == 1 and self.type in [1, 2, 3, 4, 6, 7, 8, 9]: setattr(self, "value_is_offset", False)
-		elif self.count <= 3 and self.type in [2]: setattr(self, "value_is_offset", False)
 		elif self.count <= 2 and self.type in [3, 8]: setattr(self, "value_is_offset", False)
-		elif self.count <= 4 and self.type in [1, 6, 7]: setattr(self, "value_is_offset", False)
+		elif self.count <= 4 and self.type in [1, 2, 6, 7]: setattr(self, "value_is_offset", False)
 		else: setattr(self, "value_is_offset", True)
 
 	def _fill(self):
@@ -81,19 +80,19 @@ class Ifd(dict):
 	tagname = "Tiff Tag"
 	readonly = [259, 270, 271, 272, 301, 306, 318, 319, 529, 532, 33432]
 
-	exif_ifd = property(lambda obj: obj.private_ifd.get(34665, {}), None, None, "")
-	gps_ifd = property(lambda obj: obj.private_ifd.get(34853, {}), None, None, "")
-	has_raster = property(lambda obj: bool(len(obj.stripes+obj.tiles+obj.free)), None, None, "")
-	raster = property(lambda obj: reduce(bytes.__add__, obj.stripes+obj.tiles+obj.free), None, None, "")
+	exif_ifd = property(lambda obj: obj.private_ifd.get(34665, {}), None, None, "shortcut toprivate ifd")
+	gps_ifd = property(lambda obj: obj.private_ifd.get(34853, {}), None, None, "shortcut toprivate ifd")
+	has_raster = property(lambda obj: bool(len(obj.stripes+obj.tiles+obj.free)), None, None, "return true if it contains raster data")
+	raster = property(lambda obj: reduce(bytes.__add__, obj.stripes+obj.tiles+obj.free), None, None, "raster data")
 	size = property(
 		lambda obj: {
 			"ifd": struct.calcsize("H" + (len(obj)*"HHLL") + "L"),
 			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
-		}, None, None, "")
+		}, None, None, "return ifd-packed size and data-packed size")
 
 	def __init__(self, *args, **kwargs):
+		setattr(self, "tagname", kwargs.pop("tagname", "Tiff tag"))
 		dict.__init__(self)
-		setattr(self, "tagname", kwargs.get("tagname", "Tiff tag"))
 
 		self.private_ifd = {}
 		self.stripes = ()
