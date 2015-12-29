@@ -1,6 +1,7 @@
 # -*- encding:utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 from . import reduce
+import math, fractions
 
 _m_short = 0
 _M_short = 2**8
@@ -72,5 +73,34 @@ def _11(value):
 
 _12 = _11
 
+# XPTitle XPComment XBAuthor
+_0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value])
 
-_0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value]) #"".join(chr(e) for e in value[0::2]).encode()
+# UserComment GPSProcessingMethod
+_0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode() if not isinstance(value, bytes) else value)
+
+#GPSLatitudeRef
+_0x1 = lambda value: b"N\x00" if bool(value >= 0) == True else b"S\x00"
+#GPSLatitude
+def _0x2(value):
+	value = abs(value)
+
+	degrees = math.floor(value)
+	minutes = (value - degrees) * 60
+	seconds = (minutes - math.floor(minutes)) * 60
+	minutes = math.floor(minutes)
+
+	if seconds >= (60.-0.0001):
+		seconds = 0.
+		minutes += 1
+
+	if minutes >= (60.-0.0001):
+		minutes = 0.
+		degrees += 1
+
+	return _5((degrees, minutes, seconds))
+
+#GPSLongitudeRef
+_0x3 = lambda value: b"E\x00" if bool(value >= 0) == True else b"W\x00"
+#GPSLongitude
+_0x4 = _0x2

@@ -312,7 +312,7 @@ class JpegFile(collections.OrderedDict):
 
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
 	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Exif data")
-	
+	ifd1 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[1], None, None, "Thumbnail IFD")
 	has_thumbnail = property(lambda obj: bool(len(collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF)), None, None, "")
 	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")
 
@@ -324,7 +324,7 @@ class JpegFile(collections.OrderedDict):
 			# here is raster data marker, copy all after marker id
 			if marker == 0xffda:
 				fileobj.seek(-2, 1)
-				markers[0xffda] = fileobj.read()
+				markers[0xffda] = fileobj.read()[:-2]
 				# say it is the end of the file
 				marker = 0xffd9
 			elif marker == 0xffe1:
@@ -333,8 +333,8 @@ class JpegFile(collections.OrderedDict):
 				string.seek(0)
 				if first in [0x4d4d, 0x4949]:
 					markers[marker] = TiffFile(string, first)
-				elif first == 0x2f6e: #to determine later (maybee windows special marker)
-					print("marker 0xffe1 found but may not be valid IFD data")
+				else: #if first == 0x2f6e -> /ns.adobe.com/xap/1.0 <xpacket>
+					pass #setattr(markers, "_0xffe1", string.getvalue())
 			else:
 				markers[marker] = fileobj.read(count-2)
 
@@ -364,7 +364,8 @@ class JpegFile(collections.OrderedDict):
 		pack(">H", out, (0xffd8,))
 		for key in self: self._pack(key, out)
 		pack(">H", out, (0xffd9,))
-		if not isinstance(out, StringIO): out.close()
+		if not isinstance(out, StringIO):
+			out.close()
 
 
 def open(f):

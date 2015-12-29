@@ -104,12 +104,12 @@ class GkdTag(ifd.TiffTag):
 				else:
 					raise ValueError('"%s" value must be one of %s, get %s instead' % (self.key, list(restricted.keys()), value))
 
-		self.type, self.count, self.value = self._encoder(value, types)
+		self.type, self.count, self.value = self._encode(value, types)
 
 	def __setattr__(self, attr, value):
 		object.__setattr__(self, attr, value)
 
-	def _encoder(self, value, types):
+	def _encode(self, value, types):
 		if isinstance(value, str): value = value.encode()
 		elif not hasattr(value, "__len__"): value = (value, )
 		typ = 0
@@ -117,7 +117,7 @@ class GkdTag(ifd.TiffTag):
 		elif 12 in types: typ = 34736
 		return typ, len(value), value
 
-	def _decoder(self):
+	def _decode(self):
 		if self.count == 1: return self.value[0]
 		else: return self.value
 
@@ -133,7 +133,7 @@ class Gkd(dict):
 
 	def __getitem__(self, tag):
 		if isinstance(tag, str): tag = _2TAG[tag]
-		return dict.__getitem__(self, tag)._decoder()
+		return dict.__getitem__(self, tag)._decode()
 
 	def __setitem__(self, tag, value):
 		if isinstance(tag, str): tag = _2TAG[tag]

@@ -15,6 +15,7 @@ Support this project
 
 .. image:: http://bruno.thoorens.free.fr/img/wallet.png
 
+
 Quick view
 ==========
 
@@ -31,48 +32,47 @@ https://github.com/Moustikitos/tyf/blob/master/test/CEA.tif?raw=true
 
 >>> type(jpg)
 <class 'Tyf.JpegFile'>
->>> isinstance(tif, dict)
+>>> isinstance(jpg, dict)
 True
 >>> type(tif)
 <class 'Tyf.TiffFile'>
 >>> isinstance(tif, list)
 True
 
-``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file. Values are stored as binary data except ``0xffe1`` one
-stored as a ``TiffFile`` instance. It contains two image file directories (IFD), one for the image and another one for the thumbnail.
+``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file. Values are stored as binary data except ``0xffe1`` one stored as a ``TiffFile`` instance. It contains two image file directories (IFD), one for the image and another one for the thumbnail.
 
 >>> type(jpg[0xffe1])
 <class 'Tyf.TiffFile'>
->>> jpg[0xffe1][0] # main raster info
-{256: <Tiff tag : ImageWidth (0x100) = 2560>, 305: <Tiff tag : Software (0x131) = b'KVT49
-L'>, 274: <Tiff tag : Orientation (0x112) = 1>, 531: <Tiff tag : YCbCrPositioning (0x213)
- = 1>, 34853: <Tiff tag : GPS IFD (0x8825) = 572>, 257: <Tiff tag : ImageLength (0x101) =
- 1920>, 34665: <Tiff tag : Exif IFD (0x8769) = 176>, 306: <Tiff tag : DateTime (0x132) = 
-b'2015:07:30 21:01:16'>, 272: <Tiff tag : Model (0x110) = b'Nexus S'>, 271: <Tiff tag : 
-Make (0x10f) = b'Google'>}
->>> jpg[0xffe1][1] # thumbnail info
+>>> jpg.exif # shortcut to jpg[0xffe1][0]
+{256: <Tiff tag : ImageWidth (0x100) = 2560>, 257: <Tiff tag : ImageLength (0x101) = 192
+0>, 34853: <Tiff tag : GPS IFD (0x8825) = 572>, 34665: <Tiff tag : Exif IFD (0x8769) = 1
+76>, 306: <Tiff tag : DateTime (0x132) = 2015:07:30 21:01:16>, 271: <Tiff tag : Make (0x
+10f) = Google>, 272: <Tiff tag : Model (0x110) = Nexus S>, 305: <Tiff tag : Software (0x
+131) = KVT49L>, 274: <Tiff tag : Orientation (0x112) = 1> :: "Normal", 531: <Tiff tag : 
+YCbCrPositioning (0x213) = 1> :: "Centered"}
+>>> jpg.ifd1 # shortcut to jpg[0xffe1][1]
 {256: <Tiff tag : ImageWidth (0x100) = 320>, 257: <Tiff tag : ImageLength (0x101) = 240>,
- 274: <Tiff tag : Orientation (0x112) = 1>, 259: <Tiff tag : Compression (0x103) = 6>, 51
-3: <Tiff tag : JPEGInterchangeFormat (0x201) = 966>, 296: <Tiff tag : ResolutionUnit (0x1
-28) = 2>, 282: <Tiff tag : XResolution (0x11a) = 72.0>, 283: <Tiff tag : YResolution (0x1
-1b) = 72.0>, 514: <Tiff tag : JPEGInterchangeFormatLength (0x202) = 9624>}
+ 514: <Tiff tag : JPEGInterchangeFormatLength (0x202) = 9624>, 259: <Tiff tag : Compressi
+on (0x103) = 6> :: "JPEG", 513: <Tiff tag : JPEGInterchangeFormat (0x201) = 966>, 296: <T
+iff tag : ResolutionUnit (0x128) = 2> :: "Inch", 274: <Tiff tag : Orientation (0x112) = 1
+> :: "Normal", 282: <Tiff tag : XResolution (0x11a) = 72.0>, 283: <Tiff tag : YResolution
+ (0x11b) = 72.0>}
 
 All information, including GPS and Exif IFD are available using ``.tags()`` method of its first item
-(``exif`` attribute is a shortcut to first ifd).
 
 >>> for tag in jpg.exif.tags(): print(tag)
 ...
 <Tiff tag : ImageWidth (0x100) = 2560>
 <Tiff tag : ImageLength (0x101) = 1920>
-<Tiff tag : Make (0x10f) = b'Google'>
-<Tiff tag : Model (0x110) = b'Nexus S'>
+<Tiff tag : Make (0x10f) = Google>
+<Tiff tag : Model (0x110) = Nexus S>
 <Tiff tag : Orientation (0x112) = 1> :: "Normal"
 [...]
-<GPS tag : GPSAltitude (0x6) = 0.0>
 <GPS tag : GPSTimeStamp (0x7) = (19.0, 1.0, 7.0)>
-<GPS tag : GPSImgDirectionRef (0x10) = b'M'>
+<GPS tag : GPSImgDirectionRef (0x10) = M> :: "Magnetic direction"
 <GPS tag : GPSImgDirection (0x11) = 33.0>
-<GPS tag : GPSProcessingMethod (0x1b) = b'ASCII\x00\x00\x00NETWORK'>
+<GPS tag : GPSProcessingMethod (0x1b) = NETWORK>
+<GPS tag : GPSDateStamp (0x1d) = 2015:07:30>
 
 ``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker ``0xffe1``.
 Each IFD is a dictionary containing tag-value pair and raster data if any is found.
@@ -134,7 +134,7 @@ Changes
 >>> jpg["GPSLatitudeRef"]
 b'N'
 >>> jpg["GPSLatitude"]
-(51.2095416, 0.0, 0.0)
+51.2095416
 
 0.9a1
 
@@ -148,7 +148,7 @@ b'N'
 >>> out.write(jpg.thumbnail)
 >>> out.close()
 
-https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+.. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
 
 1.0b0
 
@@ -177,8 +177,10 @@ https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 
 1.1b0
 
-+ added 0x9c9b, _0x9c9c, _0x9c9d tags decoders
-+ added 0x9c9b, _0x9c9c, _0x9c9d tags encoders
++ added encoders / decoders
++ added ``ifd1`` to ``JpegFile`` class
++ added ``exif_ifd`` to ``Ifd`` class
++ added ``gps_ifd`` to ``Ifd`` class
 
 Todo
 ====

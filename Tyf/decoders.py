@@ -13,4 +13,19 @@ _7 = lambda value: value
 
 _10 = _5
 
+# XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : "".join(chr(e) for e in value[0::2]).encode()[:-1]
+
+# UserComment GPSProcessingMethod
+_0x9286 = _0x1b = lambda value: value[8:]
+
+#GPSLatitudeRef
+_0x1 = lambda value: 1 if value in [b"N\x00", b"N"] else -1
+#GPSLatitude
+def _0x2(value):
+	degrees, minutes, seconds = _5(value)
+	return (seconds/60 + minutes)/60 + degrees
+#GPSLatitudeRef
+_0x3 = lambda value: 1 if value in [b"E\x00", b"E"] else -1
+#GPSLongitude
+_0x4 = _0x2

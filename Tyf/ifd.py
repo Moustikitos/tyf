@@ -33,18 +33,14 @@ class TiffTag(object):
 		self.name = name
 
 		self.type = _typ[-1] if type == None else type
-		if value != None: self._encoder(value)
+		if value != None: self._encode(value)
 
 	def __setattr__(self, attr, value):
 		if attr == "type":
-			try:
-				object.__setattr__(self, "_encode", getattr(encoders, "_%s"%hex(self.tag)))
-			except AttributeError:
-				object.__setattr__(self, "_encode", getattr(encoders, "_%s"%value))
-			try:
-				object.__setattr__(self, "_decode", getattr(decoders, "_%s"%hex(self.tag)))
-			except AttributeError:
-				object.__setattr__(self, "_decode", getattr(decoders, "_%s"%value))
+			try: object.__setattr__(self, "_encoder", getattr(encoders, "_%s"%hex(self.tag)))
+			except AttributeError: object.__setattr__(self, "_encoder", getattr(encoders, "_%s"%value))
+			try: object.__setattr__(self, "_decoder", getattr(decoders, "_%s"%hex(self.tag)))
+			except AttributeError: object.__setattr__(self, "_decoder", getattr(decoders, "_%s"%value))
 		elif attr == "value":
 			restricted = getattr(values, self.key, None)
 			if restricted != None:
@@ -54,14 +50,14 @@ class TiffTag(object):
 			self._determine_if_offset()
 		object.__setattr__(self, attr, value)
 
-	def _encoder(self, value):
-		self.value = self._encode(value)
+	def _encode(self, value):
+		self.value = self._encoder(value)
 
-	def _decoder(self):
-		return self._decode(self.value)
+	def _decode(self):
+		return self._decoder(self.value)
 
 	def __repr__(self):
-		return "<%s : %s (0x%x) = %s>" % (self.name, self.key, self.tag, self._decoder()) + ("" if not self.meaning else ' :: "%s"'%self.meaning)
+		return "<%s : %s (0x%x) = %s>" % (self.name, self.key, self.tag, self._decode()) + ("" if not self.meaning else ' :: "%s"'%self.meaning)
 
 	def _determine_if_offset(self):
 		if self.count == 1 and self.type in [1, 2, 3, 4, 6, 7, 8, 9]: setattr(self, "value_is_offset", False)
@@ -85,9 +81,10 @@ class Ifd(dict):
 	tagname = "Tiff Tag"
 	readonly = [259, 270, 271, 272, 301, 306, 318, 319, 529, 532, 33432]
 
+	exif_ifd = property(lambda obj: obj.private_ifd.get(34665, {}), None, None, "")
+	gps_ifd = property(lambda obj: obj.private_ifd.get(34853, {}), None, None, "")
 	has_raster = property(lambda obj: bool(len(obj.stripes+obj.tiles+obj.free)), None, None, "")
 	raster = property(lambda obj: reduce(bytes.__add__, obj.stripes+obj.tiles+obj.free), None, None, "")
-
 	size = property(
 		lambda obj: {
 			"ifd": struct.calcsize("H" + (len(obj)*"HHLL") + "L"),
@@ -124,13 +121,18 @@ class Ifd(dict):
 			try: return i[tag]
 			except KeyError: pass
 		if isinstance(tag, str): tag = _2TAG[tag]
-		return dict.__getitem__(self, tag)._decoder()
+		return dict.__getitem__(self, tag)._decode()
 
 	def set(self, tag, typ, count, value):
 		tifftag = TiffTag(tag=tag, type=typ, name=self.tagname)
 		tifftag.count = count
 		tifftag.value = (value,) if count == 1 and typ not in [5, 10] else value
 		dict.__setitem__(self, tag, tifftag)
+
+	def get(self, tag):
+		for i in self.private_ifd.values():
+			if tag in i: return i.get(tag)
+		return dict.get(self, _2TAG[tag] if isinstance(tag, str) else tag)
 
 	def addtag(self, tifftag):
 		if isinstance(tifftag, TiffTag):
