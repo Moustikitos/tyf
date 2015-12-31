@@ -40,10 +40,10 @@ True
 >>> isinstance(tif, list)
 True
 
-``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG``
- file. Values are stored as binary data except ``0xffe1`` one stored as a 
- ``TiffFile`` instance. It contains two image file directories (IFD), one for 
- the image and another one for the thumbnail.
+``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file.
+Values are stored as binary data except ``0xffe1`` one stored as a  ``TiffFile``
+instance. It contains two image file directories (IFD), one for the image and 
+another one for the thumbnail.
 
 >>> type(jpg[0xffe1])
 <class 'Tyf.TiffFile'>
@@ -98,33 +98,6 @@ Geotiff data can also be extracted from IFD.
 >>> mt = geotiff.getModelTransformation()
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
-
-API basics
-==========
-
-This package is based on ``TiffTag`` and ``Ifd`` class implementing `TIFF specification`_.
-
-``Tyf.ifd.TiffTag``
--------------------
-
->>> tifftag = Tyf.ifd.TiffTag(0x132) # base line tag number for Datetime
->>> tifftag.value = b'2015:12:29 08:55:23\x00'
->>> tifftag.__dict__
-{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': <function <lambda> at 0x012BE46
-8>, '_encoder': <function <lambda> at 0x012B75D0>, 'tag': 306, 'count': 19, 'comment': "D
-ate and time of image creation, aray size = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'v
-alue': b'2015:12:29 08:55:23\x00', 'key': 'DateTime'}
->>> import datetime
->>> tifftag = Tyf.ifd.TiffTag(0x132, value=datetime.datetime(2015, 12, 29, 8, 55, 23))
->>> tifftag.__dict__
-{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': <function <lambda> at 0x012BE46
-8>, '_encoder': <function <lambda> at 0x012B75D0>, 'tag': 306, 'count': 20, 'comment': "D
-ate and time of image creation, aray size = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'v
-alue': b'2015:12:29 08:55:23\x00', 'key': 'DateTime'}
->>> tifftag.value     # bytes array to be stored in IFD data
-b'2015:12:29 08:55:23\x00'
->>> tifftag._decode() # python datetime value decoded on the fly
-2015-12-29 08:55:02
 
 Changes
 =======
@@ -190,10 +163,14 @@ https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 + added ``exif_ifd`` to ``Ifd`` class
 + added ``gps_ifd`` to ``Ifd`` class
 
+1.1.1
+
++ added hability to read custom sub IFD
++ rational encoder fix
++ ``__repr__`` format update and show raw value
+
 Todo
 ====
 
 + command line utility script
 + API documentation
-
-.. _TIFF specification :: https://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf

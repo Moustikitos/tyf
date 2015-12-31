@@ -4,36 +4,34 @@
 from . import tags, encoders, decoders, reduce, values, TYPES
 import struct, fractions
 
-_TAGS = {}
-_TAGS.update(tags.bTT)
-_TAGS.update(tags.xTT)
-_TAGS.update(tags.pTT)
-_TAGS.update(tags.exfT)
-_TAGS.update(tags.gpsT)
-
-_2TAG = dict((v[0], t) for t,v in _TAGS.items())
-_2KEY = dict((v, k) for k,v in _2TAG.items())
+_TAGS = tags._TAGS
+_2TAG = tags._2TAG
+_2KEY = tags._2KEY
 
 
 class TiffTag(object):
 
-	# defaults values
-	comment = "Undefined tag"
-	meaning = None
-	key = "Unknown"
+	# IFD entries values
 	tag = 0x0
 	type = 0
 	count = 0
 	value = None
-	name = "Tag"
+
+	# end user side values
+	key = "Undefined"
+	name = "Undefined tag"
+	comment = "Nothing about this tag"
+	meaning = None
 
 	def __init__(self, tag, type=None, value=None, name="Tiff tag"):
+		if tag in _2TAG: tag = _2TAG[tag]
 		self.key, _typ, default, self.comment = _TAGS.get(tag, ("Unknown", [0], None, "Undefined tag 0x%x"%tag))
 		self.tag = tag
 		self.name = name
 
 		self.type = _typ[-1] if type == None else type
 		if value != None: self._encode(value)
+		elif default != None: self.value = (default,) if not hasattr(default, "len") else default
 
 	def __setattr__(self, attr, value):
 		if attr == "type":
@@ -50,14 +48,14 @@ class TiffTag(object):
 			self._determine_if_offset()
 		object.__setattr__(self, attr, value)
 
+	def __repr__(self):
+		return "<%s 0x%x: %s = %r>" % (self.name, self.tag, self.key, self.value) + ("" if not self.meaning else ' := %r'%self.meaning)
+
 	def _encode(self, value):
 		self.value = self._encoder(value)
 
 	def _decode(self):
 		return self._decoder(self.value)
-
-	def __repr__(self):
-		return "<%s 0x%x: %s = %r>" % (self.name, self.tag, self.key, self.value) + ("" if not self.meaning else ' := %r'%self.meaning)
 
 	def _determine_if_offset(self):
 		if self.count == 1 and self.type in [1, 2, 3, 4, 6, 7, 8, 9]: setattr(self, "value_is_offset", False)

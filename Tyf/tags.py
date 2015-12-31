@@ -284,3 +284,13 @@ gpsT = {
 	29: ("GPSDateStamp", [2], None, "A character string recording date and time information relative to UTC (Coordinated Universal Time)"),
 	30: ("GPSDifferential", [1], None, "Indicates whether differential correction is applied to the GPS receiver"),
 }
+
+_TAGS = {}
+_TAGS.update(bTT)
+_TAGS.update(xTT)
+_TAGS.update(pTT)
+_TAGS.update(exfT)
+_TAGS.update(gpsT)
+
+_2TAG = dict((v[0], t) for t,v in _TAGS.items())
+_2KEY = dict((v, k) for k,v in _2TAG.items())

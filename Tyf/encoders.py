@@ -38,7 +38,7 @@ def _4(value):
 
 def _5(value):
 	if not isinstance(value, tuple): value = (value, )
-	return reduce(tuple.__add__, [(f.numerator, f.denominator) for f in [fractions.Fraction(str(v)) for v in value]])
+	return reduce(tuple.__add__, [(f.numerator, f.denominator) for f in [fractions.Fraction(str(v)).limit_denominator(10000000) for v in value]])
 
 _m_s_short = -_M_short/2
 _M_s_short = _M_short/2-1

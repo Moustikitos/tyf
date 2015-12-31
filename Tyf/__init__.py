@@ -92,21 +92,19 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 
 		obj.addtag(tt)
 
-def from_buffer(obj, fileobj, offset, byteorder="<"):
+def from_buffer(obj, fileobj, offset, byteorder="<", sub_ifd={}):
 	# read data from offset
 	_read_IFD(obj, fileobj, offset, byteorder)
 	# get next ifd offset
 	next_ifd, = unpack(byteorder+"L", fileobj)
 
+	private_ifd = {34665:"Exif tag", 34853:"GPS tag"}
+	private_ifd.update(sub_ifd)
 	## read private ifd if any
-	# Exif IFD
-	if 34665 in obj:
-		obj.private_ifd[34665] = ifd.Ifd(tagname="Exif tag")
-		_read_IFD(obj.private_ifd[34665], fileobj, obj[34665], byteorder)
-	# GPS IFD
-	if 34853 in obj:
-		obj.private_ifd[34853] = ifd.Ifd(tagname="GPS tag")
-		_read_IFD(obj.private_ifd[34853], fileobj, obj[34853], byteorder)
+	for key,value in private_ifd.items():
+		if key in obj:
+			obj.private_ifd[key] = ifd.Ifd(tagname=value)
+			_read_IFD(obj.private_ifd[key], fileobj, obj[key], byteorder)
 
 	## read raster data if any
 	# striped raster data
@@ -333,8 +331,8 @@ class JpegFile(collections.OrderedDict):
 				string.seek(0)
 				if first in [0x4d4d, 0x4949]:
 					markers[marker] = TiffFile(string, first)
-				else: #if first == 0x2f6e -> /ns.adobe.com/xap/1.0 <xpacket>
-					pass #setattr(markers, "_0xffe1", string.getvalue())
+				else:
+					setattr(markers, "_0xffe1", string.getvalue())
 			else:
 				markers[marker] = fileobj.read(count-2)
 
