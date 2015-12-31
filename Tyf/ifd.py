@@ -102,12 +102,12 @@ class Ifd(dict):
 		if isinstance(tag, str): tag = _2TAG[tag]
 		if tag in tags.exfT:
 			if not 34665 in self.private_ifd:
-				self.addtag(TiffTag(34665, 4, 0, name=self.tagname))
+				# self.addtag(TiffTag(34665, 4, 0, name=self.tagname))
 				self.private_ifd[34665] = Ifd(tagname="Exif tag")
 			self.private_ifd[34665].addtag(TiffTag(tag, value=value))
 		elif tag in tags.gpsT:
 			if not 34853 in self.private_ifd:
-				self.addtag(TiffTag(34853, 4, 0, name=self.tagname))
+				# self.addtag(TiffTag(34853, 4, 0, name=self.tagname))
 				self.private_ifd[34853] = Ifd(tagname="GPS tag")
 			self.private_ifd[34853].addtag(TiffTag(tag, value=value))
 		else:
@@ -119,6 +119,11 @@ class Ifd(dict):
 			except KeyError: pass
 		if isinstance(tag, str): tag = _2TAG[tag]
 		return dict.__getitem__(self, tag)._decode()
+
+	def _check_sub_ifd(self):
+		for key in self.private_ifd:
+			if key not in self:
+				self.addtag(TiffTag(key, 4, 0, name=self.tagname))
 
 	def set(self, tag, typ, count, value):
 		tifftag = TiffTag(tag=tag, type=typ, name=self.tagname)

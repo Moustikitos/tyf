@@ -197,6 +197,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 	return next_ifd_offset
 
 def to_buffer(obj, fileobj, offset, byteorder="<"):
+	obj._check_sub_ifd()
 	size = obj.size
 
 	raw_offset = offset + size["ifd"] + size["data"]

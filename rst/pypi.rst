@@ -48,30 +48,30 @@ another one for the thumbnail.
 >>> type(jpg[0xffe1])
 <class 'Tyf.TiffFile'>
 >>> jpg.exif # shortcut to jpg[0xffe1][0]
-{256: <Tiff tag : ImageWidth (0x100) = 2560>, 257: <Tiff tag : ImageLength (0x101) = 192
-0>, 34853: <Tiff tag : GPS IFD (0x8825) = 572>, 34665: <Tiff tag : Exif IFD (0x8769) = 1
-76>, 306: <Tiff tag : DateTime (0x132) = 2015:07:30 21:01:16>, 271: <Tiff tag : Make (0x
-10f) = Google>, 272: <Tiff tag : Model (0x110) = Nexus S>, 305: <Tiff tag : Software (0x
-131) = KVT49L>, 274: <Tiff tag : Orientation (0x112) = 1> :: "Normal", 531: <Tiff tag : 
-YCbCrPositioning (0x213) = 1> :: "Centered"}
+{256: <Tiff tag 0x100: ImageWidth = (2560,)>, 305: <Tiff tag 0x131: Software = b'KVT49L\x
+00'>, 274: <Tiff tag 0x112: Orientation = (1,)> := 'Normal', 531: <Tiff tag 0x213: YCbCrP
+ositioning = (1,)> := 'Centered', 34853: <Tiff tag 0x8825: GPS IFD = (572,)>, 257: <Tiff 
+tag 0x101: ImageLength = (1920,)>, 34665: <Tiff tag 0x8769: Exif IFD = (176,)>, 306: <Tif
+f tag 0x132: DateTime = b'2015:07:30 21:01:16\x00'>, 272: <Tiff tag 0x110: Model = b'Nexu
+s S\x00'>, 271: <Tiff tag 0x10f: Make = b'Google\x00'>}
 >>> jpg.ifd1 # shortcut to jpg[0xffe1][1]
-{256: <Tiff tag : ImageWidth (0x100) = 320>, 257: <Tiff tag : ImageLength (0x101) = 240>,
- 514: <Tiff tag : JPEGInterchangeFormatLength (0x202) = 9624>, 259: <Tiff tag : Compressi
-on (0x103) = 6> :: "JPEG", 513: <Tiff tag : JPEGInterchangeFormat (0x201) = 966>, 296: <T
-iff tag : ResolutionUnit (0x128) = 2> :: "Inch", 274: <Tiff tag : Orientation (0x112) = 1
-> :: "Normal", 282: <Tiff tag : XResolution (0x11a) = 72.0>, 283: <Tiff tag : YResolution
- (0x11b) = 72.0>}
+{256: <Tiff tag 0x100: ImageWidth = (320,)>, 257: <Tiff tag 0x101: ImageLength = (240,)>,
+ 274: <Tiff tag 0x112: Orientation = (1,)> := 'Normal', 259: <Tiff tag 0x103: Compression
+ = (6,)> := 'JPEG', 513: <Tiff tag 0x201: JPEGInterchangeFormat = (966,)>, 296: <Tiff tag
+ 0x128: ResolutionUnit = (2,)> := 'Inch', 282: <Tiff tag 0x11a: XResolution = (72, 1)>, 2
+83: <Tiff tag 0x11b: YResolution = (72, 1)>, 514: <Tiff tag 0x202: JPEGInterchangeFormatL
+ength = (9624,)>}
 
 All information, including GPS and Exif IFD are available using ``.tags()`` 
 method of its first item
 
 >>> for tag in jpg.exif.tags(): print(tag)
 ...
-<Tiff tag : ImageWidth (0x100) = 2560>
-<Tiff tag : ImageLength (0x101) = 1920>
+<Tiff tag 0x100: ImageWidth = (2560,)>
+<Tiff tag 0x101: ImageLength = (1920,)>
 [...]
-<GPS tag : GPSProcessingMethod (0x1b) = NETWORK>
-<GPS tag : GPSDateStamp (0x1d) = 2015:07:30>
+<GPS tag 0x1b: GPSProcessingMethod = b'ASCII\x00\x00\x00NETWORK'>
+<GPS tag 0x1d: GPSDateStamp = b'2015:07:30\x00'>
 
 ``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker 
 ``0xffe1``. Each IFD is a dictionary containing tag-value pair and raster data 
@@ -79,22 +79,22 @@ if any is found.
 
 >>> for tag in tif[0].tags(): print(tag)
 ...
-<Tiff tag : ImageWidth (0x100) = 514>
-<Tiff tag : ImageLength (0x101) = 515>
+<Tiff tag 0x100: ImageWidth = (514,)>
+<Tiff tag 0x101: ImageLength = (515,)>
 [...]
-<Tiff tag : GeoDoubleParamsTag (0x87b0) = (-117.333333333333, 33.75, 0.0, 0.0)>
-<Tiff tag : GeoAsciiParamsTag (0x87b1) = b'unnamed|NAD27|'>
+<Tiff tag 0x87b0: GeoDoubleParamsTag = (-117.333333333333, 33.75, 0.0, 0.0)>
+<Tiff tag 0x87b1: GeoAsciiParamsTag = b'unnamed|NAD27|\x00'>
 
 Geotiff data can also be extracted from IFD.
 
 >>> geotiff = tif.gkd[0] # geotiff from the first ifd
 >>> for tag in geotiff.tags(): print(tag)
 ...
-<GeoTiff Tag : GTModelTypeGeoKey (0x400) = 1> :: "Projection Coordinate System"
-<GeoTiff Tag : GTRasterTypeGeoKey (0x401) = 1> :: "Raster pixel is area"
+<Geotiff Tag 0x400: GTModelTypeGeoKey = (1,)> := 'Projection Coordinate System'
+<Geotiff Tag 0x401: GTRasterTypeGeoKey = (1,)> := 'Raster pixel is area'
 [...]
-<GeoTiff Tag : ProjFalseEastingGeoKey (0xc0a) = 0.0>
-<GeoTiff Tag : ProjFalseNorthingGeoKey (0xc0b) = 0.0>
+<Geotiff Tag 0xc0a: ProjFalseEastingGeoKey = (0.0,)>
+<Geotiff Tag 0xc0b: ProjFalseNorthingGeoKey = (0.0,)>
 >>> mt = geotiff.getModelTransformation()
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
@@ -130,6 +130,7 @@ b'N'
 >>> out.close()
 
 .. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+   :align: center
 
 1.0b0
 
@@ -167,7 +168,7 @@ https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 
 + added hability to read custom sub IFD
 + rational encoder fix
-+ ``__repr__`` format update and show raw value
++ ``__repr__`` format update
 
 Todo
 ====
