@@ -2,7 +2,6 @@
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 from . import reduce
 import math, fractions, datetime
-
 ###############
 # type encoders
 

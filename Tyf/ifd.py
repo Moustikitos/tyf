@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
-from . import tags, encoders, decoders, reduce, values, TYPES
+from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
 import struct, fractions
 
 _TAGS = tags._TAGS
@@ -149,3 +149,25 @@ class Ifd(dict):
 		for i in self.sub_ifd.values():
 			for v in sorted(dict.values(i), key=lambda e:e.tag):
 				yield v
+
+	def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
+		if set([1,2,3,4]) <= set(self.gps_ifd.keys()):
+			latitude = self.gps_ifd[1] * self.gps_ifd[2]
+			longitude = self.gps_ifd[3] * self.gps_ifd[4]
+			opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
+				latitude, longitude,
+				zoom, size, mcolor,
+				latitude, longitude,
+				format, scale
+			))
+			return StringIO(opener.read())
+		else:
+			return False
+
+	def dump_location(self, tilename, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
+		fileobj = self.load_location(zoom, size, mcolor, format, scale)
+		if fileobj:
+			out = io.open(os.path.splitext(tilename)[0] + "."+format, "wb")
+			out.write(fileobj.getvalue())
+			out.close()
+		del fileobj

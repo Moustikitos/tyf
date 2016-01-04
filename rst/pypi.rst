@@ -52,7 +52,7 @@ Quick view
 >>> ifd.exif_ifd
 {37510: <Exif tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commentaire'>}
 
-Thumbnail location can be dumped from google ``staticmap`` API if all latitude and longitude tags exists.
+Thumbnail location can be dumped from google ``staticmap`` API if all latitude and longitude tags exist.
 
 >>> ifd["GPSLatitude"] = ifd["GPSLatitudeRef"] = 48.958474
 >>> ifd["GPSLongitude"] = ifd["GPSLongitudeRef"] = 4.362743
@@ -159,6 +159,12 @@ JPEG or TIFF thumbnail embeded in JPEG file can be extracted into a single file
 >>> jpg.save_thumbnail(".\test_thumb") # file extension will be appended automaticaly
 
 .. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+
+And because ``JpegFile.exif`` is actually a shortcut to a ``Tyf.ifd.Ifd`` instance :
+
+>>> jpg.exif.dump_location("./pypi_test_location1", format="jpg")
+
+.. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/pypi_test_location1.jpg
 
 ``TiffFile``
 ------------

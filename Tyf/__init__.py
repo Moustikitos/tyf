@@ -32,8 +32,10 @@ if sys.version_info[0] >= 3:
 	import functools
 	reduce = functools.reduce
 	long = int
+	import urllib.request as urllib
 else:
 	from StringIO import StringIO
+	import urllib
 	reduce = __builtins__["reduce"]
 
 from . import ifd, gkd, tags
@@ -428,7 +430,6 @@ class JpegFile(collections.OrderedDict):
 				self[0xffe1].save(fileobj, idx=1)
 
 			if _close: fileobj.close()
-
 
 def open(f):
 	if hasattr(f, "close"):
