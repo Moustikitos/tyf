@@ -40,7 +40,8 @@ Quick view
 ``Ifd``
 -------
 
->>> ifd = Tyf.ifd.Ifd()
+>>> from Tyf import tags
+>>> ifd = Tyf.ifd.Ifd(sub_ifd={34853:[tags.gpsT,"GPS tag"],34665:[tags.exfT,"Exif tag"]})
 >>> ifd["UserComment"] = "Simple commentaire"
 >>> ifd["GPSLongitude"] = 3.5
 >>> ifd["Copyright"] = "Bruno THOORENS"
@@ -51,6 +52,14 @@ Quick view
 >>> ifd.exif_ifd
 {37510: <Exif tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commentaire'>}
 
+Thumbnail location can be dumped from google ``staticmap`` API if all latitude and longitude tags exists.
+
+>>> ifd["GPSLatitude"] = ifd["GPSLatitudeRef"] = 48.958474
+>>> ifd["GPSLongitude"] = ifd["GPSLongitudeRef"] = 4.362743
+>>> ifd.dump_location("./pypi_test_location", format="jpg")
+
+.. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/pypi_test_location.jpg
+
 ``to_buffer``
 -------------
 
@@ -59,15 +68,17 @@ Quick view
 >>> Tyf.to_buffer(ifd, s, offset=0)
 173
 >>> s.getvalue()
-b'\x03\x00\x98\x82\x02\x00\x0f\x00\x00\x00*\x00\x00\x00i\x87\x04\x00\x01\x00\x00\x00;\x00
-\x00\x00%\x88\x04\x00\x01\x00\x00\x00i\x00\x00\x00\x00\x00\x00\x00Bruno THOORENS\x00\x00\
-x00\x01\x00\x86\x92\x07\x00\x1a\x00\x00\x00M\x00\x00\x00\x00\x00\x00\x00ASCII\x00\x00\x00
-Simple commentaire\x00\x00\x01\x00\x04\x00\x05\x00\x03\x00\x00\x00{\x00\x00\x00\x00\x00\x
-00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x1e\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x0
-1\x00\x00\x00'
+b'\x03\x00\x98\x82\x02\x00\x0f\x00\x00\x00*\x00\x00\x00%\x88\x04\x00\x01\x00\x00\x00U\x00
+\x00\x00\x86\x92\x07\x00\x1a\x00\x00\x009\x00\x00\x00\x00\x00\x00\x00Bruno THOORENS\x00AS
+CII\x00\x00\x00Simple commentaire\x00\x00\x04\x00\x01\x00\x02\x00\x02\x00\x00\x00N\x00\x0
+0\x00\x02\x00\x05\x00\x03\x00\x00\x00\x8b\x00\x00\x00\x03\x00\x02\x00\x02\x00\x00\x00E\x0
+0\x00\x00\x04\x00\x05\x00\x03\x00\x00\x00\xa3\x00\x00\x00\x00\x00\x00\x000\x00\x00\x00\x0
+1\x00\x00\x009\x00\x00\x00\x01\x00\x00\x00\xf5\x94\x00\x00\xe2\x04\x00\x00\x04\x00\x00\x0
+0\x01\x00\x00\x00\x15\x00\x00\x00\x01\x00\x00\x00\xff\xbf\x01\x00\xc4\t\x00\x00'
 >>> ifd # tags have been automaticaly added to localize SubIFD in main IFD data
-{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34665: <Tiff tag 0x8769: Ex
-if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
+{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34853: <Tiff tag 0x8825: GP
+S IFD = (85,)>, 37510: <Tiff tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commenta
+ire'>}
 
 ``from_buffer``
 ---------------
@@ -77,16 +88,19 @@ if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
 >>> Tyf.from_buffer(ifd1, s, offset=0)
 0
 >>> ifd1
-{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34665: <Tiff tag 0x8769: Ex
-if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
+{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34853: <Tiff tag 0x8825: GP
+S IFD = (85,)>, 37510: <Tiff tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commenta
+ire'>}
 >>> ifd1.gps_ifd
-{4: <GPS tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>}
+{1: <GPS tag 0x1: GPSLatitudeRef = b'N\x00'> := 'North latitude', 2: <GPS tag 0x2: GPSLat
+itude = (48, 1, 57, 1, 38133, 1250)>, 3: <GPS tag 0x3: GPSLongitudeRef = b'E\x00'> := 'Ea
+st longitude', 4: <GPS tag 0x4: GPSLongitude = (4, 1, 21, 1, 114687, 2500)>}
 >>> ifd1.exif_ifd
 {37510: <Exif tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commentaire'>}
 >>> ifd1["GPSLongitude"]
-3.5
->>> ifd1.get("GPSLongitude")
-<GPS tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>
+4.362743
+>>> ifd1.get(0x4)
+<GPS tag 0x4: GPSLongitude = (4, 1, 21, 1, 114687, 2500)>
 
 ``open``
 --------
