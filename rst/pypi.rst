@@ -1,4 +1,4 @@
-``Tyf`` package provides simple way to view and edit (beta) Exif data from 
+``Tyf`` package provides simple way to view and edit Exif data from 
 ``TIFF`` and ``JPEG`` files.
 
 Support this project
@@ -70,7 +70,7 @@ Simple commentaire\x00\x00\x01\x00\x04\x00\x05\x00\x03\x00\x00\x00{\x00\x00\x00\
 if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
 
 ``from_buffer``
--------------
+---------------
 
 >>> s.seek(0)
 >>> ifd1 = Tyf.ifd.Ifd()
@@ -92,7 +92,7 @@ if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
 --------
 
 ``Tyf`` package exports ``open`` function. It returns ``JpegFile`` or 
-``TiffFile`` class that enables metadata reading and writing(soon).
+``TiffFile`` class that enables metadata reading and writing.
 
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
