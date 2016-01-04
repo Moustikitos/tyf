@@ -1,10 +1,10 @@
 # -*- coding:utf-8 -*-
 __copyright__ = "Copyright © 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html"
 __author__    = "THOORENS Bruno"
-__tiff__      = (6,0)
-__geotiff__   = (1,8,1)
+__tiff__      = (6, 0)
+__geotiff__   = (1, 8, 1)
 
-import io, os, sys, struct, collections
+import io, os, sys, struct, operator, collections
 
 unpack = lambda fmt, fileobj: struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
 pack = lambda fmt, fileobj, value: fileobj.write(struct.pack(fmt, *value))
@@ -40,8 +40,6 @@ from . import ifd, gkd, tags
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<"):
-	""
-
 	# fileobj seek must be is on the start offset
 	fileobj.seek(offset)
 	# get number of entry
@@ -82,7 +80,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 			# go back to ifd entry
 			fileobj.seek(bckp)
 
-	# if value is in the ifd entry
+		# if value is in the ifd entry
 		else:
 			if typ in [2, 7]:
 				tt.value = data[:count]
@@ -92,42 +90,45 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 
 		obj.addtag(tt)
 
-def from_buffer(obj, fileobj, offset, byteorder="<", sub_ifd={}):
+def from_buffer(obj, fileobj, offset, byteorder="<", custom_sub_ifd={}):
 	# read data from offset
 	_read_IFD(obj, fileobj, offset, byteorder)
 	# get next ifd offset
 	next_ifd, = unpack(byteorder+"L", fileobj)
 
-	private_ifd = {34665:"Exif tag", 34853:"GPS tag"}
-	private_ifd.update(sub_ifd)
-	## read private ifd if any
-	for key,value in private_ifd.items():
+	# finding by default those SubIFD
+	sub_ifd = {34665:"Exif tag", 34853:"GPS tag", 40965:"Interoperability tag"}
+	# adding other SubIFD if asked
+	sub_ifd.update(custom_sub_ifd)
+	## read registered SubIFD
+	for key,value in sub_ifd.items():
 		if key in obj:
-			obj.private_ifd[key] = ifd.Ifd(tagname=value)
-			_read_IFD(obj.private_ifd[key], fileobj, obj[key], byteorder)
+			obj.sub_ifd[key] = ifd.Ifd(tagname=value)
+			_read_IFD(obj.sub_ifd[key], fileobj, obj[key], byteorder)
 
-	## read raster data if any
+	return next_ifd
+
+# for speed reason : load raster only if asked or if needed
+def _load_raster(obj, fileobj):
 	# striped raster data
 	if 273 in obj:
-		for offset,bytecount in zip(obj[273], obj[279]):
+		for offset,bytecount in zip(obj.get(273).value, obj.get(279).value):
 			fileobj.seek(offset)
 			obj.stripes += (fileobj.read(bytecount), )
 	# free raster data
 	elif 288 in obj:
-		for offset,bytecount in zip(obj[288], obj[289]):
+		for offset,bytecount in zip(obj.get(288).value, obj.get(289).value):
 			fileobj.seek(offset)
 			obj.free += (fileobj.read(bytecount), )
 	# tiled raster data
 	elif 324 in obj:
-		for offset,bytecount in zip(obj[324], obj[325]):
+		for offset,bytecount in zip(obj.get(324).value, obj.get(325).value):
 			fileobj.seek(offset)
 			obj.tiles += (fileobj.read(bytecount), )
 	# get interExchange (thumbnail data for JPEG/EXIF data)
 	if 513 in obj:
 		fileobj.seek(obj[513])
 		obj.jpegIF = fileobj.read(obj[514])
-
-	return next_ifd
 
 def _write_IFD(obj, fileobj, offset, byteorder="<"):
 	# go where obj have to be written
@@ -190,72 +191,72 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 			data_offset = fileobj.tell()
 			# go to where I was in ifd entries
 			fileobj.seek(bckp)
-			lastt = t #
 		else:
 			fileobj.seek(step1, 1)
 
 	return next_ifd_offset
 
 def to_buffer(obj, fileobj, offset, byteorder="<"):
-	obj._check_sub_ifd()
-	size = obj.size
+	obj._check()
 
+	size = obj.size
 	raw_offset = offset + size["ifd"] + size["data"]
-	# add GPS and Exif IFD sizes...
-	for tag, p_ifd in sorted(obj.private_ifd.items(), key=lambda e:e[0]):
-		obj.set(tag, 4, 1, raw_offset)
+	# add SubIFD sizes...
+	for tag, p_ifd in sorted(obj.sub_ifd.items(), key=lambda e:e[0]):
+		obj.set(tag, 4, raw_offset)
 		size = p_ifd.size
 		raw_offset = raw_offset + size["ifd"] + size["data"]
 
 	# knowing where raw image have to be writen, update [Strip/Free/Tile]Offsets
 	if 273 in obj:
-		_279 = obj[279]
+		_279 = obj.get(279).value
 		stripoffsets = (raw_offset,)
 		for bytecount in _279[:-1]:
 			stripoffsets += (stripoffsets[-1]+bytecount, )
-		obj.set(273, 4, len(stripoffsets), stripoffsets)
+		obj.set(273, 4, stripoffsets)
 		next_ifd = stripoffsets[-1] + _279[-1]
 	elif 288 in obj:
-		_289 = obj[289]
+		_289 = obj.get(289).value
 		freeoffsets = (raw_offset,)
 		for bytecount in _289[:-1]:
 			freeoffsets += (freeoffsets[-1]+bytecount, )
-		obj.set(288, 4, len(freeoffsets), freeoffsets)
+		obj.set(288, 4, freeoffsets)
 		next_ifd = freeoffsets[-1] + _289[-1]
 	elif 324 in obj:
-		_325 = obj[325]
+		_325 = obj.get(325).value
 		tileoffsets = (raw_offset,)
 		for bytecount in _325[:-1]:
 			tileoffsets += (tileoffsets[-1]+bytecount, )
-		obj.set(324, 4, len(tileoffsets), tileoffsets)
+		obj.set(324, 4, tileoffsets)
 		next_ifd = tileoffsets[-1] + _325[-1]
 	elif 513 in obj:
 		interexchangeoffset = raw_offset
-		obj.set(513, 4, 1, raw_offset)
+		obj.set(513, 4, raw_offset)
 		next_ifd = interexchangeoffset + obj[514]
 	else:
 		next_ifd = raw_offset
 
+	# write IFD
 	next_ifd_offset = _write_IFD(obj, fileobj, offset, byteorder)
-	# write "Exif IFD" and "GPS IFD"
-	for tag, p_ifd in sorted(obj.private_ifd.items(), key=lambda e:e[0]):
+	# write SubIFD 
+	for tag, p_ifd in sorted(obj.sub_ifd.items(), key=lambda e:e[0]):
 		_write_IFD(p_ifd, fileobj, obj[tag], byteorder)
 
-	# write raw data
+	# write raster data
 	if len(obj.stripes):
-		for offset,data in zip(obj[273], obj.stripes):
+		for offset,data in zip(stripoffsets, obj.stripes):
 			fileobj.seek(offset)
 			fileobj.write(data)
 	elif len(obj.free):
-		for offset,data in zip(obj[288], obj.stripes):
+		for offset,data in zip(freeoffsets, obj.stripes):
 			fileobj.seek(offset)
 			fileobj.write(data)
 	elif len(obj.tiles):
-		for offset,data in zip(obj[324], obj.tiles):
+		for offset,data in zip(tileoffsets, obj.tiles):
 			fileobj.seek(offset)
 			fileobj.write(data)
 	elif obj.jpegIF != b"":
-		fileobj.seek(obj[513])
+		fileobj.seek(interexchangeoffset)
 		fileobj.write(obj.jpegIF)
 
 	fileobj.seek(next_ifd_offset)
@@ -265,6 +266,8 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 class TiffFile(list):
 
 	gkd = property(lambda obj: [gkd.Gkd(ifd) for ifd in obj], None, None, "list of geotiff directory")
+	has_raster = property(lambda obj: reduce(operator.__or__, [ifd.has_raster for ifd in obj]), None, None, "")
+	raster_loaded = property(lambda obj: reduce(operator.__and__, [ifd.raster_loaded for ifd in obj]), None, None, "")
 
 	def __init__(self, fileobj, byteorder=0x4949):
 		byteorder = "<" if byteorder == 0x4949 else ">"
@@ -282,7 +285,12 @@ class TiffFile(list):
 			next_ifd = from_buffer(i, fileobj, next_ifd, byteorder)
 			ifds.append(i)
 
-		fileobj.close()
+		if hasattr(fileobj, "name"):
+			self._filename = fileobj.name
+		else:
+			for i in ifds:
+				_load_raster(i, fileobj)
+
 		list.__init__(self, ifds)
 
 	def __getitem__(self, item):
@@ -290,30 +298,46 @@ class TiffFile(list):
 		else: return list.__getitem__(self, item)
 
 	def __add__(self, value):
+		self.load_raster()
 		if isinstance(value, TiffFile):
+			value.load_raster()
 			for i in value: self.append(i)
 		elif isinstance(value, ifd.Ifd):
 			self.append(value)
 		return self
+	__iadd__ = __add__
 
-	def save(self, f, byteorder="<"):
-		if hasattr(f, "close"): out = f
-		else: out = io.open(f, "wb")
-		pack(byteorder+"HH", out, (0x4949 if byteorder == "<" else 0x4d4d, 0x2A,))
+	def load_raster(self, idx=None):
+		in_ = io.open(self._filename, "rb")
+		for ifd in iter(self) if idx == None else [self[idx]]:
+			if not ifd.raster_loaded: _load_raster(ifd, in_)
+		in_.close()
+
+	def save(self, f, byteorder="<", idx=None):
+		self.load_raster()
+
+		if hasattr(f, "close"):
+			fileobj = f
+			_close = False
+		else:
+			fileobj = io.open(f, "wb")
+			_close = True
+
+		pack(byteorder+"HH", fileobj, (0x4949 if byteorder == "<" else 0x4d4d, 0x2A,))
 		next_ifd = 8
-		for i in self:
-			pack(byteorder+"L", out, (next_ifd,))
-			next_ifd = to_buffer(i, out, next_ifd, byteorder)
-		if not isinstance(out, StringIO): out.close()
+
+		for i in iter(self) if idx == None else [self[idx]]:
+			pack(byteorder+"L", fileobj, (next_ifd,))
+			next_ifd = to_buffer(i, fileobj, next_ifd, byteorder)
+
+		if _close: fileobj.close()
 
 
 class JpegFile(collections.OrderedDict):
 
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
-	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Exif data")
+	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Image IFD")
 	ifd1 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[1], None, None, "Thumbnail IFD")
-	has_thumbnail = property(lambda obj: bool(len(collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF)), None, None, "")
-	thumbnail = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[-1].jpegIF, None, None, "Thumbnail data")
 
 	def __init__(self, fileobj):
 		markers = collections.OrderedDict()
@@ -334,10 +358,10 @@ class JpegFile(collections.OrderedDict):
 					markers[marker] = TiffFile(string, first)
 				else:
 					setattr(markers, "_0xffe1", string.getvalue())
+				string.close()
 			else:
 				markers[marker] = fileobj.read(count-2)
 
-		fileobj.close()
 		collections.OrderedDict.__init__(self, markers)
 
 	def __getitem__(self, item):
@@ -358,33 +382,70 @@ class JpegFile(collections.OrderedDict):
 		fileobj.write(data)
 
 	def strip_exif(self):
-		for key in self.exif.private_ifd:
+		for key in self.exif.sub_ifd:
 			if key in self.exif: self.exif.pop(key)
-		self.exif.private_ifd = {}
+		self.exif.sub_ifd = {}
 		for key in list(k for k in self.exif if k not in tags.bTT):
 			self.exif.pop(key)
 		while len(self[0xffe1]) > 1:
 			self[0xffe1].pop(-1)
 
 	def save(self, f):
-		if hasattr(f, "close"): out = f
-		else: out = io.open(f, "wb")
-		pack(">H", out, (0xffd8,))
-		for key in self: self._pack(key, out)
-		pack(">H", out, (0xffd9,))
-		if not isinstance(out, StringIO):
-			out.close()
+		if hasattr(f, "close"):
+			fileobj = f
+			_close = False
+		else:
+			fileobj = io.open(f, "wb")
+			_close = True
+
+		pack(">H", fileobj, (0xffd8,))
+		for key in self: self._pack(key, fileobj)
+		pack(">H", fileobj, (0xffd9,))
+
+		if _close: fileobj.close()
+
+	def save_thumbnail(self, f):
+		try:
+			ifd = self.ifd1
+		except IndexError:
+			pass
+		else:
+			compression = ifd[259]
+			if hasattr(f, "close"):
+				fileobj = f
+				_close = False
+			else: 
+				fileobj = io.open(os.path.splitext(f)[0] + (".jpg" if compression == 6 else ".tif"), "wb")
+				_close = True
+
+			if compression == 6:
+				fileobj.write(ifd.jpegIF)
+			elif compression == 1:
+				self[0xffe1].save(fileobj, idx=1)
+
+			if _close: fileobj.close()
 
 
 def open(f):
-	if hasattr(f, "close"): fileobj = f
-	else: fileobj = io.open(f, "rb")
+	if hasattr(f, "close"):
+		fileobj = f
+		_close = False
+	else:
+		fileobj = io.open(f, "rb")
+		_close = True
 		
 	first, = unpack(">H", fileobj)
 	fileobj.seek(0)
 
 	if first == 0xffd8:
-		return JpegFile(fileobj)
+		obj = JpegFile(fileobj)
 
 	elif first in [0x4d4d, 0x4949]:
-		return TiffFile(fileobj, first)
+		obj = TiffFile(fileobj, first)
+
+	if _close: fileobj.close()
+	
+	try:
+		return obj
+	except:
+		raise Exception("file is not a valid JPEG nor TIFF image")

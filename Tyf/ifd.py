@@ -76,23 +76,23 @@ class TiffTag(object):
 
 class Ifd(dict):
 	tagname = "Tiff Tag"
-	readonly = [259, 270, 271, 272, 301, 306, 318, 319, 529, 532, 33432]
 
-	exif_ifd = property(lambda obj: obj.private_ifd.get(34665, {}), None, None, "shortcut toprivate ifd")
-	gps_ifd = property(lambda obj: obj.private_ifd.get(34853, {}), None, None, "shortcut toprivate ifd")
-	has_raster = property(lambda obj: bool(len(obj.stripes+obj.tiles+obj.free)), None, None, "return true if it contains raster data")
-	raster = property(lambda obj: reduce(bytes.__add__, obj.stripes+obj.tiles+obj.free), None, None, "raster data")
+	exif_ifd = property(lambda obj: obj.sub_ifd.get(34665, {}), None, None, "shortcut to EXIF sub ifd")
+	gps_ifd = property(lambda obj: obj.sub_ifd.get(34853, {}), None, None, "shortcut to GPS sub ifd")
+	has_raster = property(lambda obj: 273 in obj or 288 in obj or 324 in obj or 513 in obj, None, None, "return true if it contains raster data")
+	raster_loaded = property(lambda obj: not(obj.has_raster) or bool(len(obj.stripes+obj.tiles+obj.free)+len(obj.jpegIF)), None, None, "")
 	size = property(
 		lambda obj: {
 			"ifd": struct.calcsize("H" + (len(obj)*"HHLL") + "L"),
 			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
 		}, None, None, "return ifd-packed size and data-packed size")
-
-	def __init__(self, *args, **kwargs):
+		
+	def __init__(self, sub_ifd={34665:[tags.exfT,"Exif tag"],34853:[tags.gpsT,"GPS tag"]}, **kwargs):
+		self._sub_ifd = sub_ifd
 		setattr(self, "tagname", kwargs.pop("tagname", "Tiff tag"))
 		dict.__init__(self)
 
-		self.private_ifd = {}
+		self.sub_ifd = {}
 		self.stripes = ()
 		self.tiles = ()
 		self.free = ()
@@ -100,49 +100,52 @@ class Ifd(dict):
 
 	def __setitem__(self, tag, value):
 		if isinstance(tag, str): tag = _2TAG[tag]
-		if tag in tags.exfT:
-			if not 34665 in self.private_ifd:
-				# self.addtag(TiffTag(34665, 4, 0, name=self.tagname))
-				self.private_ifd[34665] = Ifd(tagname="Exif tag")
-			self.private_ifd[34665].addtag(TiffTag(tag, value=value))
-		elif tag in tags.gpsT:
-			if not 34853 in self.private_ifd:
-				# self.addtag(TiffTag(34853, 4, 0, name=self.tagname))
-				self.private_ifd[34853] = Ifd(tagname="GPS tag")
-			self.private_ifd[34853].addtag(TiffTag(tag, value=value))
+		for t,(ts,tname) in self._sub_ifd.items():
+			if tag in ts:
+				if not t in self.sub_ifd:
+					self.sub_ifd[t] = Ifd(sub_ifd={}, tagname=tname)
+				self.sub_ifd[t].addtag(TiffTag(tag, value=value))
+				return
 		else:
 			dict.__setitem__(self, tag, TiffTag(tag, value=value, name=self.tagname))
 
 	def __getitem__(self, tag):
-		for i in self.private_ifd.values():
+		for i in self.sub_ifd.values():
 			try: return i[tag]
 			except KeyError: pass
 		if isinstance(tag, str): tag = _2TAG[tag]
 		return dict.__getitem__(self, tag)._decode()
 
-	def _check_sub_ifd(self):
-		for key in self.private_ifd:
+	def _check(self):
+		for key in self.sub_ifd:
 			if key not in self:
 				self.addtag(TiffTag(key, 4, 0, name=self.tagname))
 
-	def set(self, tag, typ, count, value):
+	def set(self, tag, typ, value):
+		for t,(ts,tname) in self._sub_ifd.items():
+			if tag in ts:
+				if not t in self.sub_ifd:
+					self.sub_ifd[t] = Ifd(sub_ifd={}, tagname=tname)
+				self.sub_ifd[t].set(tag, typ, value)
+				return
 		tifftag = TiffTag(tag=tag, type=typ, name=self.tagname)
-		tifftag.count = count
-		tifftag.value = (value,) if count == 1 and typ not in [5, 10] else value
+		tifftag.value = (value,) if not hasattr(value, "__len__") else value
+		tifftag.name = self.tagname
 		dict.__setitem__(self, tag, tifftag)
 
 	def get(self, tag):
-		for i in self.private_ifd.values():
+		for i in self.sub_ifd.values():
 			if tag in i: return i.get(tag)
 		return dict.get(self, _2TAG[tag] if isinstance(tag, str) else tag)
 
 	def addtag(self, tifftag):
 		if isinstance(tifftag, TiffTag):
+			tifftag.name = self.tagname
 			dict.__setitem__(self, tifftag.tag, tifftag)
 
 	def tags(self):
 		for v in sorted(dict.values(self), key=lambda e:e.tag):
 			yield v
-		for i in self.private_ifd.values():
+		for i in self.sub_ifd.values():
 			for v in sorted(dict.values(i), key=lambda e:e.tag):
 				yield v

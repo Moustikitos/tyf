@@ -17,7 +17,7 @@ def _1(value):
 def _2(value):
 	if not isinstance(value, bytes):
 		value = value.encode()
-		value += b"\x00" if value[-1] != b"\x00" else ""
+	value += b"\x00" if value[-1] != b"\x00" else ""
 	return value
 
 _m_byte = 0

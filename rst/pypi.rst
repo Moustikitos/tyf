@@ -15,38 +15,105 @@ Support this project
 
 .. image:: http://bruno.thoorens.free.fr/img/wallet.png
 
-
 Quick view
 ==========
+
+>>> import Tyf
+
+``TiffTag``
+-----------
+
+>>> tifftag = Tyf.ifd.TiffTag("GPSLongitude", value=3.5)
+>>> tifftag
+<Tiff tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>
+>>> tifftag.tag
+4
+>>> tifftag.type
+5
+>>> tifftag.count
+3
+>>> tifftag.value
+(3, 1, 30, 1, 0, 1)
+>>> tifftag._decode()
+3.5
+
+``Ifd``
+-------
+
+>>> ifd = Tyf.ifd.Ifd()
+>>> ifd["UserComment"] = "Simple commentaire"
+>>> ifd["GPSLongitude"] = 3.5
+>>> ifd["Copyright"] = "Bruno THOORENS"
+>>> ifd
+{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>}
+>>> ifd.gps_ifd
+{4: <GPS tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>}
+>>> ifd.exif_ifd
+{37510: <Exif tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commentaire'>}
+
+``to_buffer``
+-------------
+
+>>> from io import BytesIO as StringIO
+>>> s = StringIO()
+>>> Tyf.to_buffer(ifd, s, offset=0)
+173
+>>> s.getvalue()
+b'\x03\x00\x98\x82\x02\x00\x0f\x00\x00\x00*\x00\x00\x00i\x87\x04\x00\x01\x00\x00\x00;\x00
+\x00\x00%\x88\x04\x00\x01\x00\x00\x00i\x00\x00\x00\x00\x00\x00\x00Bruno THOORENS\x00\x00\
+x00\x01\x00\x86\x92\x07\x00\x1a\x00\x00\x00M\x00\x00\x00\x00\x00\x00\x00ASCII\x00\x00\x00
+Simple commentaire\x00\x00\x01\x00\x04\x00\x05\x00\x03\x00\x00\x00{\x00\x00\x00\x00\x00\x
+00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x1e\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x0
+1\x00\x00\x00'
+>>> ifd # tags have been automaticaly added to localize SubIFD in main IFD data
+{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34665: <Tiff tag 0x8769: Ex
+if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
+
+``from_buffer``
+-------------
+
+>>> s.seek(0)
+>>> ifd1 = Tyf.ifd.Ifd()
+>>> Tyf.from_buffer(ifd1, s, offset=0)
+0
+>>> ifd1
+{33432: <Tiff tag 0x8298: Copyright = b'Bruno THOORENS\x00'>, 34665: <Tiff tag 0x8769: Ex
+if IFD = (59,)>, 34853: <Tiff tag 0x8825: GPS IFD = (105,)>}
+>>> ifd1.gps_ifd
+{4: <GPS tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>}
+>>> ifd1.exif_ifd
+{37510: <Exif tag 0x9286: UserComment = b'ASCII\x00\x00\x00Simple commentaire'>}
+>>> ifd1["GPSLongitude"]
+3.5
+>>> ifd1.get("GPSLongitude")
+<GPS tag 0x4: GPSLongitude = (3, 1, 30, 1, 0, 1)>
+
+``open``
+--------
 
 ``Tyf`` package exports ``open`` function. It returns ``JpegFile`` or 
 ``TiffFile`` class that enables metadata reading and writing(soon).
 
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
-
-https://raw.githubusercontent.com/Moustikitos/tyf/master/test/IMG_20150730_210115.jpg
-
 >>> tif = Tyf.open(r".\CEA.tif")
-
-https://github.com/Moustikitos/tyf/blob/master/test/CEA.tif?raw=true
-
->>> type(jpg)
-<class 'Tyf.JpegFile'>
 >>> isinstance(jpg, dict)
 True
->>> type(tif)
-<class 'Tyf.TiffFile'>
 >>> isinstance(tif, list)
 True
 
+``JpegFile``
+------------
+
 ``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file.
-Values are stored as binary data except ``0xffe1`` one stored as a  ``TiffFile``
+Values are stored as binary data except ``0xffe1`` one stored as a ``TiffFile``
 instance. It contains two image file directories (IFD), one for the image and 
 another one for the thumbnail.
 
 >>> type(jpg[0xffe1])
 <class 'Tyf.TiffFile'>
+>>> len(jpg[0xffe1])
+2
 >>> jpg.exif # shortcut to jpg[0xffe1][0]
 {256: <Tiff tag 0x100: ImageWidth = (2560,)>, 305: <Tiff tag 0x131: Software = b'KVT49L\x
 00'>, 274: <Tiff tag 0x112: Orientation = (1,)> := 'Normal', 531: <Tiff tag 0x213: YCbCrP
@@ -73,9 +140,17 @@ method of its first item
 <GPS tag 0x1b: GPSProcessingMethod = b'ASCII\x00\x00\x00NETWORK'>
 <GPS tag 0x1d: GPSDateStamp = b'2015:07:30\x00'>
 
+JPEG or TIFF thumbnail embeded in JPEG file can be extracted into a single file
+
+>>> jpg.save_thumbnail(".\test_thumb") # file extension will be appended automaticaly
+
+.. image::https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+
+``TiffFile``
+------------
+
 ``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker 
-``0xffe1``. Each IFD is a dictionary containing tag-value pair and raster data 
-if any is found.
+``0xffe1``. Each IFD is a dictionary containing tag-value pair.
 
 >>> for tag in tif[0].tags(): print(tag)
 ...
@@ -85,17 +160,27 @@ if any is found.
 <Tiff tag 0x87b0: GeoDoubleParamsTag = (-117.333333333333, 33.75, 0.0, 0.0)>
 <Tiff tag 0x87b1: GeoAsciiParamsTag = b'unnamed|NAD27|\x00'>
 
+If asked (or needed), any raster data found will be loaded.
+
+>>> tif.has_raster
+True
+>>> tif.raster_loaded
+False
+>>> tif.load_raster()
+>>> tif.raster_loaded
+True
+
 Geotiff data can also be extracted from IFD.
 
->>> geotiff = tif.gkd[0] # geotiff from the first ifd
->>> for tag in geotiff.tags(): print(tag)
+>>> geotiff = tif.gkd
+>>> for tag in geotiff[0].tags(): print(tag) # geotiff from the first ifd
 ...
 <Geotiff Tag 0x400: GTModelTypeGeoKey = (1,)> := 'Projection Coordinate System'
 <Geotiff Tag 0x401: GTRasterTypeGeoKey = (1,)> := 'Raster pixel is area'
 [...]
 <Geotiff Tag 0xc0a: ProjFalseEastingGeoKey = (0.0,)>
 <Geotiff Tag 0xc0b: ProjFalseNorthingGeoKey = (0.0,)>
->>> mt = geotiff.getModelTransformation()
+>>> mt = geotiff[0].getModelTransformation()
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
 
@@ -106,17 +191,6 @@ Changes
 
 + first consistant release
 
->>> tif[0]["ImageWidth"]
-514
->>> tif[0, "ImageWidth"]
-514
->>> geotiff["ProjNatOriginLongGeoKey"]
--117.333333333333
->>> jpg["GPSLatitudeRef"]
-b'N'
->>> jpg["GPSLatitude"]
-51.2095416
-
 0.9a1
 
 + multiple IFD management with ``TiffFile`` class
@@ -124,33 +198,12 @@ b'N'
 + full ``JPEG`` Exif read (IFD0 and IFD1 for ``0xffe1`` marker)
 + added ``thumbnail`` property for ``JpegFile`` class
 
->>> # simple way to extract JPEG thumbnail
->>> out = open(r".\test_thumb.jpg", "wb")
->>> out.write(jpg.thumbnail)
->>> out.close()
-
-.. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
-   :align: center
-
 1.0b0
 
 + added ``gkd`` property for ``TiffFile`` class
 + added ``exif`` property for ``JpegFile`` class
 + read/write ifd and exif data
-
->>> tif[0]["Copyright"] = b"Simple commentaire en ascii"
->>> tif[0]["UserComment"] = b"ASCII\x00\x00\x00Simple commentaire en ascii"
-
 + ``TiffFile`` concatenation using ``+`` operator (i.e. multi image ``TIFF`` file)
-
->>> tif2 = Tyf.open(r".\SP27GTIF.tif")
-
-https://github.com/Moustikitos/tyf/blob/master/test/SP27GTIF.TIF?raw=true
-
->>> tif += tif2
->>> tif.save(r".\test.tif")
-
-https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 
 1.0b1
 
@@ -169,9 +222,19 @@ https://github.com/Moustikitos/tyf/blob/master/test/test.tif?raw=true
 + added hability to read custom sub IFD
 + rational encoder fix
 + ``__repr__`` format update
++ removed ``thumbnail`` property for ``JpegFile`` class
+
+1.1.2
+
++ ``JpegFile`` class now handle JPEG and TIFF thumbnail
++ added ``save_thumbnail`` method for ``JpegFile`` class
++ ``TiffFile`` raster data loaded only if needed or on demand
++ added ``load_raster`` method for ``TiffFile`` class
++ ``_2`` encoder fix
++ code tweaks
 
 Todo
 ====
 
-+ command line utility script
++ command line scripts
 + API documentation
