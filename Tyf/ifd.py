@@ -87,7 +87,7 @@ class Ifd(dict):
 			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
 		}, None, None, "return ifd-packed size and data-packed size")
 		
-	def __init__(self, sub_ifd={34665:[tags.exfT,"Exif tag"],34853:[tags.gpsT,"GPS tag"]}, **kwargs):
+	def __init__(self, sub_ifd={}, **kwargs):
 		self._sub_ifd = sub_ifd
 		setattr(self, "tagname", kwargs.pop("tagname", "Tiff tag"))
 		dict.__init__(self)

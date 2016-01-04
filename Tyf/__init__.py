@@ -281,7 +281,10 @@ class TiffFile(list):
 
 		ifds = []
 		while next_ifd != 0:
-			i = ifd.Ifd("private")
+			i = ifd.Ifd(sub_ifd={
+				34665:[tags.exfT,"Exif tag"],
+				34853:[tags.gpsT,"GPS tag"]
+			})
 			next_ifd = from_buffer(i, fileobj, next_ifd, byteorder)
 			ifds.append(i)
 
@@ -308,10 +311,11 @@ class TiffFile(list):
 	__iadd__ = __add__
 
 	def load_raster(self, idx=None):
-		in_ = io.open(self._filename, "rb")
-		for ifd in iter(self) if idx == None else [self[idx]]:
-			if not ifd.raster_loaded: _load_raster(ifd, in_)
-		in_.close()
+		if hasattr(self, "_filename"):
+			in_ = io.open(self._filename, "rb")
+			for ifd in iter(self) if idx == None else [self[idx]]:
+				if not ifd.raster_loaded: _load_raster(ifd, in_)
+			in_.close()
 
 	def save(self, f, byteorder="<", idx=None):
 		self.load_raster()

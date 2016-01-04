@@ -144,7 +144,7 @@ JPEG or TIFF thumbnail embeded in JPEG file can be extracted into a single file
 
 >>> jpg.save_thumbnail(".\test_thumb") # file extension will be appended automaticaly
 
-.. image::https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+.. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
 
 ``TiffFile``
 ------------
