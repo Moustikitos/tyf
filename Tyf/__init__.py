@@ -265,16 +265,30 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 	return next_ifd
 
 
+def _fileobj(f, mode):
+	if hasattr(f, "close"):
+		fileobj = f
+		_close = False
+	else:
+		fileobj = io.open(f, mode)
+		_close = True
+
+	return fileobj, _close
+
+
 class TiffFile(list):
 
 	gkd = property(lambda obj: [gkd.Gkd(ifd) for ifd in obj], None, None, "list of geotiff directory")
 	has_raster = property(lambda obj: reduce(operator.__or__, [ifd.has_raster for ifd in obj]), None, None, "")
 	raster_loaded = property(lambda obj: reduce(operator.__and__, [ifd.raster_loaded for ifd in obj]), None, None, "")
 
-	def __init__(self, fileobj, byteorder=0x4949):
-		byteorder = "<" if byteorder == 0x4949 else ">"
+	def __init__(self, fileobj):
+		"""Initialize a TiffFile object from buffer fileobj, fileobj have to be in 'wb' mode"""
 
-		fileobj.seek(2)
+		# determine byteorder
+		first, = unpack(">H", fileobj)
+		byteorder = "<" if first == 0x4949 else ">"
+
 		magic_number, = unpack(byteorder+"H", fileobj)
 		if magic_number != 0x2A: # 42
 			fileobj.close()
@@ -321,13 +335,7 @@ class TiffFile(list):
 
 	def save(self, f, byteorder="<", idx=None):
 		self.load_raster()
-
-		if hasattr(f, "close"):
-			fileobj = f
-			_close = False
-		else:
-			fileobj = io.open(f, "wb")
-			_close = True
+		fileobj, _close = _fileobj(f, "wb")
 
 		pack(byteorder+"HH", fileobj, (0x4949 if byteorder == "<" else 0x4d4d, 0x2A,))
 		next_ifd = 8
@@ -358,12 +366,8 @@ class JpegFile(collections.OrderedDict):
 				marker = 0xffd9
 			elif marker == 0xffe1:
 				string = StringIO(fileobj.read(count-2)[6:])
-				first, = unpack(">H", string)
-				string.seek(0)
-				if first in [0x4d4d, 0x4949]:
-					markers[marker] = TiffFile(string, first)
-				else:
-					setattr(markers, "_0xffe1", string.getvalue())
+				try: markers[marker] = TiffFile(string)
+				except: setattr(markers, "_0xffe1", string.getvalue())
 				string.close()
 			else:
 				markers[marker] = fileobj.read(count-2)
@@ -383,26 +387,13 @@ class JpegFile(collections.OrderedDict):
 			self[marker].save(string)
 			data = b"Exif\x00\x00" + string.getvalue()
 			pack(">HH", fileobj, (marker, len(data) + 2))
+			string.close()
 		else:
 			pack(">HH", fileobj, (marker, len(data) + 2))
 		fileobj.write(data)
 
-	def strip_exif(self):
-		for key in self.exif.sub_ifd:
-			if key in self.exif: self.exif.pop(key)
-		self.exif.sub_ifd = {}
-		for key in list(k for k in self.exif if k not in tags.bTT):
-			self.exif.pop(key)
-		while len(self[0xffe1]) > 1:
-			self[0xffe1].pop(-1)
-
 	def save(self, f):
-		if hasattr(f, "close"):
-			fileobj = f
-			_close = False
-		else:
-			fileobj = io.open(f, "wb")
-			_close = True
+		fileobj, _close = _fileobj(f, "wb")
 
 		pack(">H", fileobj, (0xffd8,))
 		for key in self: self._pack(key, fileobj)
@@ -431,13 +422,29 @@ class JpegFile(collections.OrderedDict):
 
 			if _close: fileobj.close()
 
+	def dump_exif(self, f):
+		fileobj, _close = _fileobj(f, "wb")
+		self[0xffe1].save(fileobj)
+		if _close: fileobj.close()
+
+	def load_exif(self, f):
+		fileobj, _close = _fileobj(f, "rb")
+		self[0xffe1] = TiffFile(fileobj)
+		self[0xffe1].load_raster()
+		if _close: fileobj.close()
+
+	def strip_exif(self):
+		for key in [k for k in self.exif.sub_ifd if k in self.exif]:
+			self.exif.pop(key)
+		self.exif.sub_ifd = {}
+		for key in list(k for k in self.exif if k not in tags.bTT):
+			self.exif.pop(key)
+		while len(self[0xffe1]) > 1:
+			self[0xffe1].pop(-1)
+
+
 def open(f):
-	if hasattr(f, "close"):
-		fileobj = f
-		_close = False
-	else:
-		fileobj = io.open(f, "rb")
-		_close = True
+	fileobj, _close = _fileobj(f, "rb")
 		
 	first, = unpack(">H", fileobj)
 	fileobj.seek(0)
@@ -446,7 +453,7 @@ def open(f):
 		obj = JpegFile(fileobj)
 
 	elif first in [0x4d4d, 0x4949]:
-		obj = TiffFile(fileobj, first)
+		obj = TiffFile(fileobj)
 
 	if _close: fileobj.close()
 	

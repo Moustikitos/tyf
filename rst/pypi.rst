@@ -1,20 +1,6 @@
 ``Tyf`` package provides simple way to view and edit Exif data from 
 ``TIFF`` and ``JPEG`` files.
 
-Support this project
-====================
-
-.. image:: http://bruno.thoorens.free.fr/img/gratipay.png
-   :target: https://gratipay.com/tyf
-
----
-
-.. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
-
-1WJfDP1F2QTgqQhCT53KmhRwQSUkKRHgh
-
-.. image:: http://bruno.thoorens.free.fr/img/wallet.png
-
 Quick view
 ==========
 
@@ -204,6 +190,20 @@ Geotiff data can also be extracted from IFD.
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
 
+Support this project
+====================
+
+.. image:: http://bruno.thoorens.free.fr/img/gratipay.png
+   :target: https://gratipay.com/tyf
+
+---
+
+.. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
+
+1WJfDP1F2QTgqQhCT53KmhRwQSUkKRHgh
+
+.. image:: http://bruno.thoorens.free.fr/img/wallet.png
+
 Changes
 =======
 
@@ -233,14 +233,14 @@ Changes
 1.1b0
 
 + added encoders / decoders
-+ added ``ifd1`` to ``JpegFile`` class
-+ added ``exif_ifd`` to ``Ifd`` class
-+ added ``gps_ifd`` to ``Ifd`` class
++ added ``ifd1`` property to ``JpegFile`` class
++ added ``exif_ifd`` property to ``Ifd`` class
++ added ``gps_ifd`` property to ``Ifd`` class
 
 1.1.1
 
 + added hability to read custom sub IFD
-+ rational encoder fix
++ ``_5`` encoder fix (rational encoder)
 + ``__repr__`` format update
 + removed ``thumbnail`` property for ``JpegFile`` class
 
@@ -250,8 +250,13 @@ Changes
 + added ``save_thumbnail`` method for ``JpegFile`` class
 + ``TiffFile`` raster data loaded only if needed or on demand
 + added ``load_raster`` method for ``TiffFile`` class
-+ ``_2`` encoder fix
++ ``_2`` encoder fix (ascii encoder)
 + code tweaks
+
+1.1.3
+
++ added ``load_location`` & ``dump_location`` to ``Ifd`` class
++ added ``dump_exif`` & ``load_exif`` to ``JpegFile`` class
 
 Todo
 ====

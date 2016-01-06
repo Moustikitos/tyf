@@ -285,12 +285,33 @@ gpsT = {
 	30: ("GPSDifferential", [1], None, "Indicates whether differential correction is applied to the GPS receiver"),
 }
 
-_TAGS = {}
-_TAGS.update(bTT)
-_TAGS.update(xTT)
-_TAGS.update(pTT)
-_TAGS.update(exfT)
-_TAGS.update(gpsT)
+_TAG_FAMILIES = [bTT, xTT, pTT, exfT, gpsT]
+_TAG_FAMILIES_2TAG = [dict((v[0], t) for t,v in dic.items()) for dic in _TAG_FAMILIES]
+_TAG_FAMILIES_2KEY = [dict((v, k) for k,v in dic.items()) for dic in _TAG_FAMILIES_2TAG]
 
-_2TAG = dict((v[0], t) for t,v in _TAGS.items())
-_2KEY = dict((v, k) for k,v in _2TAG.items())
+def get(tag):
+	idx = 0
+	for dic in _TAG_FAMILIES:
+		if isinstance(tag, (bytes, str)):
+			tag = _TAG_FAMILIES_2TAG[idx][tag]
+		if tag in dic:
+			return dic[tag]
+	return ("Unknown", [4], None, "Undefined tag 0x%x"%tag)
+
+def _2tag(tag, family=None):
+	if family != None:
+		idx = _TAG_FAMILIES.index(family)
+		if isinstance(tag, (bytes, str)):
+			if tag in _TAG_FAMILIES_2TAG[idx]:
+				return _TAG_FAMILIES_2TAG[idx][tag]
+			return tag
+		else:
+			return tag
+	elif isinstance(tag, (bytes, str)):
+		for dic in _TAG_FAMILIES_2TAG:
+			if tag in dic:
+				return dic[tag]
+		return tag
+	else:
+		return tag
+	

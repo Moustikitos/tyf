@@ -101,10 +101,12 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+*.exif
 test/test.jpg
 test/Profil.jpg
 test/CEA_copy.tif
 test/c41078a1.tif
 test/BOGOTA.tif
 test/IMG_20150730_210115 - Copie.jpg
+test/tumbnail.jpg
 test/test2.jpg
