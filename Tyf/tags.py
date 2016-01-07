@@ -1,4 +1,4 @@
-# -*- encding:utf-8 -*-
+# -*- encoding:utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 # ~ http://wwwawaresystemsbe/imaging/tiff/tifftagshtml
 from . import values
@@ -314,4 +314,3 @@ def _2tag(tag, family=None):
 		return tag
 	else:
 		return tag
-	

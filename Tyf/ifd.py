@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- encoding:utf-8 -*-
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
 from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO

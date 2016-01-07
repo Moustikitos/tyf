@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# -*- encoding:utf-8 -*-
 __copyright__ = "Copyright © 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html"
 __author__    = "THOORENS Bruno"
 __tiff__      = (6, 0)
