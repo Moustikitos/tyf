@@ -1,5 +1,4 @@
 # `Tyf`
-<img src="http://bruno.thoorens.free.fr/img/tyf.png" height="100px" />
 
 [![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/tyf.html)
 
