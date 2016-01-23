@@ -21,9 +21,9 @@ kw.update(**{
 	"description": "Pythonic way to read and edit IFD and EXIF tags.",
 	"long_description": long_description.read(),
 	"packages": ["Tyf"],
-	"license": "Copyright 2015, THOORENS Bruno, BSD licence",
+	"license": "Copyright 2015-2016, THOORENS Bruno, BSD licence",
 	"classifiers": [
-		'Development Status :: 5 - Production/Stable',
+		'Development Status :: 6 - Mature',
 		'Environment :: Console',
 		'Intended Audience :: Developers',
 		'Intended Audience :: Information Technology',

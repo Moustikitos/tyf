@@ -42,14 +42,14 @@ from . import ifd, gkd, tags
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<"):
-	# fileobj seek must be is on the start offset
+	# fileobj seek must be on the start offset
 	fileobj.seek(offset)
 	# get number of entry
 	nb_entry, = unpack(byteorder+"H", fileobj)
 
 	# for each entry 
 	for i in range(nb_entry):
-		# read tag, type and cound values
+		# read tag, type and count values
 		tag, typ, count = unpack(byteorder+"HHL", fileobj)
 		# extract data
 		data = fileobj.read(struct.calcsize("L"))
@@ -356,6 +356,7 @@ class JpegFile(collections.OrderedDict):
 	def __init__(self, fileobj):
 		markers = collections.OrderedDict()
 		marker, = unpack(">H", fileobj)
+		if marker != 0xffd8: raise Exception("not a valid jpeg file")
 		while marker != 0xffd9: # EOI (End Of Image) Marker
 			marker, count = unpack(">HH", fileobj)
 			# here is raster data marker, copy all after marker id
@@ -443,6 +444,25 @@ class JpegFile(collections.OrderedDict):
 			self[0xffe1].pop(-1)
 
 
+def jpeg_extract(f):
+	fileobj, _close = _fileobj(f, "rb")
+
+	ifd = False
+	marker, = unpack(">H", fileobj)
+	if marker != 0xffd8: raise Exception("not a valid jpeg file")
+	while marker != 0xffd9: # EOI (End Of Image) Marker
+		marker, count = unpack(">HH", fileobj)
+		if marker == 0xffe1:
+			string = StringIO(fileobj.read(count-2)[6:])
+			ifd = TiffFile(string)
+			string.close()
+			marker = 0xffd9
+		else:
+			fileobj.read(count-2)
+
+	if _close: fileobj.close()
+	return ifd
+
 def open(f):
 	fileobj, _close = _fileobj(f, "rb")
 		
@@ -461,3 +481,53 @@ def open(f):
 		return obj
 	except:
 		raise Exception("file is not a valid JPEG nor TIFF image")
+
+
+# if PIL exists do some overridings
+try:
+	from PIL import Image as _Image 
+
+except ImportError:
+	pass
+
+else:
+
+	def _getexif(im):
+		try:
+			data = im.info["exif"]
+		except KeyError:
+			return None
+		fileobj = io.BytesIO(data[6:])
+		exif = TiffFile(fileobj)
+		fileobj.close()
+		return exif
+
+
+	class Image(_Image.Image):
+
+		_image_ = _Image.Image
+
+		@staticmethod
+		def open(*args, **kwargs):
+			return _Image.open(*args, **kwargs)
+
+		def save(self, fp, format=None, **params):
+
+			ifd = params.pop("ifd", False)
+			if ifd != False:
+				fileobj = StringIO()
+				if isinstance(ifd, TiffFile):
+					ifd.load_raster()
+					ifd.save(fileobj)
+				elif isinstance(ifd, JpegFile):
+					ifd[0xffe1].save(fileobj)
+				data = fileobj.getvalue()
+				fileobj.close()
+				if len(data) > 0:
+					params["exif"] = b"Exif\x00\x00" + (data.encode() if isinstance(data, str) else data)
+
+			Image._image_.save(self, fp, format=None, **params)
+	_Image.Image = Image
+
+	from PIL import JpegImagePlugin
+	JpegImagePlugin._getexif = _getexif

@@ -42,7 +42,7 @@ Thumbnail location can be dumped from google ``staticmap`` API if all latitude a
 
 >>> ifd["GPSLatitude"] = ifd["GPSLatitudeRef"] = 48.958474
 >>> ifd["GPSLongitude"] = ifd["GPSLongitudeRef"] = 4.362743
->>> ifd.dump_location("./pypi_test_location", format="jpg")
+>>> ifd.dump_location("./pypi_test_location", format="jpg", size="512x256")
 
 .. image:: https://raw.githubusercontent.com/Moustikitos/tyf/master/test/pypi_test_location.jpg
 
@@ -190,6 +190,30 @@ Geotiff data can also be extracted from IFD.
 >>> mt(50, 50) # compute pixel coordinates
 (-25492.059935252837, 4252883.436953031, 0.0, 1.0)
 
+``PIL`` integration
+-------------------
+
+>>> from Tyf import Image
+>>> img = Image.open(r".\IMG_20150730_210115.jpg")
+>>> exf = img._getexif()
+>>> exf
+[{256: <Tiff tag 0x100: ImageWidth = (2560,)>, 305: <Tiff tag 0x131: Software = b'KVT49L\
+x00'>, 274: <Tiff tag 0x112: Orientation = (1,)> := 'Normal', 531: <Tiff tag 0x213: YCbCr
+Positioning = (1,)> := 'Centered', 34853: <Tiff tag 0x8825: GPS IFD = (572,)>, 257: <Tiff
+ tag 0x101: ImageLength = (1920,)>, 34665: <Tiff tag 0x8769: Exif IFD = (176,)>, 306: <Ti
+ff tag 0x132: DateTime = b'2015:07:30 21:01:16\x00'>, 272: <Tiff tag 0x110: Model = b'Nex
+us S\x00'>, 271: <Tiff tag 0x10f: Make = b'Google\x00'>}, {256: <Tiff tag 0x100: ImageWid
+th = (320,)>, 257: <Tiff tag 0x101: ImageLength = (240,)>, 274: <Tiff tag 0x112: Orientat
+ion = (1,)> := 'Normal', 259: <Tiff tag 0x103: Compression = (6,)> := 'JPEG', 513: <Tiff 
+tag 0x201: JPEGInterchangeFormat = (966,)>, 296: <Tiff tag 0x128: ResolutionUnit = (2,)> 
+:= 'Inch', 282: <Tiff tag 0x11a: XResolution = (72, 1)>, 283: <Tiff tag 0x11b: YResolutio
+n = (72, 1)>, 514: <Tiff tag 0x202: JPEGInterchangeFormatLength = (9624,)>}]
+>>> exf.__class__
+<class 'Tyf.TiffFile'>
+>>> exf[0]["UserComment"] = "Simple commentaire"
+>>> exf[0]["Copyright"] = "Bruno THOORENS"
+>>> img.save(r".\test.jpg", ifd=exf) # write JPEG image with exif
+
 Support this project
 ====================
 
@@ -257,6 +281,10 @@ Changes
 
 + added ``load_location`` & ``dump_location`` to ``Ifd`` class
 + added ``dump_exif`` & ``load_exif`` to ``JpegFile`` class
+
+1.2.0
+
++ ``PIL`` (``pillow``) integration for JPEG images
 
 Todo
 ====
