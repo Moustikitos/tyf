@@ -52,7 +52,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		# read tag, type and count values
 		tag, typ, count = unpack(byteorder+"HHL", fileobj)
 		# extract data
-		data = fileobj.read(struct.calcsize("L"))
+		data = fileobj.read(struct.calcsize("=L"))
 		if not isinstance(data, bytes):
 			data = data.encode()
 		_typ = TYPES[typ][0]
@@ -88,7 +88,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 				tt.value = data[:count]
 			else:
 				fmt = byteorder + _typ*count
-				tt.value = struct.unpack(fmt, data[:count*struct.calcsize(_typ)])
+				tt.value = struct.unpack(fmt, data[:count*struct.calcsize("="+_typ)])
 
 		obj.addtag(tt)
 
@@ -164,8 +164,8 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 
 	# prepare jumps
 	data_offset = fileobj.tell()
-	step1 = struct.calcsize("HHLL")
-	step2 = struct.calcsize("HHL")
+	step1 = struct.calcsize("=HHLL")
+	step2 = struct.calcsize("=HHL")
 
 	# comme back to first ifd entry
 	fileobj.seek(first_entry_offset)
