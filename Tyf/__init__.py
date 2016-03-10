@@ -47,7 +47,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 	# get number of entry
 	nb_entry, = unpack(byteorder+"H", fileobj)
 
-	# for each entry 
+	# for each entry
 	for i in range(nb_entry):
 		# read tag, type and count values
 		tag, typ, count = unpack(byteorder+"HHL", fileobj)
@@ -240,7 +240,7 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 
 	# write IFD
 	next_ifd_offset = _write_IFD(obj, fileobj, offset, byteorder)
-	# write SubIFD 
+	# write SubIFD
 	for tag, p_ifd in sorted(obj.sub_ifd.items(), key=lambda e:e[0]):
 		_write_IFD(p_ifd, fileobj, obj[tag], byteorder)
 
@@ -412,7 +412,7 @@ class JpegFile(collections.OrderedDict):
 			if hasattr(f, "close"):
 				fileobj = f
 				_close = False
-			else: 
+			else:
 				fileobj = io.open(os.path.splitext(f)[0] + (".jpg" if compression == 6 else ".tif"), "wb")
 				_close = True
 
@@ -450,7 +450,7 @@ def jpeg_extract(f):
 	ifd = False
 	marker, = unpack(">H", fileobj)
 	if marker != 0xffd8: raise Exception("not a valid jpeg file")
-	while marker != 0xffd9: # EOI (End Of Image) Marker
+	while marker != 0xffd9:
 		marker, count = unpack(">HH", fileobj)
 		if marker == 0xffe1:
 			string = StringIO(fileobj.read(count-2)[6:])
@@ -469,29 +469,17 @@ def open(f):
 	first, = unpack(">H", fileobj)
 	fileobj.seek(0)
 
-	if first == 0xffd8:
-		obj = JpegFile(fileobj)
-
-	elif first in [0x4d4d, 0x4949]:
-		obj = TiffFile(fileobj)
+	if first == 0xffd8: obj = JpegFile(fileobj)
+	elif first in [0x4d4d, 0x4949]: obj = TiffFile(fileobj)
 
 	if _close: fileobj.close()
-	
-	try:
-		return obj
-	except:
-		raise Exception("file is not a valid JPEG nor TIFF image")
-
+	try: return obj
+	except: raise Exception("file is not a valid JPEG nor TIFF image")
 
 # if PIL exists do some overridings
-try:
-	from PIL import Image as _Image 
-
-except ImportError:
-	pass
-
+try: from PIL import Image as _Image
+except ImportError: pass
 else:
-
 	def _getexif(im):
 		try:
 			data = im.info["exif"]
@@ -501,7 +489,6 @@ else:
 		exif = TiffFile(fileobj)
 		fileobj.close()
 		return exif
-
 
 	class Image(_Image.Image):
 
@@ -531,3 +518,4 @@ else:
 
 	from PIL import JpegImagePlugin
 	JpegImagePlugin._getexif = _getexif
+	del _getexif

@@ -195,6 +195,8 @@ Geotiff data can also be extracted from IFD.
 
 >>> from Tyf import Image
 >>> img = Image.open(r".\IMG_20150730_210115.jpg")
+>>> img
+<PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=2560x1920 at 0x12E66F0>
 >>> exf = img._getexif()
 >>> exf
 [{256: <Tiff tag 0x100: ImageWidth = (2560,)>, 305: <Tiff tag 0x131: Software = b'KVT49L\
@@ -224,7 +226,7 @@ Support this project
 
 .. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
 
-1WJfDP1F2QTgqQhCT53KmhRwQSUkKRHgh
+3Jgib9SQiDLYML7QKBYtJUkHq2nyG6Z63D
 
 .. image:: http://bruno.thoorens.free.fr/img/wallet.png
 

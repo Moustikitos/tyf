@@ -58,14 +58,14 @@ class TiffTag(object):
 		else: setattr(self, "value_is_offset", True)
 
 	def _fill(self):
-		s = struct.calcsize(TYPES[self.type][0])
-		voidspace = (struct.calcsize("L") - self.count*s)//s
+		s = struct.calcsize("="+TYPES[self.type][0])
+		voidspace = (struct.calcsize("=L") - self.count*s)//s
 		if self.type in [2, 7]: return self.value + b"\x00"*voidspace
 		elif self.type in [1, 3, 6, 8]: return self.value + ((0,)*voidspace)
 		return self.value
 
 	def calcsize(self):
-		return struct.calcsize(TYPES[self.type][0] * (self.count*(2 if self.type in [5,10] else 1))) if self.value_is_offset else 0
+		return struct.calcsize("=" + TYPES[self.type][0] * (self.count*(2 if self.type in [5,10] else 1))) if self.value_is_offset else 0
 
 
 class Ifd(dict):
@@ -77,7 +77,7 @@ class Ifd(dict):
 	raster_loaded = property(lambda obj: not(obj.has_raster) or bool(len(obj.stripes+obj.tiles+obj.free)+len(obj.jpegIF)), None, None, "")
 	size = property(
 		lambda obj: {
-			"ifd": struct.calcsize("H" + (len(obj)*"HHLL") + "L"),
+			"ifd": struct.calcsize("=H" + (len(obj)*"HHLL") + "L"),
 			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
 		}, None, None, "return ifd-packed size and data-packed size")
 		

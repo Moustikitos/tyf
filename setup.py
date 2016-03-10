@@ -11,7 +11,7 @@ long_description = open("./rst/pypi.rst", "r")
 kw.update(**{
 	"version": f.read().strip(),
 	"name": "Tyf",
-	"keywords": ["ifd", "tiff", "jpeg", "exif", "gps", "geotiff"],
+	"keywords": ["ifd", "tiff", "jpeg", "exif", "gps", "geotiff", "PIL", "Pillow"],
 	"author": "Bruno THOORENS",
 	"author_email": "bruno.thoorens@free.fr",
 	"maintainer": "Bruno THOORENS",
