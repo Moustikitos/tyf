@@ -1,6 +1,72 @@
 ``Tyf`` package provides simple way to view and edit Exif data from 
 ``TIFF`` and ``JPEG`` files.
 
+Changes
+=======
+
+1.2.2
+
++ bugfix for ``Tyf.gkd.Gkd.to_ifd`` method
+
+1.2.1
+
++ bugfix for issue #1
+
+1.2.0
+
++ ``PIL`` (``pillow``) integration for JPEG images
+
+1.1.3
+
++ added ``load_location`` & ``dump_location`` to ``Ifd`` class
++ added ``dump_exif`` & ``load_exif`` to ``JpegFile`` class
+
+1.1.2
+
++ ``JpegFile`` class now handle JPEG and TIFF thumbnail
++ added ``save_thumbnail`` method for ``JpegFile`` class
++ ``TiffFile`` raster data loaded only if needed or on demand
++ added ``load_raster`` method for ``TiffFile`` class
++ ``_2`` encoder fix (ascii encoder)
++ code tweaks
+
+1.1.1
+
++ added hability to read custom sub IFD
++ ``_5`` encoder fix (rational encoder)
++ ``__repr__`` format update
++ removed ``thumbnail`` property for ``JpegFile`` class
+
+1.1b0
+
++ added encoders / decoders
++ added ``ifd1`` property to ``JpegFile`` class
++ added ``exif_ifd`` property to ``Ifd`` class
++ added ``gps_ifd`` property to ``Ifd`` class
+
+1.0b1
+
++ fixed bug with Exif data modified by windows explorer
++ added XP tags
+
+1.0b0
+
++ added ``gkd`` property for ``TiffFile`` class
++ added ``exif`` property for ``JpegFile`` class
++ read/write ifd and exif data
++ ``TiffFile`` concatenation using ``+`` operator (i.e. multi image ``TIFF`` file)
+
+0.9a1
+
++ multiple IFD management with ``TiffFile`` class
++ added ``save`` method for ``JpegFile`` and ``TiffFile`` classes
++ full ``JPEG`` Exif read (IFD0 and IFD1 for ``0xffe1`` marker)
++ added ``thumbnail`` property for ``JpegFile`` class
+
+0.8a4
+
++ first consistant release
+
 Quick view
 ==========
 
@@ -227,66 +293,6 @@ Support this project
 .. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
 
 3Jgib9SQiDLYML7QKBYtJUkHq2nyG6Z63D
-
-.. image:: http://bruno.thoorens.free.fr/img/wallet.png
-
-Changes
-=======
-
-0.8a4
-
-+ first consistant release
-
-0.9a1
-
-+ multiple IFD management with ``TiffFile`` class
-+ added ``save`` method for ``JpegFile`` and ``TiffFile`` classes
-+ full ``JPEG`` Exif read (IFD0 and IFD1 for ``0xffe1`` marker)
-+ added ``thumbnail`` property for ``JpegFile`` class
-
-1.0b0
-
-+ added ``gkd`` property for ``TiffFile`` class
-+ added ``exif`` property for ``JpegFile`` class
-+ read/write ifd and exif data
-+ ``TiffFile`` concatenation using ``+`` operator (i.e. multi image ``TIFF`` file)
-
-1.0b1
-
-+ fixed bug with Exif data modified by windows explorer
-+ added XP tags
-
-1.1b0
-
-+ added encoders / decoders
-+ added ``ifd1`` property to ``JpegFile`` class
-+ added ``exif_ifd`` property to ``Ifd`` class
-+ added ``gps_ifd`` property to ``Ifd`` class
-
-1.1.1
-
-+ added hability to read custom sub IFD
-+ ``_5`` encoder fix (rational encoder)
-+ ``__repr__`` format update
-+ removed ``thumbnail`` property for ``JpegFile`` class
-
-1.1.2
-
-+ ``JpegFile`` class now handle JPEG and TIFF thumbnail
-+ added ``save_thumbnail`` method for ``JpegFile`` class
-+ ``TiffFile`` raster data loaded only if needed or on demand
-+ added ``load_raster`` method for ``TiffFile`` class
-+ ``_2`` encoder fix (ascii encoder)
-+ code tweaks
-
-1.1.3
-
-+ added ``load_location`` & ``dump_location`` to ``Ifd`` class
-+ added ``dump_exif`` & ``load_exif`` to ``JpegFile`` class
-
-1.2.0
-
-+ ``PIL`` (``pillow``) integration for JPEG images
 
 Todo
 ====

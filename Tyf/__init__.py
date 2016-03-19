@@ -476,6 +476,7 @@ def open(f):
 	try: return obj
 	except: raise Exception("file is not a valid JPEG nor TIFF image")
 
+
 # if PIL exists do some overridings
 try: from PIL import Image as _Image
 except ImportError: pass

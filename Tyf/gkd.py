@@ -158,14 +158,14 @@ class Gkd(dict):
 				_34737 += tag.value + b"|"
 				nbkey += 1
 
-		return dict((k,v) for k,v in {
-			33922: ifd.TiffTag(33922, reduce(tuple.__add__, [tuple(e) for e in self.get(33922, ())])),
-			33550: ifd.TiffTag(33550, tuple(self.get(33550, ()))),
-			34264: ifd.TiffTag(34264, tuple(self.get(34264, ()))),
-			34735: ifd.TiffTag(34735, (self.version,) + self.revision + (nbkey,) + _34735),
-			34736: ifd.TiffTag(34736, _34736),
-			34737: ifd.TiffTag(34737, _34737),
-		}.items() if v.value != ())
+		result = ifd.Ifd()
+		result.set(33922, 12, reduce(tuple.__add__, [tuple(e) for e in self.get(33922, ([0.,0.,0.,0.,0.,0.],))]))
+		result.set(33550, 12, tuple(self.get(33550, (1.,1.,1.))))
+		result.set(34264, 12, tuple(self.get(34264, (1.,0.,0.,0.,0.,-1.,0.,0.,0.,0.,1.,0.,0.,0.,0.,1.))))
+		result.set(34735, 3, (self.version,) + self.revision + (nbkey,) + _34735)
+		result.set(34736, 12, _34736)
+		result.set(34737, 2, _34737)
+		return result
 
 	def from_ifd(self, ifd = {}, **kw):
 		pairs = dict(ifd, **kw)
