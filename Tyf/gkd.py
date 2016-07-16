@@ -2,7 +2,7 @@
 # Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 # ~ http://www.remotesensing.org/geotiff/spec/geotiffhome.html
 
-from . import sys, ifd, tags, values, __geotiff__
+from . import ifd, tags, values, __geotiff__, __PY3__
 import collections
 
 GeoKeyModel = {
@@ -77,7 +77,7 @@ _TAGS = {
 _2TAG = dict((v[0], t) for t,v in _TAGS.items())
 _2KEY = dict((v, k) for k,v in _2TAG.items())
 
-if sys.version_info[0] >= 3:
+if __PY3__:
 	import functools
 	reduce = functools.reduce
 	long = int

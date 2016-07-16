@@ -4,6 +4,10 @@
 Changes
 =======
 
+1.2.3
++ bugfix for ``Tyf.Image.save`` method
++ added ``__PY3__`` variable for verion testing
+
 1.2.2
 
 + bugfix for ``Tyf.gkd.Gkd.to_ifd`` method

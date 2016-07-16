@@ -6,6 +6,8 @@ __geotiff__   = (1, 8, 1)
 
 import io, os, sys, struct, operator, collections
 
+__PY3__ = True if sys.version_info[0] >= 3 else False
+
 unpack = lambda fmt, fileobj: struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
 pack = lambda fmt, fileobj, value: fileobj.write(struct.pack(fmt, *value))
 
@@ -25,7 +27,7 @@ TYPES = {
 }
 
 # assure compatibility python 2 & 3
-if sys.version_info[0] >= 3:
+if __PY3__:
 	from io import BytesIO as StringIO
 	TYPES[2] = ("s", "ASCII")
 	TYPES[7] = ("s", "UDEFINED")
@@ -150,7 +152,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 		if not t.value_is_offset:
 			value = t._fill()
 			n = len(value)
-			if sys.version_info[0] >= 3 and t.type in [2, 7]:
+			if __PY3__ and t.type in [2, 7]:
 				fmt = str(n)+TYPES[t.type][0]
 				value = (value,)
 			else:
@@ -181,7 +183,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 			# go to offset where value is about to be stored
 			fileobj.seek(data_offset)
 			# prepare value according to python version
-			if sys.version_info[0] >= 3 and t.type in [2, 7]:
+			if __PY3__ and t.type in [2, 7]:
 				fmt = str(t.count)+TYPES[t.type][0]
 				value = (t.value,)
 			else:
@@ -283,7 +285,7 @@ class TiffFile(list):
 	raster_loaded = property(lambda obj: reduce(operator.__and__, [ifd.raster_loaded for ifd in obj]), None, None, "")
 
 	def __init__(self, fileobj):
-		"""Initialize a TiffFile object from buffer fileobj, fileobj have to be in 'wb' mode"""
+		# Initialize a TiffFile object from buffer fileobj, fileobj have to be in 'wb' mode
 
 		# determine byteorder
 		first, = unpack(">H", fileobj)
@@ -499,7 +501,7 @@ else:
 		def open(*args, **kwargs):
 			return _Image.open(*args, **kwargs)
 
-		def save(self, fp, format=None, **params):
+		def save(self, fp, format="JPEG", **params):
 
 			ifd = params.pop("ifd", False)
 			if ifd != False:
@@ -514,7 +516,7 @@ else:
 				if len(data) > 0:
 					params["exif"] = b"Exif\x00\x00" + (data.encode() if isinstance(data, str) else data)
 
-			Image._image_.save(self, fp, format=None, **params)
+			Image._image_.save(self, fp, format="JPEG", **params)
 	_Image.Image = Image
 
 	from PIL import JpegImagePlugin
