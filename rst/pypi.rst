@@ -4,7 +4,26 @@
 Changes
 =======
 
+1.2.4
+
++ added ``set_location`` and ``get_location`` to ``Ifd`` class
+
+>>> from Tyf.ifd import Ifd
+>>> ifd = Ifd()
+>>> ifd.set_location(-4.362746, 48.958474, -152.2356)
+>>> for tag in ifd.tags(): print(tag)
+...
+<GPS tag 0x1: GPSLatitudeRef = b'N\x00'> := 'North latitude'
+<GPS tag 0x2: GPSLatitude = (48, 1, 57, 1, 38133, 1250)>
+<GPS tag 0x3: GPSLongitudeRef = b'W\x00'> := 'West longitude'
+<GPS tag 0x4: GPSLongitude = (4, 1, 21, 1, 57357, 1250)>
+<GPS tag 0x5: GPSAltitudeRef = (1,)> := 'Below sea level'
+<GPS tag 0x6: GPSAltitude = (380589, 2500)>
+>>> ifd.get_location()
+(-4.362746, 48.958474, -152.2356)
+
 1.2.3
+
 + bugfix for ``Tyf.Image.save`` method
 + added ``__PY3__`` variable for verion testing
 
@@ -296,7 +315,7 @@ Support this project
 
 .. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
 
-3Jgib9SQiDLYML7QKBYtJUkHq2nyG6Z63D
+16SPHzxaxjCYccnJCRY3RG711oybQj4KZ4
 
 Todo
 ====

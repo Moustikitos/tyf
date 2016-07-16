@@ -190,6 +190,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 				fmt = t.count*TYPES[t.type][0]
 				value = t.value
 			# write value
+			# print(">>>", fmt, value)
 			pack(byteorder+fmt, fileobj, value)
 			# remmember where to put next value
 			data_offset = fileobj.tell()

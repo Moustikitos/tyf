@@ -22,8 +22,8 @@ class TiffTag(object):
 		self.key, _typ, default, self.comment = tags.get(tag)
 		self.tag = tag
 		self.name = name
-
 		self.type = _typ[-1] if type == None else type
+
 		if value != None: self._encode(value)
 		elif default != None: self.value = (default,) if not hasattr(default, "len") else default
 
@@ -144,10 +144,26 @@ class Ifd(dict):
 			for v in sorted(dict.values(i), key=lambda e:e.tag):
 				yield v
 
+	def set_location(self, longitude, latitude, altitude=0.):
+		if 34853 not in self._sub_ifd:
+			self._sub_ifd[34853] = [tags.gpsT, "GPS tag"]
+		self[1] = self[2] = latitude
+		self[3] = self[4] = longitude
+		self[5] = self[6] = altitude
+
+	def get_location(self):
+		if set([1,2,3,4,5,6]) <= set(self.gps_ifd.keys()):
+			return (
+				self[3] * self[4],
+				self[1] * self[2],
+				self[5] * self[6]
+			)
+
 	def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
 		if set([1,2,3,4]) <= set(self.gps_ifd.keys()):
-			latitude = self.gps_ifd[1] * self.gps_ifd[2]
-			longitude = self.gps_ifd[3] * self.gps_ifd[4]
+			gps_ifd = self.gps_ifd
+			latitude = gps_ifd[1] * gps_ifd[2]
+			longitude = gps_ifd[3] * gps_ifd[4]
 			try:
 				opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
 					latitude, longitude,
@@ -165,8 +181,9 @@ class Ifd(dict):
 
 	def dump_location(self, tilename, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
 		if set([1,2,3,4]) <= set(self.gps_ifd.keys()):
-			latitude = self.gps_ifd[1] * self.gps_ifd[2]
-			longitude = self.gps_ifd[3] * self.gps_ifd[4]
+			gps_ifd = self.gps_ifd
+			latitude = gps_ifd[1] * gps_ifd[2]
+			longitude = gps_ifd[3] * gps_ifd[4]
 			try:
 				urllib.urlretrieve("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
 						latitude, longitude,

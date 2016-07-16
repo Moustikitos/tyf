@@ -34,6 +34,8 @@ def _0x2(value):
 _0x3 = lambda value: 1 if value in [b"E\x00", b"E"] else -1
 #GPSLongitude
 _0x4 = _0x2
+#GPSAltitudeRef
+_0x5 = lambda value: 1 if value == 0 else -1
 # GPSTimeStamp
 _0x7 = lambda value: datetime.time(*[int(e) for e in _5(value)])
 # GPSDateStamp

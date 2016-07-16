@@ -107,6 +107,10 @@ def _0x2(value):
 _0x3 = lambda value: b"E\x00" if bool(value >= 0) == True else b"W\x00"
 #GPSLongitude
 _0x4 = _0x2
+#GPSAltitudeRef
+_0x5 = lambda value: _3(1 if value < 0 else 0)
+#GPSAltitude
+_0x6 = lambda value: _5(abs(value))
 # GPSTimeStamp
 _0x7 = lambda value: _5(tuple(float(e) for e in [value.hour, value.minute, value.second]))
 # GPSDateStamp
