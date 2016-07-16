@@ -6,8 +6,8 @@ except ImportError:
 	from distutils.core import setup
 kw = {}
 
-f = open("Tyf/VERSION", "r")
-long_description = open("./rst/pypi.rst", "r")
+f = open("VERSION", "r")
+long_description = open("rst/pypi.rst", "r")
 kw.update(**{
 	"version": f.read().strip(),
 	"name": "Tyf",
