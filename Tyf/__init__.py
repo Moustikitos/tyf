@@ -295,7 +295,10 @@ class TiffFile(list):
 		magic_number, = unpack(byteorder+"H", fileobj)
 		if magic_number != 0x2A: # 42
 			fileobj.close()
-			raise IOError("Bad magic number. Not a valid TIFF file")
+			if magic_number == 0x2B: # 43
+				raise IOError("BigTIFF file not supported")
+			else:
+				raise IOError("Bad magic number. Not a valid TIFF file")
 		next_ifd, = unpack(byteorder+"L", fileobj)
 
 		ifds = []
