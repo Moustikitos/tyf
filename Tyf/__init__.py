@@ -293,7 +293,7 @@ class TiffFile(list):
 		byteorder = "<" if first == 0x4949 else ">"
 
 		magic_number, = unpack(byteorder+"H", fileobj)
-		if magic_number != 0x2A: # 42
+		if magic_number not in [0x732E,0x2A]: #29486, 42
 			fileobj.close()
 			if magic_number == 0x2B: # 43
 				raise IOError("BigTIFF file not supported")
