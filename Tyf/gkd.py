@@ -83,6 +83,7 @@ if __PY3__:
 	long = int
 
 class GkdTag(ifd.TiffTag):
+	strict = True
 
 	def __init__(self, tag=0x0, value=None, name="GeoTiff Tag"):
 		self.name = name
@@ -91,18 +92,17 @@ class GkdTag(ifd.TiffTag):
 		value = default if value == None else value
 
 		self.tag = tag
-		restricted = getattr(values, self.key, None)
+		restricted = getattr(values, self.key, {})
 
 		if restricted:
+			reverse = dict((v,k) for k,v in restricted.items())
 			if value in restricted:
 				self.meaning = restricted.get(value)
-			else:
-				reverse = dict((v,k) for k,v in restricted.items())
-				if value in reverse:
-					value = reverse[value]
-					self.meaning = value
-				else:
-					raise ValueError('"%s" value must be one of %s, get %s instead' % (self.key, list(restricted.keys()), value))
+			elif value in reverse:
+				value = reverse[value]
+				self.meaning = value
+			elif GkdTag.strict:
+				raise ValueError('"%s" value must be one of %s, get %s instead' % (self.key, list(restricted.keys()), value))
 
 		self.type, self.count, self.value = self._encode(value, types)
 
