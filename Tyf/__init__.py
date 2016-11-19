@@ -42,7 +42,6 @@ else:
 
 from . import ifd, gkd, tags
 
-
 def _read_IFD(obj, fileobj, offset, byteorder="<"):
 	# fileobj seek must be on the start offset
 	fileobj.seek(offset)
@@ -60,9 +59,10 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		tt = ifd.TiffTag(tag, typ, name=obj.tagname)
+		# tt = ifd.TiffTag(tag, typ, name=obj.tagname)
+		tt = ifd.Tag(tag, name=obj.tagname, db=obj.from_db(tag))
 		# initialize what we already know
-		# tt.type = typ
+		tt.type = typ
 		tt.count = count
 		# to know if ifd entry value is an offset
 		tt._determine_if_offset()
@@ -92,23 +92,19 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 				fmt = byteorder + _typ*count
 				tt.value = struct.unpack(fmt, data[:count*struct.calcsize("="+_typ)])
 
-		obj.addtag(tt)
+		obj.append(tt)
 
-def from_buffer(obj, fileobj, offset, byteorder="<", custom_sub_ifd={}):
+def from_buffer(obj, fileobj, offset, byteorder="<"):
 	# read data from offset
 	_read_IFD(obj, fileobj, offset, byteorder)
 	# get next ifd offset
 	next_ifd, = unpack(byteorder+"L", fileobj)
 
-	# finding by default those SubIFD
-	sub_ifd = {34665:"Exif tag", 34853:"GPS tag", 40965:"Interoperability tag"}
-	# adding other SubIFD if asked
-	sub_ifd.update(custom_sub_ifd)
-	## read registered SubIFD
-	for key,value in sub_ifd.items():
-		if key in obj:
-			obj.sub_ifd[key] = ifd.Ifd(tagname=value)
-			_read_IFD(obj.sub_ifd[key], fileobj, obj[key], byteorder)
+	for tag in ifd.Ifd.sub_ifd:
+		if tag in obj:
+			tagname, tag_family = ifd.Ifd.sub_ifd[tag]
+			setattr(obj, "_%s"%tag, ifd.Ifd(tagname=tagname, tag_family=[tag_family]))
+			from_buffer(getattr(obj, "_%s"%tag), fileobj, obj.get(tag).value[0], byteorder)
 
 	return next_ifd
 
@@ -190,7 +186,6 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 				fmt = t.count*TYPES[t.type][0]
 				value = t.value
 			# write value
-			# print(">>>", fmt, value)
 			pack(byteorder+fmt, fileobj, value)
 			# remmember where to put next value
 			data_offset = fileobj.tell()
@@ -199,18 +194,21 @@ def _write_IFD(obj, fileobj, offset, byteorder="<"):
 		else:
 			fileobj.seek(step1, 1)
 
+	fileobj.seek(next_ifd_offset)
 	return next_ifd_offset
 
-def to_buffer(obj, fileobj, offset, byteorder="<"):
-	obj._check()
 
-	size = obj.size
-	raw_offset = offset + size["ifd"] + size["data"]
-	# add SubIFD sizes...
-	for tag, p_ifd in sorted(obj.sub_ifd.items(), key=lambda e:e[0]):
-		obj.set(tag, 4, raw_offset)
-		size = p_ifd.size
-		raw_offset = raw_offset + size["ifd"] + size["data"]
+def to_buffer(obj, fileobj, offset, byteorder="<"):
+	sub_ifd_tags = list(ifd.Ifd.sub_ifd.keys())
+	def malloc(i,o):
+		size = i.size
+		o += size["ifd"] + size["data"]
+		for tag in sub_ifd_tags:
+			if tag in i:
+				i.set(tag, 4, o)
+				o = malloc(getattr(i, "_%s"%tag),o)
+		return o
+	raw_offset = malloc(obj, offset)
 
 	# knowing where raw image have to be writen, update [Strip/Free/Tile]Offsets
 	if 273 in obj:
@@ -242,10 +240,12 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 		next_ifd = raw_offset
 
 	# write IFD
-	next_ifd_offset = _write_IFD(obj, fileobj, offset, byteorder)
-	# write SubIFD
-	for tag, p_ifd in sorted(obj.sub_ifd.items(), key=lambda e:e[0]):
-		_write_IFD(p_ifd, fileobj, obj[tag], byteorder)
+	def dump(i,f,o,b):
+		for tag in sub_ifd_tags:
+			if tag in i:
+				dump(getattr(i, "_%s"%tag),f,i.get(tag).value[0],b)
+		return _write_IFD(i,f,o,b)
+	next_ifd_offset = dump(obj, fileobj, offset, byteorder)
 
 	# write raster data
 	if len(obj.stripes):
@@ -303,10 +303,7 @@ class TiffFile(list):
 
 		ifds = []
 		while next_ifd != 0:
-			i = ifd.Ifd(sub_ifd={
-				34665:[tags.exfT,"Exif tag"],
-				34853:[tags.gpsT,"GPS tag"]
-			})
+			i = ifd.Ifd(tag_name="Tiff tag", tag_family=[tags.bTT, tags.pTT, tags.xTT, tags.exfT])
 			next_ifd = from_buffer(i, fileobj, next_ifd, byteorder)
 			ifds.append(i)
 
@@ -373,8 +370,9 @@ class JpegFile(collections.OrderedDict):
 				marker = 0xffd9
 			elif marker == 0xffe1:
 				string = StringIO(fileobj.read(count-2)[6:])
-				try: markers[marker] = TiffFile(string)
-				except: setattr(markers, "_0xffe1", string.getvalue())
+				#try: 
+				markers[marker] = TiffFile(string)
+				#except: setattr(markers, "_0xffe1", string.getvalue())
 				string.close()
 			else:
 				markers[marker] = fileobj.read(count-2)

@@ -431,6 +431,9 @@ GTRasterTypeGeoKey = {
 		2: "Raster pixel is point",
 }
 
+
+# load from json
+
 ProjCoordTransGeoKey = {
 	1:  "CT_TransverseMercator",
 	2:  "CT_TransvMercator_Modified_Alaska",
@@ -7295,4 +7298,13 @@ ProjectionGeoKey = {
 	19905: "Proj_Netherlands_E_Indies_Equatorial",
 	19912: "Proj_RSO_Borneo",
 	32767: "User-defined"
+}
+
+InteropIndex = {
+	b'R03' : "R03 - DCF option file (Adobe RGB)",
+	b'R98' : "R98 - DCF basic file (sRGB)",
+	b'THM' : "THM - DCF thumbnail file",
+	b'R03\x00' : "R03 - DCF option file (Adobe RGB)",
+	b'R98\x00' : "R98 - DCF basic file (sRGB)",
+	b'THM\x00' : "THM - DCF thumbnail file"
 }

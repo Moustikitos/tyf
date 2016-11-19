@@ -4,6 +4,11 @@
 Changes
 =======
 
+1.2.5
+
++ bugfix issue #5 
++ bugfix issue #6
+
 1.2.4
 
 + added ``set_location`` and ``get_location`` to ``Ifd`` class

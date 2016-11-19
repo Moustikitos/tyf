@@ -82,7 +82,8 @@ if __PY3__:
 	reduce = functools.reduce
 	long = int
 
-class GkdTag(ifd.TiffTag):
+# class GkdTag(ifd.TiffTag):
+class GkdTag(ifd.Tag):
 	strict = True
 
 	def __init__(self, tag=0x0, value=None, name="GeoTiff Tag"):

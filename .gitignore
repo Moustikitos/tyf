@@ -119,3 +119,7 @@ test/test loose.jpg
 test/test looseless.jpg
 test/test looseles.jpg
 test/IMG_TEST_003.jpg
+test/issue.7.jpg
+test/test.7.jpg
+test/dump.png
+dumps2json.py.zip

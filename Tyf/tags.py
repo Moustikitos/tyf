@@ -225,6 +225,7 @@ exfT = {
 	40962: ("PixelXDimension", [1,4], None, "Specific to compressed data; the valid width of the meaningful image"),
 	40963: ("PixelYDimension", [1,4], None, "Specific to compressed data; the valid height of the meaningful image"),
 	40964: ("RelatedSoundFile", [2], None, "Used to record the name of an audio file related to the image data"),
+	40965: ("Interoperability IFD", [4], None, "A pointer to the Exif-related Interoperability IFD"),
 	41483: ("FlashEnergy", [5], None, "Indicates the strobe energy at the time the image is captured, as measured in Beam Candle Power Seconds"),
 	41484: ("SpatialFrequencyResponse", [7], None, "Records the camera or input device spatial frequency table and SFR values in the direction of image width, image height, and diagonal direction, as specified in ISO 12233"),
 	41486: ("FocalPlaneXResolution", [5], None, "Indicates the number of pixels in the image width (X) direction per FocalPlaneResolutionUnit on the camera focal plane"),
@@ -283,6 +284,14 @@ gpsT = {
 	28: ("GPSAreaInformation", [7], None, "A character string recording the name of the GPS area"),
 	29: ("GPSDateStamp", [2], None, "A character string recording date and time information relative to UTC (Coordinated Universal Time)"),
 	30: ("GPSDifferential", [1], None, "Indicates whether differential correction is applied to the GPS receiver"),
+}
+
+itrT = {
+	0x0001: ("InteropIndex", [2], b"R03", ""),
+	0x0002: ("InteropVersion", [7], None, ""),
+	0x1000: ("RelatedImageFileFormat", [2], None, ""),
+	0x1001: ("RelatedImageWidth", [4], None, ""),
+	0x1002: ("RelatedImageHeight", [4], None, ""),
 }
 
 _TAG_FAMILIES = [bTT, xTT, pTT, exfT, gpsT]
