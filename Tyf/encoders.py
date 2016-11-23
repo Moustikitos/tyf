@@ -5,13 +5,14 @@ import math, fractions, datetime
 ###############
 # type encoders
 
+cast = lambda value, mini, maxi: int(max(min(value, maxi), mini))
+
 _m_short = 0
 _M_short = 2**8
 def _1(value):
 	value = int(value)
-	return (_m_short, ) if value < _m_short else \
-	       (_M_short, ) if value > _M_short else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_short, _M_short) for v in value)
+	else: return (cast(value, _m_short, _M_short), )
 
 def _2(value):
 	if not isinstance(value, bytes):
@@ -22,18 +23,14 @@ def _2(value):
 _m_byte = 0
 _M_byte = 2**16
 def _3(value):
-	value = int(value)
-	return (_m_byte, ) if value < _m_byte else \
-	       (_M_byte, ) if value > _M_byte else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_byte, _M_byte) for v in value)
+	else: return (cast(value, _m_byte, _M_byte), )
 
 _m_long = 0
 _M_long = 2**32
 def _4(value):
-	value = int(value)
-	return (_m_long, ) if value < _m_long else \
-	       (_M_long, ) if value > _M_long else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_long, _M_long) for v in value)
+	else: return (cast(value, _m_long, _M_long), )
 
 def _5(value):
 	if not isinstance(value, tuple): value = (value, )
@@ -42,10 +39,8 @@ def _5(value):
 _m_s_short = -_M_short/2
 _M_s_short = _M_short/2-1
 def _6(value):
-	value = int(value)
-	return (_m_s_short, ) if value < _m_s_short else \
-	       (_M_s_short, ) if value > _M_s_short else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_s_short, _M_s_short) for v in value)
+	else: return (cast(value, _m_s_short, _M_s_short), )
 
 def _7(value):
 	if not isinstance(value, bytes):
@@ -55,18 +50,14 @@ def _7(value):
 _m_s_byte = -_M_byte/2
 _M_s_byte = _M_byte/2-1
 def _8(value):
-	value = int(value)
-	return (_m_s_byte, ) if value < _m_s_byte else \
-	       (_M_s_byte, ) if value > _M_s_byte else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_s_byte, _M_s_byte) for v in value)
+	else: return (cast(value, _m_s_byte, _M_s_byte), )
 
 _m_s_long = -_M_long/2
 _M_s_long = _M_long/2-1
 def _9(value):
-	value = int(value)
-	return (_m_s_long, ) if value < _m_s_long else \
-	       (_M_s_long, ) if value > _M_s_long else \
-	       (value, )
+	if isinstance(value, tuple): return tuple(cast(v, _m_s_long, _M_s_long) for v in value)
+	else: return (cast(value, _m_s_long, _M_s_long), )
 
 _10 = _5
 

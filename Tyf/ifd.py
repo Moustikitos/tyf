@@ -14,6 +14,7 @@ class Tag(object):
 		self.type = _typ[-1]
 		self.name = name
 		if value: self._encode(value)
+		elif default: self._encode(default)
 
 	def __setattr__(self, attr, value):
 		# define encoder and decoder according to type
@@ -96,13 +97,21 @@ class Ifd(dict):
 			if tag in tf: return tf[tag]
 		return ("Undefined", [7], b"", "Nothing about abstract tag")
 
+	# def create_sub_ifd(self, tag):
+	# 	for tf in self.tag_family:
+	# 		tag = tags._2tag(tag, family=tf)
+	# 		if tag in Ifd.sub_ifd:
+	# 			name, family = Ifd.sub_ifd[tag]
+	# 			setattr(self, "_%s"%tag, Ifd(tag_name=name, tag_family=[family]))
+
 	def __setitem__(self, tag, value):
 		for tf in self.tag_family:
 			tag = tags._2tag(tag, family=tf)
 			if tag in tf:
 				if tag in Ifd.sub_ifd:
-					if isinstance(value, Ifd): setattr(self, "_%s"%tag, value)
-					self[tag] = Tag(key, 4, 0, name=self.tagname, db=tf[tag])
+					name, family = Ifd.sub_ifd[tag]
+					setattr(self, "_%s"%tag, value if isinstance(value, Ifd) else Ifd(tag_name=name, tag_family=[family]))
+					dict.__setitem__(self, tag, Tag(tag, 0, name=self.tagname, db=tf[tag]))
 				else:
 					dict.__setitem__(self, tag, Tag(tag, value, name=self.tagname, db=tf[tag]))
 				return
@@ -113,8 +122,10 @@ class Ifd(dict):
 			tag = tags._2tag(tag, family=tf)
 			if tag in tf:
 				if tag in Ifd.sub_ifd:
-					if hasattr(self, "_%s"%tag): return getattr(self, "_%s"%tag)
-					else: raise KeyError("Ifd does not contains %s sub ifd" % tag)
+					if not hasattr(self, "_%s"%tag):
+						name, family = Ifd.sub_ifd[tag]
+						setattr(self, "_%s"%tag, Ifd(tag_name=name, tag_family=[family]))
+					return getattr(self, "_%s"%tag)
 				return dict.__getitem__(self, tag)._decode()
 		return dict.__getitem__(self, tag)
 
@@ -212,7 +223,7 @@ class Ifd(dict):
 		for v in sorted(dict.values(self), key=lambda e:e.tag):
 			yield v
 		for tag in Ifd.sub_ifd.keys():
-			if tag in self:
+			if hasattr(self, "_%s"%tag):
 				for v in sorted(getattr(self, "_%s"%tag).values(), key=lambda e:e.tag):
 					yield v
 
