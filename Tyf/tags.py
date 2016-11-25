@@ -199,7 +199,7 @@ exfT = {
 	34852: ("SpectralSensitivity", [2], None, "Indicates the spectral sensitivity of each channel of the camera used"),
 	34855: ("ISOSpeedRatings", [1], None, "Indicates the ISO Speed and ISO Latitude of the camera or input device as specified in ISO 12232"),
 	34856: ("OECF", [7], None, "Indicates the Opto-Electric Conversion Function (OECF) specified in ISO 14524"),
-	36864: ("ExifVersion", [7], b"0220", "The version of the supported Exif standard"),
+	36864: ("ExifVersion", [7], "0220", "The version of the supported Exif standard"),
 	36867: ("DateTimeOriginal", [2], None, "The date and time when the original image data was generated"),
 	36868: ("DateTimeDigitized", [2], None, "The date and time when the image was stored as digital data"),
 	37121: ("ComponentsConfiguration", [7], None, "Specific to compressed data; specifies the channels and complements PhotometricInterpretation"),
@@ -220,7 +220,7 @@ exfT = {
 	37520: ("SubsecTime", [2], None, "A tag used to record fractions of seconds for the DateTime tag"),
 	37521: ("SubsecTimeOriginal", [2], None, "A tag used to record fractions of seconds for the DateTimeOriginal tag"),
 	37522: ("SubsecTimeDigitized", [2], None, "A tag used to record fractions of seconds for the DateTimeDigitized tag"),
-	40960: ("FlashpixVersion", [7], b"0100", "The Flashpix format version supported by a FPXR file"),
+	40960: ("FlashpixVersion", [7], "0100", "The Flashpix format version supported by a FPXR file"),
 	40961: ("ColorSpace", [1], None, "The color space information tag is always recorded as the color space specifier"),
 	40962: ("PixelXDimension", [1,4], None, "Specific to compressed data; the valid width of the meaningful image"),
 	40963: ("PixelYDimension", [1,4], None, "Specific to compressed data; the valid height of the meaningful image"),
@@ -234,8 +234,8 @@ exfT = {
 	41492: ("SubjectLocation", [2], None, "Indicates the location of the main subject in the scene"),
 	41493: ("ExposureIndex", [5], None, "Indicates the exposure index selected on the camera or input device at the time the image is captured"),
 	41495: ("SensingMethod", [1], None, "Indicates the image sensor type on the camera or input device"),
-	41728: ("FileSource", [7], b"3", "Indicates the image source"),
-	41729: ("SceneType", [7], b"1", "Indicates the type of scene"),
+	41728: ("FileSource", [7], "3", "Indicates the image source"),
+	41729: ("SceneType", [7], "1", "Indicates the type of scene"),
 	41730: ("CFAPattern", [7], None, "Indicates the color filter array (CFA) geometric pattern of the image sensor when a one-chip color area sensor is used"),
 	41985: ("CustomRendered", [1], 0, "Indicates the use of special processing on image data, such as rendering geared to output"),
 	41986: ("ExposureMode", [1], None, "Indicates the exposure mode set when the image was shot"),
@@ -287,7 +287,7 @@ gpsT = {
 }
 
 itrT = {
-	0x0001: ("InteropIndex", [2], b"R03", ""),
+	0x0001: ("InteropIndex", [2], "R03", ""),
 	0x0002: ("InteropVersion", [7], None, ""),
 	0x1000: ("RelatedImageFileFormat", [2], None, ""),
 	0x1001: ("RelatedImageWidth", [4], None, ""),
@@ -299,13 +299,13 @@ _TAG_FAMILIES_2TAG = [dict((v[0], t) for t,v in dic.items()) for dic in _TAG_FAM
 _TAG_FAMILIES_2KEY = [dict((v, k) for k,v in dic.items()) for dic in _TAG_FAMILIES_2TAG]
 
 def get(tag):
-	idx = 0
 	for dic in _TAG_FAMILIES:
-		if isinstance(tag, (bytes, str)):
-			tag = _TAG_FAMILIES_2TAG[idx][tag]
+		family = _TAG_FAMILIES_2TAG[_TAG_FAMILIES.index(dic)]
+		if isinstance(tag, (bytes, str)) and tag in family:
+			tag = family[tag]
 		if tag in dic:
-			return dic[tag]
-	return ("Unknown", [4], None, "Undefined tag 0x%x"%tag)
+			return tag, dic[tag]
+	return 0, ("Undefined", [7], None, "Undefined tag %r"%tag)
 
 def _2tag(tag, family=None):
 	if family != None:

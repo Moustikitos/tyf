@@ -59,8 +59,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		# tt = ifd.TiffTag(tag, typ, name=obj.tagname)
-		tt = ifd.Tag(tag, name=obj.tagname, db=obj.from_db(tag))
+		tt = ifd.Tag(tag, name=obj.tag_name, db=obj.from_db(tag))
 		# initialize what we already know
 		tt.type = typ
 		tt.count = count
@@ -102,8 +101,8 @@ def from_buffer(obj, fileobj, offset, byteorder="<"):
 
 	for tag in ifd.Ifd.sub_ifd:
 		if tag in obj:
-			tagname, tag_family = ifd.Ifd.sub_ifd[tag]
-			setattr(obj, "_%s"%tag, ifd.Ifd(tagname=tagname, tag_family=[tag_family]))
+			tag_name, tag_family = ifd.Ifd.sub_ifd[tag]
+			setattr(obj, "_%s"%tag, ifd.Ifd(tag_name=tag_name, tag_family=[tag_family]))
 			from_buffer(getattr(obj, "_%s"%tag), fileobj, obj.get(tag).value[0], byteorder)
 
 	return next_ifd
@@ -303,7 +302,7 @@ class TiffFile(list):
 
 		ifds = []
 		while next_ifd != 0:
-			i = ifd.Ifd(tag_name="Tiff tag", tag_family=[tags.bTT, tags.pTT, tags.xTT, tags.exfT])
+			i = ifd.Ifd(tag_name="Tiff tag", tag_family=[tags.bTT, tags.pTT, tags.xTT])
 			next_ifd = from_buffer(i, fileobj, next_ifd, byteorder)
 			ifds.append(i)
 
@@ -353,7 +352,7 @@ class TiffFile(list):
 class JpegFile(collections.OrderedDict):
 
 	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
-	exif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Image IFD")
+	ifd0 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Image IFD")
 	ifd1 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[1], None, None, "Thumbnail IFD")
 
 	def __init__(self, fileobj):
@@ -439,11 +438,10 @@ class JpegFile(collections.OrderedDict):
 		if _close: fileobj.close()
 
 	def strip_exif(self):
-		for key in [k for k in self.exif.sub_ifd if k in self.exif]:
-			self.exif.pop(key)
-		self.exif.sub_ifd = {}
-		for key in list(k for k in self.exif if k not in tags.bTT):
-			self.exif.pop(key)
+		for key in [k for k in self.ifd0.sub_ifd if k in self.ifd0]:
+			self.ifd0.pop(key)
+		for key in list(k for k in self.ifd0 if k not in tags.bTT):
+			self.ifd0.pop(key)
 		while len(self[0xffe1]) > 1:
 			self[0xffe1].pop(-1)
 
@@ -505,8 +503,8 @@ else:
 
 		def save(self, fp, format="JPEG", **params):
 
-			ifd = params.pop("ifd", False)
-			if ifd != False:
+			ifd = params.pop("ifd", self._getexif())
+			if ifd:
 				fileobj = StringIO()
 				if isinstance(ifd, TiffFile):
 					ifd.load_raster()
