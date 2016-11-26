@@ -72,28 +72,31 @@ _12 = _11
 
 # XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value])
-# UserComment GPSProcessingMethod
+#UserComment GPSProcessingMethod
 _0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode() if not isinstance(value, bytes) else value)
-# GPSLatitudeRef
-_0x1 = lambda value: b"N\x00" if bool(value >= 0) == True else b"S\x00"
-# GPSLatitude
+#GPSLatitudeRef or InteropIndex
+def _0x1 (value):
+	if isinstance(value, (bytes, str)):
+		return _2(value)
+	else:
+		return b"N\x00" if bool(value >= 0) == True else b"S\x00"
+#GPSLatitude or InteropVersion
 def _0x2(value):
-	value = abs(value)
+	if isinstance(value, (int, float)):
+		value = abs(value)
 
-	degrees = math.floor(value)
-	minutes = (value - degrees) * 60
-	seconds = (minutes - math.floor(minutes)) * 60
-	minutes = math.floor(minutes)
+		degrees = math.floor(value)
+		minutes = (value - degrees) * 60
+		seconds = (minutes - math.floor(minutes)) * 60
+		minutes = math.floor(minutes)
 
-	if seconds >= (60.-0.0001):
-		seconds = 0.
-		minutes += 1
+		if seconds >= (60.-0.0001): seconds = 0.; minutes += 1
+		if minutes >= (60.-0.0001): minutes = 0.; degrees += 1
 
-	if minutes >= (60.-0.0001):
-		minutes = 0.
-		degrees += 1
+		return _5((degrees, minutes, seconds))
+	else:
+		return _7(value)
 
-	return _5((degrees, minutes, seconds))
 #GPSLongitudeRef
 _0x3 = lambda value: b"E\x00" if bool(value >= 0) == True else b"W\x00"
 #GPSLongitude

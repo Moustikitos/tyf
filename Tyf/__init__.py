@@ -47,6 +47,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 	fileobj.seek(offset)
 	# get number of entry
 	nb_entry, = unpack(byteorder+"H", fileobj)
+	next_ifd_offset = offset + struct.calcsize("=H" + nb_entry*"HHLL")
 
 	# for each entry
 	for i in range(nb_entry):
@@ -93,11 +94,12 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 
 		obj.append(tt)
 
+	return next_ifd_offset
+
 def from_buffer(obj, fileobj, offset, byteorder="<"):
 	# read data from offset
-	_read_IFD(obj, fileobj, offset, byteorder)
+	next_ifd_offset = _read_IFD(obj, fileobj, offset, byteorder)
 	# get next ifd offset
-	next_ifd, = unpack(byteorder+"L", fileobj)
 
 	for tag in ifd.Ifd.sub_ifd:
 		if tag in obj:
@@ -105,6 +107,8 @@ def from_buffer(obj, fileobj, offset, byteorder="<"):
 			setattr(obj, "_%s"%tag, ifd.Ifd(tag_name=tag_name, tag_family=[tag_family]))
 			from_buffer(getattr(obj, "_%s"%tag), fileobj, obj.get(tag).value[0], byteorder)
 
+	fileobj.seek(next_ifd_offset)
+	next_ifd, = unpack(byteorder+"L", fileobj)
 	return next_ifd
 
 # for speed reason : load raster only if asked or if needed
@@ -369,9 +373,8 @@ class JpegFile(collections.OrderedDict):
 				marker = 0xffd9
 			elif marker == 0xffe1:
 				string = StringIO(fileobj.read(count-2)[6:])
-				#try: 
-				markers[marker] = TiffFile(string)
-				#except: setattr(markers, "_0xffe1", string.getvalue())
+				try: markers[marker] = TiffFile(string)
+				except: setattr(markers, "_0xffe1", string.getvalue())
 				string.close()
 			else:
 				markers[marker] = fileobj.read(count-2)

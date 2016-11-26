@@ -250,6 +250,7 @@ exfT = {
 	41995: ("DeviceSettingDescription", [7], None, "This tag indicates information on the picture-taking conditions of a particular camera model"),
 	41996: ("SubjectDistanceRange", [1], None, "Indicates the distance to the subject"),
 	42016: ("ImageUniqueID", [2], None, "Indicates an identifier assigned uniquely to each image"),
+	0xea1c: ("Padding", [7], None, ""),
 }
 
 gpsT = {

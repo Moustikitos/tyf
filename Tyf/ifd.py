@@ -82,10 +82,9 @@ class Ifd(dict):
 			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
 		}, None, None, "return ifd-packed size and data-packed size")
 
-	exif = property(lambda obj: getattr(obj, "_34665", None), None, None, "shortcut to EXIF sub ifd")
-	gps = property(lambda obj: getattr(obj, "_34853", None), None, None, "shortcut to GPS sub ifd")
-	iterop = property(lambda obj: getattr(obj, "_40965", None), None, None, "shortcut to Interoperability sub ifd")
-
+	interop = property(lambda obj: getattr(obj, "_40965", {}), None, None, "shortcut to Interoperability sub ifd")
+	exif = property(lambda obj: getattr(obj, "_34665", {}), None, None, "shortcut to EXIF sub ifd")
+	gps = property(lambda obj: getattr(obj, "_34853", {}), None, None, "shortcut to GPS sub ifd")
 	has_raster = property(lambda obj: 273 in obj or 288 in obj or 324 in obj or 513 in obj, None, None, "return true if it contains raster data")
 	raster_loaded = property(lambda obj: not(obj.has_raster) or bool(len(obj.stripes+obj.tiles+obj.free)+len(obj.jpegIF)), None, None, "")
 
@@ -100,10 +99,9 @@ class Ifd(dict):
 		self.free = ()
 		self.jpegIF = b""
 
-	def from_db(self, tag):
-		for tf in self.tag_family:
-			if tag in tf: return tf[tag]
-		return ("Undefined", [7], None, "Undefined tag %r"%tag)
+	def __iter__(self):
+		for tag in self.tags():
+			yield tag.key, tag._decode()
 
 	def __setitem__(self, tag, value):
 		for tf in self.tag_family:
@@ -141,6 +139,11 @@ class Ifd(dict):
 				return dict.__delitem__(self, tag)
 		return dict.__delitem__(self, tag)
 
+	def from_db(self, tag):
+		for tf in self.tag_family:
+			if tag in tf: return tf[tag]
+		return ("Undefined", [7], None, "Undefined tag %r"%tag)
+
 	def set(self, tag, typ, value):
 		for tf in self.tag_family:
 			tag = tags._2tag(tag, family=tf)
@@ -160,6 +163,7 @@ class Ifd(dict):
 
 	def append(self, elem):
 		if isinstance(elem, Tag):
+			# print(self.tag_name, elem.count, elem.tag, elem.key, elem.value)
 			elem.name = self.tag_name
 			if elem.tag in Ifd.sub_ifd:
 				return dict.__setitem__(self, elem.tag, elem)
@@ -226,5 +230,5 @@ class Ifd(dict):
 			yield v
 		for tag in Ifd.sub_ifd.keys():
 			if hasattr(self, "_%s"%tag):
-				for v in sorted(getattr(self, "_%s"%tag).values(), key=lambda e:e.tag):
+				for v in getattr(self, "_%s"%tag).tags():
 					yield v

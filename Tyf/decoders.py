@@ -20,16 +20,22 @@ _10 = _5
 #######################
 # Tag-specific decoders
 
-# XPTitle XPComment XBAuthor
-_0x9c9b = _0x9c9c = _0x9c9d = lambda value : "".join(chr(e) for e in value[0::2]).encode()[:-1]
-# UserComment GPSProcessingMethod
+#XPTitle XPComment XBAuthor
+_0x9c9b = _0x9c9c = _0x9c9d = lambda value : "".join(chr(e) for e in value[0::2]).encode()
+#UserComment GPSProcessingMethod
 _0x9286 = _0x1b = lambda value: value[8:]
-#GPSLatitudeRef
-_0x1 = lambda value: 1 if value in [b"N\x00", b"N"] else -1
-#GPSLatitude
+#GPSLatitudeRef or InteropIndex
+def _0x1(value):
+	if value in [b"N\x00", b"N"]: return 1
+	elif value in [b"S\x00", b"S"]: return -1
+	else: return _2(value)
+#GPSLatitude or InteropVersion
 def _0x2(value):
-	degrees, minutes, seconds = _5(value)
-	return (seconds/60 + minutes)/60 + degrees
+	if isinstance(value, tuple):
+		degrees, minutes, seconds = _5(value)
+		return (seconds/60 + minutes)/60 + degrees
+	else:
+		return _7(value)
 #GPSLatitudeRef
 _0x3 = lambda value: 1 if value in [b"E\x00", b"E"] else -1
 #GPSLongitude
