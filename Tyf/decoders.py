@@ -23,7 +23,11 @@ _10 = _5
 #XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : "".join(chr(e) for e in value[0::2]).encode()
 #UserComment GPSProcessingMethod
-_0x9286 = _0x1b = lambda value: value[8:]
+def _0x9286(value):
+	stamp = value[:8]
+	if stamp == b"ASCII\x00\x00\x00": return value[8:].decode("ascii", errors="ignore")
+	else: return value[8:]
+_0x1b = _0x9286
 #GPSLatitudeRef or InteropIndex
 def _0x1(value):
 	if value in [b"N\x00", b"N"]: return 1

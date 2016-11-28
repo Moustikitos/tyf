@@ -441,12 +441,11 @@ class JpegFile(collections.OrderedDict):
 		if _close: fileobj.close()
 
 	def strip_exif(self):
-		for key in [k for k in self.ifd0.sub_ifd if k in self.ifd0]:
-			self.ifd0.pop(key)
-		for key in list(k for k in self.ifd0 if k not in tags.bTT):
-			self.ifd0.pop(key)
+		# strip thumbnail(s?)
 		while len(self[0xffe1]) > 1:
 			self[0xffe1].pop(-1)
+		for key in list(k for k in dict.__iter__(self.ifd0) if k not in tags.bTT):
+			self.ifd0.pop(key)
 
 
 def jpeg_extract(f):

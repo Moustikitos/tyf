@@ -161,9 +161,16 @@ class Ifd(dict):
 				return dict.__getitem__(self, tag)
 		raise KeyError("%s tag not found in ifd" % tag)
 
+	def pop(self, tag):
+		for tf in self.tag_family:
+			tag = tags._2tag(tag, family=tf)
+			attr = "_%s"%tag
+			if hasattr(self, attr):
+				delattr(self, attr)
+		dict.pop(self, tag)
+
 	def append(self, elem):
 		if isinstance(elem, Tag):
-			# print(self.tag_name, elem.count, elem.tag, elem.key, elem.value)
 			elem.name = self.tag_name
 			if elem.tag in Ifd.sub_ifd:
 				return dict.__setitem__(self, elem.tag, elem)

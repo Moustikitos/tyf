@@ -73,7 +73,7 @@ _12 = _11
 # XPTitle XPComment XBAuthor
 _0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value])
 #UserComment GPSProcessingMethod
-_0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode() if not isinstance(value, bytes) else value)
+_0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode("ascii", errors="replace") if not isinstance(value, bytes) else value)
 #GPSLatitudeRef or InteropIndex
 def _0x1 (value):
 	if isinstance(value, (bytes, str)):

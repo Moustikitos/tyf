@@ -393,4 +393,4 @@ Support this project
 
 .. image:: http://bruno.thoorens.free.fr/img/bitcoin.png
 
-16SPHzxaxjCYccnJCRY3RG711oybQj4KZ4
+3Jgib9SQiDLYML7QKBYtJUkHq2nyG6Z63D
