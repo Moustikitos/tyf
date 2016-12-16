@@ -1,0 +1,169 @@
+/* print layout*/
+@page{ 
+	size   : auto;
+	margin : 20mm;
+} 
+
+@media print{
+	.logo {display:none;}
+	.main {min-width:500px;}
+}
+
+/* webpage layout*/
+body
+{
+	font-family : calibri, verdana, tahoma;
+	font-size   : 14px;
+	padding     : 10px;
+	background  : grey;
+}
+
+a{
+	text-decoration : none;
+	color           : #44bb44;
+	cursor          : hand;
+}a:hover{
+	text-decoration : underline;
+}a:visited{
+	color           : #bbff44;
+}
+
+p
+{
+	margin    : 5px;
+	color     : white;
+}
+
+h1
+{
+	text-align  : center;
+	color       : lightgrey;
+	margin      : 5px;
+	padding     : 0px;
+}
+
+h2
+{
+	margin : 5px;
+	margin-top: 20px;
+	color  : white;
+}
+
+h3
+{
+	margin : 5px;
+	margin-top: 15px;
+	color  : white;
+}
+
+
+ul{
+	padding     : 0px;
+
+	margin      : 0px;
+	margin-left : 20px;
+	color       : white;
+}
+
+li
+{
+	padding       : 0px;
+
+	margin-top    : 2px;
+	margin-bottom : 2px;
+	color         : white;
+}
+
+.main
+{
+	padding      : 10px;
+	margin-left  : 20%;
+	margin-right : 32%;
+	text-align   : justify;
+}
+
+.reg
+{
+	color       : #662211;
+	font-weight : bold;
+}
+
+.licence
+{
+	color         : #662211;
+	text-align    : left;
+	font-weight   : bold;
+
+	border        : 3px solid #662211;
+
+	margin        : 5px;
+	margin-top    : 10px;
+	margin-bottom : 10px;
+
+	padding       : 3px;
+}
+
+.python
+{
+	font-size     : 12px;
+	font-family   : consolas;
+	min-width     : 500px;
+	background    : darkgrey;
+	color         : #000;
+	padding       : 5px;
+	border        : 3px solid lightgrey;
+	border-radius : 7px;
+}
+
+.console
+{
+	font-size   : 13px;
+	font-family : consolas;
+	color       : #662211;
+}
+
+.package
+{
+	border-left   : 2px solid #8b6914;
+	border-top    : 2px solid #8b6914;
+	padding       : 10px;
+	margin-top    : 20px;
+	margin-bottom : 20px;
+}
+
+.logo
+{
+	position      : fixed;
+	top           : 20px;
+	left          : 20px;
+	width         : 80px;
+	float         : left;
+	padding       : 10px;
+	margin        : 0px;
+	border        : 3px solid lightgreen;
+	border-radius : 20px;
+}
+
+.index
+{
+	position      : fixed;
+	top           : 180px;
+	left          : 20px;
+	width         : 80px;
+	float         : left;
+	padding       : 10px;
+	margin        : 0px;
+	border        : 3px solid lightgreen;
+	border-radius : 20px;
+}
+
+.contribute
+{
+	position   : fixed;
+	bottom     : 20px;
+	right      : 20px;
+	text-align : center;
+	border     : 3px solid #8b6914;
+	border-radius : 20px;
+	background    : #b8860b;
+}

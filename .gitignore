@@ -124,3 +124,8 @@ test/test.7.jpg
 test/dump.png
 dumps2json.py.zip
 test/test PIL override.jpg
+test/ifd
+test/ifd.tiff
+test/issue #7 - Copie
+test/test
+test/test_XP

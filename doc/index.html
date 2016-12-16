@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"/>
+<html>
+<head>
+	<meta http-equiv="pics-label" content="image/x-icon" URL="http://bruno.thoorens.free.fr/favicon.ico"/>
+	<meta name="author" content="bruno thoorens"/>
+	<meta name="revisit-after" content="4 days"/>
+	<meta name="language" content="en"/>
+	<meta name="robots" content="all"/>
+	<link rel="stylesheet" href="document.css"/>
+	<title>Tyf</title>
+</head>
+<body>
+
+<img class="logo" src="../logo.png" style="background-color:white;border:3px solid lightgrey;" />
+<div class="index"><ul>
+<li><a href="index.html">Foreword</a></li>
+<li><a href="api.html">API</a></li>
+</ul></div>
+
+<div class="main">
+
+<h1>Tyf</h1>
+<hr/>
+
+<h2>Foreword</h2>
+
+<p>
+The main goal of this package is to provide pythonic way to read and edit EXIF data from JPEG file.
+</p>
+
+<pre class="python">>>> import Tyf
+>>> jpg = Tyf.open("a_file.jpg")
+>>> jpg.ifd0.gps["GPSLatitude"]
+51.1597896
+>>> jpg.ifd0.gps["GPSLatitude"] = 45.3265487
+>>> jpg.save("another_file.jpg")</pre>
+
+<h3>Where are EXIF in JPEG file&nbsp;?</h3>
+
+<p>
+Googling &laquo;&nbsp;Exif file format&nbsp;&raquo; you can find <a href="http://www.media.mit.edu/pia/Research/deepview/exif.html">any pages</a> that explain how JPEG file is build&nbsp;:
+</p>
+
+<table style="border:2px solid lightgrey;border-collapse:collapse;" align="center" border="2" cellspacing="0">
+	<tbody style="color:white;">
+	<tr>
+		<td>SOI Marker</td><td colspan="3">Marker XX<br/>size=SSSS</td><td colspan="3">Marker YY<br/>size=TTTT</td><td colspan="3">SOS Marker<br/>size=UUUU</td><td>Image stream</td><td>EOI Marker</td></tr>
+	<tr class="console">
+		<td>FFD8</td><td>FFXX</td><td>SSSS</td><td>DDDD&hellip;</td><td>FFYY</td><td>TTTT</td><td>DDDD&hellip;</td><td>FFDA</td><td>UUUU</td><td>DDDD&hellip;</td><td>IIII&hellip;</td><td>FFD9</td>
+	</tr>
+	</tbody>
+</table>
+
+<p>
+EXIF informations are contained in APP1 segment of JPEG File (marker number <span class="console">E1</span>)&nbsp;:	
+</p>
+
+<table style="border:2px solid lightgrey;border-collapse:collapse;" align="center" border="2" cellspacing="0">
+	<tbody style="color:white;">
+	<tr><td class="console">FFE1</td><td colspan="3">APP1 Marker</td></tr>
+	<tr><td class="console">SSSS</td><td colspan="3">APP1 Data Size</td></tr>
+	<tr><td class="console">45786966 0000</td><td rowspan="12">APP1 Data</td><td colspan="2">Exif Header &rarr; <span class="console">b"Exif\x00\x00"</span></td></tr>
+	<tr><td class="console">49492A00 08000000</td><td colspan="2">TIFF Header</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td rowspan="2">IFD0 (main image)</td><td>Directory</td></tr>
+	<tr><td class="console">LLLLLLLL</td><td>Link to IFD1</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td colspan="2">Data area of IFD0</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td rowspan="2">Exif SubIFD</td><td>Directory</td></tr>
+	<tr><td class="console">00000000</td><td>End of Link</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td colspan="2">Data area of Exif SubIFD</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td rowspan="2">IFD1 (thumbnail image)</td><td>Directory</td></tr>
+	<tr><td class="console">00000000</td><td>End of Link</td></tr>
+	<tr><td class="console">XXXX&hellip;</td><td colspan="2">Data area of IFD1</td></tr>
+	<tr><td class="console">FFD8XXXX&hellip;XXXXFFD9</td><td colspan="2">Thumbnail image</td></tr>
+	</tbody>
+</table>
+
+<p>
+EXIF is actualy a Sub Image File Directory (SubIFD) contained in a TIFF IFD. So 
+once EXIF <span class="console">data</span> extracted from JPEG file we have to 
+deal with <span class="console">data[6:]</span> (striped from Exif Header) as a 
+TIFF (Tagged Image File Format) file. The idea here is to base <span class="console">Tyf</span>
+package on TIFF <span class="console">Tag</span> and <span class="console">Ifd</span>
+classes implementing <a href="https://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf">TIFF specification</a>.
+<span class="console">Tyf</span> has to be able to read and edit TIFF tags&hellip;
+</p>
+
+<h3>Main idea</h3>
+
+<p>
+Firstly, as end-up user, I only want to assign a value to a tag name or to 
+get value from a tag name. It is easily associatd to well known dictionary
+Python built-in type. It is the mean reason why <span class="console">Tyf.ifd.Ifd</span>
+class is an implementation of <span class="console">dict</span> object.
+</p>
+<p>
+Secondly, tag values can be tricky to understand. For example, GPS 
+longitude is a set of 6 integers that have to be interpreted as three rationals
+for degrees, minutes and seconds. It means that code has to provide encoders and
+decoders according to IFD entries type or tag. They are defined in
+<span class="console">Tyf.encoders</span> and <span class="console">Tyf.decoders</span>.
+</p>
+
+<pre class="python">>>> enc = getattr(Tyf.encoders, "_0x2") # 0x2 for GPSLongitude
+>>> enc(5.3212315165454)
+(5, 1, 19, 1, 25842026, 1572525)
+>>> enc = getattr(Tyf.encoders, "_0x1") # 0x1 for GPSLongitudeRef
+>>> enc(5.3212315165454) # should return the north hemisphere value
+b'N\x00'</pre>
+
+<p>
+To keep a maximum flexibility with my code, I wish to have a &laquo;&nbsp;human&nbsp;&raquo;
+and a &laquo;&nbsp;raw&nbsp;&raquo; way to read or write values in IFD&nbsp;:
+</p>
+<ul>
+	<li>The human way, using <span class="console">Tyf.ifd.Ifd.__getitem__</span>
+	and <span class="console">Tyf.ifd.Ifd.__setitem__</span> methods, to work
+	directly with Python values (ie <span class="console">datetime</span> object
+	instead of formated string, <span class="console">float</span> 	instead of 
+	rational&hellip;)</li>
+	<li>The raw way, using <span class="console">Tyf.ifd.Ifd.get</span> and
+	<span class="console">Tyf.ifd.Ifd.set</span> methods, to work directly with tag 
+	values which will exclusively be a <span class="console">bytes</span>
+	sequence or a <span class="console">tuple</span> (even with only one value)</li>
+</ul>
+
+<p>
+Finaly I want the <span class="console">Tyf.ifd.Tag</span> class to be end
+user friendly. A TIFF IFD is a collection of entries each one defining a tag
+with 4 entities&nbsp;: id number, type data, count of data and data itself.
+Tag id are integers and for each tag id is associated a type and
+sometime a default value. So <span class="console">Tyf.ifd.Tag</span>
+class should know about those values when I instanciate it with nothing but a 
+keyword.
+</p>
+
+<pre class="python">>>> tag = Tyf.ifd.Tag("ReferenceBlackWhite")
+>>> tag.value
+(0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1)
+>>> tag.tag
+532
+>>> tag.type
+5
+>>> tag.count
+24</pre>
+
+<p>
+A <span class="console">Tyf.tags</span> module containing a database of all tag
+should do the work. See <a href="http://www.awaresystems.be/imaging/tiff.html">this page for more informations</a>.
+</p>
+
+<hr style="page-break-after:always;"/>
+
+<!--p>
+
+<p>
+Data can be stored in the IFD entry if not too large (4 bytes max) else in IFD
+data. In that case, value stored in IFD entry is the offset in the file where
+data can be found.
+</p>
+
+<pre class="python">>>> import datetime
+>>> tag = Tyf.ifd.Tag(0x132) # base line tag number for Datetime
+>>> tag.value = b'2015:12:29 08:55:23\x00'
+>>> tag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': &lt;function &lt;lam
+bda> at 0x012BE468>, '_encoder': &lt;function &lt;lambda> at 0x012B75D0>, 'tag
+': 306, 'count': 20, 'comment': "Date and time of image creation, aray s
+ize = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'value': b'2015:12:29 0
+8:55:23\x00', 'key': 'DateTime'}
+>>> tag = Tyf.ifd.Tag(0x132, value=datetime.datetime(2015, 12, 29, 8, 55, 23))
+>>> tag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': &lt;function &lt;lam
+bda> at 0x012BE468>, '_encoder': &lt;function &lt;lambda> at 0x012B75D0>, 'tag
+': 306, 'count': 20, 'comment': "Date and time of image creation, aray s
+ize = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'value': b'2015:12:29 0
+8:55:23\x00', 'key': 'DateTime'}
+>>> tag.value     # bytes array to be stored in IFD data
+b'2015:12:29 08:55:23\x00'
+>>> tag._decode() # python datetime value decoded on the fly
+2015-12-29 08:55:02
+>>> tag._encode(datetime.datetime(2016, 1, 1, 0, 0, 1))
+>>> tag.value
+b'2016:01:01 00:00:01\x00'</pre-->
+
+</div>
+</body>
+</html>

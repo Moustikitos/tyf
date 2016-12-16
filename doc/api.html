@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"/>
+<html>
+<head>
+	<meta http-equiv="pics-label" content="image/x-icon" URL="http://bruno.thoorens.free.fr/favicon.ico"/>
+	<meta name="author" content="bruno thoorens"/>
+	<meta name="revisit-after" content="4 days"/>
+	<meta name="language" content="en"/>
+	<meta name="robots" content="all"/>
+	<link rel="stylesheet" href="document.css"/>
+	<title>Tyf</title>
+</head>
+<body>
+
+<img class="logo" src="../logo.png" style="background-color:white;border:3px solid lightgrey;" />
+<div class="index"><ul>
+<li><a href="index.html">Foreword</a></li>
+<li><a href="api.html">API</a></li>
+</ul></div>
+
+<div class="main">
+
+<h1>Tyf</h1>
+<hr/>
+
+<pre class="python">&gt;&gt;&gt; import Tyf</pre>
+
+<h2>API</h2>
+
+<p>Because JPEG EXIF data are stored occording to TIFF specification, I need to implement
+tag and Image file directory object</p>
+
+<h3>Tag object</h3>
+
+<p><span class="console">Tag</span> class stores numeric data in <span class="console">tuple</span>
+and string data in <span class="console">bytes</span>.</p>
+
+<pre class="python">&gt;&gt;&gt; tag = Tyf.ifd.Tag("GPSLongitude")
+&gt;&gt;&gt; tag
+&lt;Orphan tag 0x4: GPSLongitude = (0, )&gt;
+&gt;&gt;&gt; tag._encode(10.321)
+&gt;&gt;&gt; tag
+&lt;Orphan tag 0x4: GPSLongitude = (10, 1, 19, 1, 78, 5)&gt;
+</pre>
+
+<h3>Ifd object</h3>
+
+<!-- <h3>TiffFile object</h3>
+
+<h3>JpegFile object</h3>
+
+<p>Where can I find EXIF values&nbsp;?</p>
+<pre class="python">&gt;&gt;&gt; import Tyf
+&gt;&gt;&gt; jpg = Tyf.open("IMG_20150730_210115.jpg")
+&gt;&gt;&gt;  type(jpg)
+&lt;class 'Tyf.JpegFile'&gt;
+&gt;&gt;&gt; type(jpg.ifd0) # here is the first IFD containing EXIF data
+&lt;class 'Tyf.ifd.Ifd'&gt;
+</pre>
+<pre class="python">&gt;&gt;&gt; type(jpg.ifd0.gps) # here is a sub IFD containing GPS data
+&lt;class 'Tyf.ifd.Ifd'&gt;
+&gt;&gt;&gt; type(jpg.ifd1) # here is the second IFD containing Thumbnail data
+&lt;class 'Tyf.ifd.Ifd'&gt;
+</pre>
+<pre class="python">&gt;&gt;&gt; ["%x"%k for k in jpg.keys()]
+['ffe1', 'ffe0', 'fffe', 'ffdb', 'ffc0', 'ffc4', 'ffdd', 'ffda']
+</pre>
+ --><hr style="page-break-after:always;"/>
+
+<!--p>
+
+<p>
+Data can be stored in the IFD entry if not too large (4 bytes max) else in IFD
+data. In that case, value stored in IFD entry is the offset in the file where
+data can be found.
+</p>
+
+<pre class="python">>>> import datetime
+>>> tag = Tyf.ifd.Tag(0x132) # base line tag number for Datetime
+>>> tag.value = b'2015:12:29 08:55:23\x00'
+>>> tag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': &lt;function &lt;lam
+bda> at 0x012BE468>, '_encoder': &lt;function &lt;lambda> at 0x012B75D0>, 'tag
+': 306, 'count': 20, 'comment': "Date and time of image creation, aray s
+ize = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'value': b'2015:12:29 0
+8:55:23\x00', 'key': 'DateTime'}
+>>> tag = Tyf.ifd.Tag(0x132, value=datetime.datetime(2015, 12, 29, 8, 55, 23))
+>>> tag.__dict__
+{'value_is_offset': True, 'name': 'Tiff tag', '_decoder': &lt;function &lt;lam
+bda> at 0x012BE468>, '_encoder': &lt;function &lt;lambda> at 0x012B75D0>, 'tag
+': 306, 'count': 20, 'comment': "Date and time of image creation, aray s
+ize = 20, 'YYYY:MM:DD HH:MM:SS\x00'", 'type': 2, 'value': b'2015:12:29 0
+8:55:23\x00', 'key': 'DateTime'}
+>>> tag.value     # bytes array to be stored in IFD data
+b'2015:12:29 08:55:23\x00'
+>>> tag._decode() # python datetime value decoded on the fly
+2015-12-29 08:55:02
+>>> tag._encode(datetime.datetime(2016, 1, 1, 0, 0, 1))
+>>> tag.value
+b'2016:01:01 00:00:01\x00'</pre-->
+
+</div>
+</body>
+</html>

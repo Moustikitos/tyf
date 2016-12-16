@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-# Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 import datetime
 
 ###############

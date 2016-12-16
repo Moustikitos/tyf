@@ -4,6 +4,12 @@
 Changes
 =======
 
+1.3.2
+
++ ``Ifd``class manage to translate tags
++ added ``find`` method to ``Ifd`` class
++ ``UserComment`` ``GPSProcessingMethod`` encoders / decoders improved
+
 1.3.1
 
 + encoders / decoders bugfix

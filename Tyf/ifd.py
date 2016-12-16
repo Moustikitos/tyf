@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-# Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
 from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
 import struct
@@ -13,12 +13,12 @@ class Tag(object):
 		self.name = kwargs.pop("name", "Orphan tag")
 		if not db: tag, db = tags.get(tag)
 
-		self.tag, (self.key, _typ, default, self.comment) = tag, db
-		self.type = _typ[-1]
+		self.tag, (self.key, self.__types, default, self.comment) = tag, db
+		self.type = self.__types[-1]
 
 		if value != None: self._encode(value)
 		elif default != None: self._encode(default)
-		else: self.value = "" if self.type in [2,7] else ()
+		else: self.value = "" if self.type in [2,7] else (0,)
 
 	def __setattr__(self, attr, value):
 		# define encoder and decoder according to type
@@ -37,12 +37,17 @@ class Tag(object):
 			if restricted != None:
 				v = value[0] if isinstance(value, tuple) and len(value) == 1 else value
 				self.meaning = restricted.get(v, "no description found ["+str(v)+"]")
-			self.count = len(value) // (1 if self.type not in [5,10] else 2)
+			self._deal(value)
 			self._determine_if_offset()
 		object.__setattr__(self, attr, value)
 
 	def __repr__(self):
 		return "<%s 0x%x: %s = %r>" % (self.name, self.tag, self.key, self.value) + ("" if not self.meaning else ' :: %s'%self.meaning)
+
+	def _deal(self, value):
+		if len(self.__types) > 1: self.type = self.__types[-1]
+		else: self.type = self.__types[0]
+		self.count = len(value) // (1 if self.type not in [5,10] else 2)
 
 	def _encode(self, value):
 		self.value = self._encoder(value)
@@ -104,70 +109,69 @@ class Ifd(dict):
 			yield tag.key, tag._decode()
 
 	def __setitem__(self, tag, value):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			if tag in tf:
-				if tag in Ifd.sub_ifd:
-					name, family = Ifd.sub_ifd[tag]
-					setattr(self, "_%s"%tag, value if isinstance(value, Ifd) else Ifd(tag_name=name, tag_family=[family]))
-					dict.__setitem__(self, tag, Tag(tag, 0, name=self.tag_name, db=tf[tag]))
-				else:
-					dict.__setitem__(self, tag, Tag(tag, value, name=self.tag_name, db=tf[tag]))
-				return
-		raise KeyError("%s tag not a valid tag for this ifd" % tag)
+		_tag, database = self._tag(tag)
+		if not _tag:
+			raise KeyError("%s tag not a valid tag for this ifd" % tag)
+		elif _tag in Ifd.sub_ifd:
+			name, family = Ifd.sub_ifd[_tag]
+			setattr(self, "_%s"%_tag, value if isinstance(value, Ifd) else Ifd(tag_name=name, tag_family=[family]))
+			dict.__setitem__(self, _tag, Tag(_tag, 0, name=self.tag_name, db=database))
+		else:
+			dict.__setitem__(self, _tag, Tag(_tag, value, name=self.tag_name, db=database))
 
 	def __getitem__(self, tag):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			if tag in tf:
-				if tag in Ifd.sub_ifd:
-					if not hasattr(self, "_%s"%tag):
-						name, family = Ifd.sub_ifd[tag]
-						setattr(self, "_%s"%tag, Ifd(tag_name=name, tag_family=[family]))
-						dict.__setitem__(self, tag, Tag(tag, 0, name=self.tag_name, db=tf[tag]))
-					return getattr(self, "_%s"%tag)
-				return dict.__getitem__(self, tag)._decode()
-		return dict.__getitem__(self, tag)
+		_tag, database = self._tag(tag)
+		if not _tag:
+			return dict.__getitem__(self, tag)
+		elif _tag in Ifd.sub_ifd:
+			attr = "_%s"%_tag
+			if not hasattr(self, attr):
+				name, family = Ifd.sub_ifd[_tag]
+				setattr(self, attr, Ifd(tag_name=name, tag_family=[family]))
+				dict.__setitem__(self, _tag, Tag(_tag, 0, name=self.tag_name, db=database))
+			return getattr(self, attr)
+		return dict.__getitem__(self, _tag)._decode()
 
 	def __delitem__(self, tag):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			if tag in tf:
-				if tag in Ifd.sub_ifd:
-					if hasattr(self, "_%s"%tag): delattr(self, "_%s"%tag)
-					else: raise KeyError("Ifd does not contains %s sub ifd" % tag)
-				return dict.__delitem__(self, tag)
-		return dict.__delitem__(self, tag)
+		_tag, database = self._tag(tag)
+		if not _tag:
+			return dict.__delitem__(self, tag)
+		elif _tag in Ifd.sub_ifd:
+			attr = "_%s"%_tag
+			if hasattr(self, attr): delattr(self, attr)
+			else: raise KeyError("Ifd does not contains %s sub ifd" % _tag)
+		return dict.__delitem__(self, _tag)
 
-	def from_db(self, tag):
+	def _tag(self, elem):
 		for tf in self.tag_family:
-			if tag in tf: return tf[tag]
-		return ("Undefined", [7], None, "Undefined tag %r"%tag)
+			if elem in tf:
+				return elem, tf[elem]
+			else:
+				for tag, (key, typ, default, desc) in tf.items():
+					if elem == key:
+						return tag, (key, typ, default, desc)
+		return False, ("Undefined", [7], None, "Undefined tag %r"%elem)
 
 	def set(self, tag, typ, value):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			if tag in tf:
-				obj = Tag(tag, name=self.tag_name, db=tf[tag])
-				obj.type = typ
-				obj.value = (value,) if not hasattr(value, "__len__") else value
-				return dict.__setitem__(self, tag, obj)
-		raise KeyError("%s tag not a valid tag for this ifd" % tag)
+		_tag, database = self._tag(tag)
+		if not _tag: raise KeyError("%s tag not a valid tag for this ifd" % tag)
+		obj = Tag(_tag, name=self.tag_name, db=database)
+		obj.type = typ
+		obj.value = (value,) if not hasattr(value, "__len__") else value
+		return dict.__setitem__(self, _tag, obj)
 
 	def get(self, tag):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			if tag in tf:
-				return dict.__getitem__(self, tag)
-		raise KeyError("%s tag not found in ifd" % tag)
+		_tag, database = self._tag(tag)
+		return dict.__getitem__(self, _tag)
 
 	def pop(self, tag):
-		for tf in self.tag_family:
-			tag = tags._2tag(tag, family=tf)
-			attr = "_%s"%tag
-			if hasattr(self, attr):
-				delattr(self, attr)
-		dict.pop(self, tag)
+		_tag, database = self._tag(tag)
+		attr = "_%s"%_tag
+		if hasattr(self, attr):
+			delattr(self, attr)
+		elem = dict.pop(self, _tag)
+		elem.name = "Orphan tag"
+		return elem
 
 	def append(self, elem):
 		if isinstance(elem, Tag):
@@ -178,7 +182,22 @@ class Ifd(dict):
 				if elem.tag in tf:
 					return dict.__setitem__(self, elem.tag, elem)
 			raise KeyError("%s tag not a valid tag for this ifd" % elem.tag)
-		else: raise TypeError("%s is not a valid tag object" % elem)
+		else:
+			raise TypeError("%r is not a valid tag object" % elem)
+
+	def find(self, elem):
+		found = False
+		for tf in self.tag_family:
+			dico = dict((v[0],k) for k,v in tf.items())
+			if elem in tf and elem in self:
+				return dict.__getitem__(self, elem)
+			elif elem in dico and dico[elem] in self:
+				return dict.__getitem__(self, dico[elem])
+		for tag in Ifd.sub_ifd:
+			if hasattr(self, "_%s"%tag):
+				found = getattr(self, "_%s"%tag).find(elem)
+				if found: break
+		return found
 
 	def set_location(self, longitude, latitude, altitude=0.):
 		ifd = self["GPS IFD"]

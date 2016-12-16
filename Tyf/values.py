@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-# Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
 ## Tiff tag values
 NewSubfileType = {
@@ -90,8 +90,8 @@ Orientation = {
 }
 
 PlanarConfiguration = {
-	1: "Chunky", #, format: RGBARGBARGBA....RGBA 
-	2: "Planar"  #, format: RRR.RGGG.GBBB.BAAA.A
+	1: "Chunky", # format: RGBARGBARGBA...RGBA 
+	2: "Planar"  # format: RR...RGG...GBB...BAA...A
 }
 
 GrayResponseUnit = {

@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-# Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 # ~ http://www.awaresystems.be/imaging/tiff.html
 from . import values
 
@@ -306,21 +306,4 @@ def get(tag):
 			tag = family[tag]
 		if tag in dic:
 			return tag, dic[tag]
-	return 0, ("Undefined", [7], None, "Undefined tag %r"%tag)
-
-def _2tag(tag, family=None):
-	if family != None:
-		idx = _TAG_FAMILIES.index(family)
-		if isinstance(tag, (bytes, str)):
-			if tag in _TAG_FAMILIES_2TAG[idx]:
-				return _TAG_FAMILIES_2TAG[idx][tag]
-			return tag
-		else:
-			return tag
-	elif isinstance(tag, (bytes, str)):
-		for dic in _TAG_FAMILIES_2TAG:
-			if tag in dic:
-				return dic[tag]
-		return tag
-	else:
-		return tag
+	return False, ("Undefined", [7], None, "Undefined tag %r"%tag)

@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-# Copyright 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
+# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 from . import reduce
 import math, fractions, datetime
 ###############
@@ -17,6 +17,7 @@ def _1(value):
 def _2(value):
 	if not isinstance(value, bytes):
 		value = value.encode()
+	if len(value) == 0: return b"\x00"
 	value += b"\x00" if value[-1] != b"\x00" else ""
 	return value
 

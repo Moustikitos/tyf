@@ -1,5 +1,5 @@
 # -*- encoding:utf-8 -*-
-__copyright__ = "Copyright © 2012-2015, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html"
+__copyright__ = "Copyright © 2015-2016\nhttp://bruno.thoorens.free.fr/licences/tyf.html"
 __author__    = "THOORENS Bruno"
 __tiff__      = (6, 0)
 __geotiff__   = (1, 8, 1)
@@ -7,6 +7,7 @@ __geotiff__   = (1, 8, 1)
 import io, os, sys, struct, operator, collections
 
 __PY3__ = True if sys.version_info[0] >= 3 else False
+__XMP__ = False
 
 unpack = lambda fmt, fileobj: struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
 pack = lambda fmt, fileobj, value: fileobj.write(struct.pack(fmt, *value))
@@ -60,39 +61,41 @@ def _read_IFD(obj, fileobj, offset, byteorder="<"):
 		_typ = TYPES[typ][0]
 
 		# create a tifftag
-		tt = ifd.Tag(tag, name=obj.tag_name, db=obj.from_db(tag))
-		# initialize what we already know
-		tt.type = typ
-		tt.count = count
-		# to know if ifd entry value is an offset
-		tt._determine_if_offset()
+		tag, database = obj._tag(tag)
+		if tag:
+			tt = ifd.Tag(tag, name=obj.tag_name, db=database)
+			# initialize what we already know
+			tt.type = typ
+			tt.count = count
+			# to know if ifd entry value is an offset
+			tt._determine_if_offset()
 
-		# if value is offset
-		if tt.value_is_offset:
-			# read offset value
-			value, = struct.unpack(byteorder+"L", data)
-			fmt = byteorder + _typ*count
-			bckp = fileobj.tell()
-			# go to offset in the file
-			fileobj.seek(value)
-			# if ascii type, convert to bytes
-			if typ == 2: tt.value = b"".join(e for e in unpack(fmt, fileobj))
-			# else if undefined type, read data
-			elif typ == 7: tt.value = fileobj.read(count)
-			# else unpack data
-			else: tt.value = unpack(fmt, fileobj)
-			# go back to ifd entry
-			fileobj.seek(bckp)
-
-		# if value is in the ifd entry
-		else:
-			if typ in [2, 7]:
-				tt.value = data[:count]
-			else:
+			# if value is offset
+			if tt.value_is_offset:
+				# read offset value
+				value, = struct.unpack(byteorder+"L", data)
 				fmt = byteorder + _typ*count
-				tt.value = struct.unpack(fmt, data[:count*struct.calcsize("="+_typ)])
+				bckp = fileobj.tell()
+				# go to offset in the file
+				fileobj.seek(value)
+				# if ascii type, convert to bytes
+				if typ == 2: tt.value = b"".join(e for e in unpack(fmt, fileobj))
+				# else if undefined type, read data
+				elif typ == 7: tt.value = fileobj.read(count)
+				# else unpack data
+				else: tt.value = unpack(fmt, fileobj)
+				# go back to ifd entry
+				fileobj.seek(bckp)
 
-		obj.append(tt)
+			# if value is in the ifd entry
+			else:
+				if typ in [2, 7]:
+					tt.value = data[:count]
+				else:
+					fmt = byteorder + _typ*count
+					tt.value = struct.unpack(fmt, data[:count*struct.calcsize("="+_typ)])
+
+			obj.append(tt)
 
 	return next_ifd_offset
 
@@ -101,11 +104,10 @@ def from_buffer(obj, fileobj, offset, byteorder="<"):
 	next_ifd_offset = _read_IFD(obj, fileobj, offset, byteorder)
 	# get next ifd offset
 
-	for tag in ifd.Ifd.sub_ifd:
-		if tag in obj:
-			tag_name, tag_family = ifd.Ifd.sub_ifd[tag]
-			setattr(obj, "_%s"%tag, ifd.Ifd(tag_name=tag_name, tag_family=[tag_family]))
-			from_buffer(getattr(obj, "_%s"%tag), fileobj, obj.get(tag).value[0], byteorder)
+	for tag in [t for t in ifd.Ifd.sub_ifd if t in obj]:
+		tag_name, tag_family = ifd.Ifd.sub_ifd[tag]
+		setattr(obj, "_%s"%tag, ifd.Ifd(tag_name=tag_name, tag_family=[tag_family]))
+		from_buffer(getattr(obj, "_%s"%tag), fileobj, obj.get(tag).value[0], byteorder)
 
 	fileobj.seek(next_ifd_offset)
 	next_ifd, = unpack(byteorder+"L", fileobj)
@@ -206,10 +208,9 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 	def malloc(i,o):
 		size = i.size
 		o += size["ifd"] + size["data"]
-		for tag in sub_ifd_tags:
-			if tag in i:
-				i.set(tag, 4, o)
-				o = malloc(getattr(i, "_%s"%tag),o)
+		for tag in [t for t in sub_ifd_tags if t in i]:
+			i.set(tag, 4, o)
+			o = malloc(getattr(i, "_%s"%tag), o)
 		return o
 	raw_offset = malloc(obj, offset)
 
@@ -244,9 +245,8 @@ def to_buffer(obj, fileobj, offset, byteorder="<"):
 
 	# write IFD
 	def dump(i,f,o,b):
-		for tag in sub_ifd_tags:
-			if tag in i:
-				dump(getattr(i, "_%s"%tag),f,i.get(tag).value[0],b)
+		for tag in [t for t in sub_ifd_tags if t in i]:
+			dump(getattr(i, "_%s"%tag), f, i.get(tag).value[0], b)
 		return _write_IFD(i,f,o,b)
 	next_ifd_offset = dump(obj, fileobj, offset, byteorder)
 
@@ -372,9 +372,14 @@ class JpegFile(collections.OrderedDict):
 				# say it is the end of the file
 				marker = 0xffd9
 			elif marker == 0xffe1:
-				string = StringIO(fileobj.read(count-2)[6:])
-				try: markers[marker] = TiffFile(string)
-				except: setattr(markers, "_0xffe1", string.getvalue())
+				data = fileobj.read(count-2)
+				string = StringIO(data[6:])
+				try:
+					markers[marker] = TiffFile(string)
+					# print("IFD reading")
+				except:
+					# print("XMP reading")
+					if __XMP__: setattr(self, "_0xffe1", data)
 				string.close()
 			else:
 				markers[marker] = fileobj.read(count-2)
@@ -403,6 +408,11 @@ class JpegFile(collections.OrderedDict):
 		fileobj, _close = _fileobj(f, "wb")
 
 		pack(">H", fileobj, (0xffd8,))
+		if __XMP__ and hasattr(self, "_0xffe1"):
+			# print("XMP writing")
+			data = getattr(self, "_0xffe1")
+			pack(">HH", fileobj, (key, len(data) + 2))
+			fileobj.write(data)
 		for key in self: self._pack(key, fileobj)
 		pack(">H", fileobj, (0xffd9,))
 
