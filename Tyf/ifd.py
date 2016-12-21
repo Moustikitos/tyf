@@ -51,6 +51,7 @@ class Tag(object):
 
 	def _encode(self, value):
 		self.value = self._encoder(value)
+	digest = _encode
 
 	def _decode(self):
 		return self._decoder(self.value)
