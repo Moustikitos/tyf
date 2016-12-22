@@ -20,12 +20,12 @@ body
 
 a{
 	text-decoration : none;
-	color           : #44bb44;
+	color           : #0044bb;
 	cursor          : hand;
 }a:hover{
 	text-decoration : underline;
 }a:visited{
-	color           : #bbff44;
+	color           : #44ffbb;
 }
 
 p

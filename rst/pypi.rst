@@ -6,6 +6,7 @@ Changes
 
 1.3.2
 
++ ``JpegFile`` API change
 + ``Ifd``class manage to translate tags
 + added ``find`` method to ``Ifd`` class
 + ``UserComment`` ``GPSProcessingMethod`` encoders / decoders improved
@@ -40,7 +41,7 @@ b'Bruno THOORENS\x00'>, 40092: <Tiff tag 0x9c9c: XPComment = (83, 0, 105, 0, 109
  0, 108, 0, 101, 0, 32, 0, 99, 0, 111, 0, 109, 0, 109, 0, 101, 0, 110, 0, 116, 0, 97, 0, 
 105, 0, 114, 0, 101, 0, 32, 0, 101, 0, 110, 0, 32, 0, 97, 0, 115, 0, 99, 0, 105, 0, 105, 
 0, 32, 0, 112, 0, 111, 0, 117, 0, 114, 0, 32, 0, 88, 0, 80, 0)>}
->>> ifd.ifd0.exif
+>>> jpg.ifd0.exif
 {36864: <Exif tag 0x9000: ExifVersion = b'0220'>, 37377: <Exif tag 0x9201: ShutterSpeedVa
 lue = (70, 10)>, 37378: <Exif tag 0x9202: ApertureValue = (30, 10)>, 36867: <Exif tag 0x9
 003: DateTimeOriginal = b'2015:12:29 08:00:00\x00'>, 36868: <Exif tag 0x9004: DateTimeDig
@@ -56,7 +57,7 @@ r = (26, 10)>, 34850: <Exif tag 0x8822: ExposureProgram = (3,)> :: Aperture prio
 e = (0,)> :: Standard, 34855: <Exif tag 0x8827: ISOSpeedRatings = (50,)>, 41987: <Exif ta
 g 0xa403: WhiteBalance = (0,)> :: Auto white balance, 37379: <Exif tag 0x9203: Brightness
 Value = (60, 10)>, 40962: <Exif tag 0xa002: PixelXDimension = (2560,)>}
->>> ifd.ifd0.gps
+>>> jpg.ifd0.gps
 {0: <GPS tag 0x0: GPSVersionID = (2, 2, 0, 0)>, 1: <GPS tag 0x1: GPSLatitudeRef = b'N\x00
 '> :: North latitude, 2: <GPS tag 0x2: GPSLatitude = (43, 1, 30, 1, 0, 1)>, 3: <GPS tag 0
 x3: GPSLongitudeRef = b'E\x00'> :: East longitude, 4: <GPS tag 0x4: GPSLongitude = (3, 1,
@@ -268,7 +269,7 @@ st longitude', 4: <GPS tag 0x4: GPSLongitude = (4, 1, 21, 1, 114687, 2500)>}
 >>> import Tyf
 >>> jpg = Tyf.open(r".\IMG_20150730_210115.jpg")
 >>> tif = Tyf.open(r".\CEA.tif")
->>> isinstance(jpg, dict)
+>>> isinstance(jpg, list)
 True
 >>> isinstance(tif, list)
 True
@@ -276,23 +277,22 @@ True
 ``JpegFile``
 ------------
 
-``JpegFile`` class is an ordered dictionary mapping all marker found in ``JPEG`` file.
+``JpegFile`` class is an list mapping all marker found in ``JPEG`` file.
 Values are stored as binary data except ``0xffe1`` one stored as a ``TiffFile``
-instance. It contains two image file directories (IFD), one for the image and 
-another one for the thumbnail.
+instance or a ``bytes`` object (XMP data).
 
->>> type(jpg[0xffe1])
+>>> type(jpg.ifd)
 <class 'Tyf.TiffFile'>
->>> len(jpg[0xffe1])
+>>> len(jpg.ifd)
 2
->>> jpg.ifd0 # shortcut to jpg[0xffe1][0]
+>>> jpg.ifd0 # shortcut to jpg.ifd[0]
 {256: <Tiff tag 0x100: ImageWidth = (2560,)>, 305: <Tiff tag 0x131: Software = b'KVT49L\x
 00'>, 274: <Tiff tag 0x112: Orientation = (1,)> :: Normal, 531: <Tiff tag 0x213: YCbCrPos
 itioning = (1,)> :: Centered, 34853: <Tiff tag 0x8825: GPS IFD = (572,)>, 257: <Tiff tag 
 0x101: ImageLength = (1920,)>, 34665: <Tiff tag 0x8769: Exif IFD = (176,)>, 306: <Tiff ta
 g 0x132: DateTime = b'2015:07:30 21:01:16\x00'>, 272: <Tiff tag 0x110: Model = b'Nexus S\
 x00'>, 271: <Tiff tag 0x10f: Make = b'Google\x00'>}
->>> jpg.ifd1 # shortcut to jpg[0xffe1][1]
+>>> jpg.ifd1 # shortcut to jpg.ifd[1]
 {256: <Tiff tag 0x100: ImageWidth = (320,)>, 257: <Tiff tag 0x101: ImageLength = (240,)>,
  274: <Tiff tag 0x112: Orientation = (1,)> :: Normal, 259: <Tiff tag 0x103: Compression =
  (6,)> :: JPEG, 513: <Tiff tag 0x201: JPEGInterchangeFormat = (966,)>, 296: <Tiff tag 0x1

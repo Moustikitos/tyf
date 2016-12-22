@@ -10,7 +10,6 @@ cast = lambda value, mini, maxi: int(max(min(value, maxi), mini))
 _m_short = 0
 _M_short = 2**8
 def _1(value):
-	value = int(value)
 	if isinstance(value, tuple): return tuple(cast(v, _m_short, _M_short) for v in value)
 	else: return (cast(value, _m_short, _M_short), )
 
@@ -72,7 +71,7 @@ _12 = _11
 # Tag-specific encoders
 
 # XPTitle XPComment XBAuthor
-_0x9c9b = _0x9c9c = _0x9c9d = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value])
+_0x9c9b = _0x9c9c = _0x9c9d_= _0x9c9e = _0x9c9f = lambda value : reduce(tuple.__add__, [(ord(e), 0) for e in value]) + (0, 0)
 #UserComment GPSProcessingMethod
 _0x9286 = _0x1b = lambda value: b"ASCII\x00\x00\x00" + (value.encode("ascii", errors="replace") if not isinstance(value, bytes) else value)
 #GPSLatitudeRef or InteropIndex

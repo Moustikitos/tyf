@@ -26,20 +26,88 @@
 
 <h2>API</h2>
 
-<p>Because JPEG EXIF data are stored occording to TIFF specification, I need to implement
-tag and Image file directory object</p>
+<p>Because JPEG EXIF data are stored occording to TIFF specification, <span class="console">Tyf</span>
+package is based on tag and Image file directory implementation.</p>
 
 <h3>Tag object</h3>
 
-<p><span class="console">Tag</span> class stores numeric data in <span class="console">tuple</span>
-and string data in <span class="console">bytes</span>.</p>
+<p>
+Let's see what is in <span class="console">Tag</span> object&nbsp;:
+</p>
+<pre class="python">
+>>> tag = Tyf.ifd.Tag("GPSLongitude")
+>>> for k,v in sorted(tag.__dict__.items(), key=lambda e:e[0]):
+...	print("%s: %r" %(k,v))
+...
+_Tag__types: [5]
+_decoder: &lt;function _0x2 at 0x02D046F0>
+_encoder: &lt;function _0x2 at 0x02D042B8>
+comment: 'Indicates the longitude'
+count: 3
+key: 'GPSLongitude'
+name: 'Orphan tag'
+tag: 4
+type: 5
+value: (0, 1, 0, 1, 0, 1)
+value_is_offset: True</pre>
 
-<pre class="python">&gt;&gt;&gt; tag = Tyf.ifd.Tag("GPSLongitude")
-&gt;&gt;&gt; tag
-&lt;Orphan tag 0x4: GPSLongitude = (0, )&gt;
-&gt;&gt;&gt; tag._encode(10.321)
-&gt;&gt;&gt; tag
-&lt;Orphan tag 0x4: GPSLongitude = (10, 1, 19, 1, 78, 5)&gt;
+<p>
+<span class="console">Tag</span> object automaticaly initiates all data it needs according to a given
+tag name. It uses <span class="console">_encoder</span> and <span class="console">_decoder</span> function
+to computes three different python values&nbsp;:
+</p>
+<ol>
+<li>scalar values (single one or tuple-ed ones)</li>
+<li>string object</li>
+<li>datetime object values</li>
+</ol>
+<p>
+Value have to be changed using <span class="console">digest</span> function and is recovered through
+<span class="console">decode</span> one.
+</p>
+<pre class="python">
+>>> tag
+&lt;Orphan tag 0x4: GPSLongitude = (0, 1, 0, 1, 0, 1)>
+>>> tag.digest(10.321)
+>>> tag.value
+(10, 1, 19, 1, 78, 5)
+>>> tag.decode()
+10.321
+>>> tag = Tyf.ifd.Tag(529)
+>>> tag
+&lt;Orphan tag 0x211: YCbCrCoefficients = (299, 1000, 587, 1000, 114, 1000)>
+>>> tag.digest((4.5,2.3,5.65))
+>>> tag.value
+(9, 2, 23, 10, 113, 20)
+>>> tag.decode()
+(4.5, 2.3, 5.65)
+</pre>
+
+<p>Note that a valid tag
+number can also be used on instanciation.
+</p>
+
+<pre class="python">
+>>> tag = Tyf.ifd.Tag(37510)
+>>> tag
+&lt;Orphan tag 0x9286: UserComment = b'ASCII\x00\x00\x00\x00'>
+>>> tag.digest("Simple comment")
+>>> tag.value
+b'ASCII\x00\x00\x00Simple comment'
+>>> tag.decode()
+'Simple comment'
+</pre>
+
+<pre class="python">
+>>> import datetime
+>>> tag = Tyf.ifd.Tag("DateTimeDigitized")
+>>> tag
+&lt;Orphan tag 0x9004: DateTimeDigitized = b'\x00'>
+>>> tag.digest(datetime.datetime(2016,12,20,9,10,0))
+>>> tag
+&lt;Orphan tag 0x9004: DateTimeDigitized = b'2016:12:20 09:10:00\x00'>
+>>> tag.decode()
+datetime.datetime(2016, 12, 20, 9, 10)
 </pre>
 
 <h3>Ifd object</h3>

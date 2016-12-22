@@ -7,7 +7,7 @@ __geotiff__   = (1, 8, 1)
 import io, os, sys, struct, operator, collections
 
 __PY3__ = True if sys.version_info[0] >= 3 else False
-__XMP__ = False
+__XMP__ = True
 
 unpack = lambda fmt, fileobj: struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
 pack = lambda fmt, fileobj, value: fileobj.write(struct.pack(fmt, *value))
@@ -353,69 +353,65 @@ class TiffFile(list):
 		if _close: fileobj.close()
 
 
-class JpegFile(collections.OrderedDict):
+class JpegFile(list):
 
-	jfif = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe0), None, None, "JFIF data")
-	ifd0 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[0], None, None, "Image IFD")
-	ifd1 = property(lambda obj: collections.OrderedDict.__getitem__(obj, 0xffe1)[1], None, None, "Thumbnail IFD")
+	ifd0 = property(lambda obj: getattr(obj, "ifd")[0], None, None, "Image IFD")
+	ifd1 = property(lambda obj: getattr(obj, "ifd")[1], None, None, "Thumbnail IFD")
 
 	def __init__(self, fileobj):
-		markers = collections.OrderedDict()
+		sgmt = []
+
+		fileobj.seek(0)
 		marker, = unpack(">H", fileobj)
-		if marker != 0xffd8: raise Exception("not a valid jpeg file")
+		if marker != 0xffd8:
+			raise Exception("not a valid jpeg file")
+
 		while marker != 0xffd9: # EOI (End Of Image) Marker
 			marker, count = unpack(">HH", fileobj)
-			# here is raster data marker, copy all after marker id
+			# if JPEG raw data
 			if marker == 0xffda:
 				fileobj.seek(-2, 1)
-				markers[0xffda] = fileobj.read()[:-2]
-				# say it is the end of the file
+				sgmt.append((0xffda, fileobj.read()[:-2]))
 				marker = 0xffd9
 			elif marker == 0xffe1:
 				data = fileobj.read(count-2)
-				string = StringIO(data[6:])
-				try:
-					markers[marker] = TiffFile(string)
-					# print("IFD reading")
-				except:
-					# print("XMP reading")
-					if __XMP__: setattr(self, "_0xffe1", data)
-				string.close()
+				if data[:6] == b"Exif\x00\x00":
+					string = StringIO(data[6:])
+					self.ifd = TiffFile(string)
+					string.close()
+					sgmt.append((0xffe1, self.ifd))
+				elif b"ns.adobe.com" in data[:30]:
+					self.xmp = data[data.find(b"\x00")+1:]
+					sgmt.append((0xffe1, self.xmp))
 			else:
-				markers[marker] = fileobj.read(count-2)
+				sgmt.append((marker, fileobj.read(count-2)))
 
-		collections.OrderedDict.__init__(self, markers)
-
-	def __getitem__(self, item):
-		try: return collections.OrderedDict.__getitem__(self, 0xffe1)[0,item]
-		except KeyError: return collections.OrderedDict.__getitem__(self, item)
-
-	def _pack(self, marker, fileobj):
-		data = self[marker]
-		if marker == 0xffda:
-			pack(">H", fileobj, (marker,))
-		elif marker == 0xffe1:
-			string = StringIO()
-			self[marker].save(string)
-			data = b"Exif\x00\x00" + string.getvalue()
-			pack(">HH", fileobj, (marker, len(data) + 2))
-			string.close()
-		else:
-			pack(">HH", fileobj, (marker, len(data) + 2))
-		fileobj.write(data)
+		list.__init__(self, sgmt)
 
 	def save(self, f):
 		fileobj, _close = _fileobj(f, "wb")
-
 		pack(">H", fileobj, (0xffd8,))
-		if __XMP__ and hasattr(self, "_0xffe1"):
-			# print("XMP writing")
-			data = getattr(self, "_0xffe1")
-			pack(">HH", fileobj, (key, len(data) + 2))
-			fileobj.write(data)
-		for key in self: self._pack(key, fileobj)
-		pack(">H", fileobj, (0xffd9,))
 
+		for marker, value in self:
+			if marker == 0xffda:
+				pack(">H", fileobj, (marker,))
+
+			elif marker == 0xffe1:
+				string = StringIO()
+				if isinstance(value, TiffFile):
+					value.save(string)
+					value = b"Exif\x00\x00" + string.getvalue()
+				elif isinstance(value, bytes):
+					value = b'http://ns.adobe.com/xap/1.0/\x00' + value
+				string.close()
+				pack(">HH", fileobj, (marker, len(value) + 2))
+
+			else:
+				pack(">HH", fileobj, (marker, len(value) + 2))
+
+			fileobj.write(value)
+
+		pack(">H", fileobj, (0xffd9,))
 		if _close: fileobj.close()
 
 	def save_thumbnail(self, f):
@@ -441,21 +437,22 @@ class JpegFile(collections.OrderedDict):
 
 	def dump_exif(self, f):
 		fileobj, _close = _fileobj(f, "wb")
-		self[0xffe1].save(fileobj)
+		self.ifd.save(fileobj)
 		if _close: fileobj.close()
 
 	def load_exif(self, f):
 		fileobj, _close = _fileobj(f, "rb")
-		self[0xffe1] = TiffFile(fileobj)
-		self[0xffe1].load_raster()
+		self.ifd = TiffFile(fileobj)
+		self.ifd.load_raster()
+		self.insert(1, (0xffe1, self.ifd))
 		if _close: fileobj.close()
 
 	def strip_exif(self):
-		# strip thumbnail(s?)
-		while len(self[0xffe1]) > 1:
-			self[0xffe1].pop(-1)
-		for key in list(k for k in dict.__iter__(self.ifd0) if k not in tags.bTT):
-			self.ifd0.pop(key)
+		ifd = self.ifd # strip thumbnail(s?)
+		ifd0 = self.ifd0
+		while len(ifd) > 1: ifd.pop(-1)
+		for key in list(k for k in dict.__iter__(ifd0) if k not in tags.bTT):
+			ifd0.pop(key)
 
 
 def jpeg_extract(f):
