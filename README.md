@@ -3,7 +3,6 @@
 [![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/tyf.html)
 
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
-
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 
@@ -24,7 +23,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + extract TIFF or JPEG thumbnails from JPEG files
  + strip EXIF data from JPEG File
  + dump location thumbnail using google API
- + create multi-frame TIFF file with simple __add__ operation
+ + create multi-frame TIFF file with simple ``__add__`` operation
  + interpolate coordinates using GEOTIFF ModelTransformation
 
 ## Contribute
