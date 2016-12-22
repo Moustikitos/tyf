@@ -7,9 +7,9 @@ Changes
 1.3.2
 
 + ``JpegFile`` API change
-+ ``JpegFile`` keeps xmp metadata as ``xml.etree.ElementTree.Element`` object
++ ``JpegFile`` keeps XMP metadata as ``xml.etree.ElementTree.Element`` object
 + ``Ifd`` class manage to translate tags
-+ added ``find`` method to ``Ifd`` class
++ added ``find`` and ``place`` method to ``Ifd`` class
 + encoders / decoders improvements
 
 1.3.1
@@ -280,7 +280,7 @@ True
 
 ``JpegFile`` class is an list mapping all marker found in ``JPEG`` file.
 Values are stored as binary data except ``0xffe1`` one stored as a ``TiffFile``
-instance or a ``bytes`` object (XMP data).
+instance or a ``xml.etree.ElementTree.Element`` object (XMP data).
 
 >>> type(jpg.ifd)
 <class 'Tyf.TiffFile'>
