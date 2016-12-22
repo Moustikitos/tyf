@@ -4,6 +4,7 @@ __author__    = "THOORENS Bruno"
 __tiff__      = (6, 0)
 __geotiff__   = (1, 8, 1)
 
+from xml.etree.ElementTree import Element, fromstring, tostring
 import io, os, sys, struct, operator, collections
 
 __PY3__ = True if sys.version_info[0] >= 3 else False
@@ -381,7 +382,7 @@ class JpegFile(list):
 					string.close()
 					sgmt.append((0xffe1, self.ifd))
 				elif b"ns.adobe.com" in data[:30]:
-					self.xmp = data[data.find(b"\x00")+1:]
+					self.xmp = fromstring(data[data.find(b"\x00")+1:])
 					sgmt.append((0xffe1, self.xmp))
 			else:
 				sgmt.append((marker, fileobj.read(count-2)))
@@ -397,13 +398,13 @@ class JpegFile(list):
 				pack(">H", fileobj, (marker,))
 
 			elif marker == 0xffe1:
-				string = StringIO()
 				if isinstance(value, TiffFile):
+					string = StringIO()
 					value.save(string)
 					value = b"Exif\x00\x00" + string.getvalue()
-				elif isinstance(value, bytes):
-					value = b'http://ns.adobe.com/xap/1.0/\x00' + value
-				string.close()
+					string.close()
+				elif isinstance(value, Element):
+					value = b'http://ns.adobe.com/xap/1.0/\x00' + tostring(self.xmp)
 				pack(">HH", fileobj, (marker, len(value) + 2))
 
 			else:
@@ -458,21 +459,24 @@ class JpegFile(list):
 def jpeg_extract(f):
 	fileobj, _close = _fileobj(f, "rb")
 
-	ifd = False
 	marker, = unpack(">H", fileobj)
 	if marker != 0xffd8: raise Exception("not a valid jpeg file")
-	while marker != 0xffd9:
+	
+	while marker != 0xffda:
 		marker, count = unpack(">HH", fileobj)
 		if marker == 0xffe1:
-			string = StringIO(fileobj.read(count-2)[6:])
-			ifd = TiffFile(string)
-			string.close()
-			marker = 0xffd9
+			data = fileobj.read(count-2)
+			if data[:6] == b"Exif\x00\x00":
+				string = StringIO(data[6:])
+				ifd = TiffFile(string)
+				string.close()
+			elif b"ns.adobe.com" in data[:30]:
+				xmp = fromstring(data[data.find(b"\x00")+1:])
 		else:
 			fileobj.read(count-2)
 
 	if _close: fileobj.close()
-	return ifd
+	return ifd, xmp
 
 def open(f):
 	fileobj, _close = _fileobj(f, "rb")

@@ -7,9 +7,10 @@ Changes
 1.3.2
 
 + ``JpegFile`` API change
-+ ``Ifd``class manage to translate tags
++ ``JpegFile`` keeps xmp metadata as ``xml.etree.ElementTree.Element`` object
++ ``Ifd`` class manage to translate tags
 + added ``find`` method to ``Ifd`` class
-+ ``UserComment`` ``GPSProcessingMethod`` encoders / decoders improved
++ encoders / decoders improvements
 
 1.3.1
 
@@ -168,7 +169,7 @@ Quick view
 
 >>> import Tyf
 >>> t = Tyf.ifd.Tag("GPSLongitude")
->>> t._encode(4.362743)
+>>> t.digest(4.362743)
 >>> t
 <Orphan tag 0x4: GPSLongitude = (4, 1, 21, 1, 114687, 2500)>
 >>> t = Tyf.ifd.Tag("GPSLongitude", value=4.362743)
@@ -180,7 +181,7 @@ Quick view
 3
 >>> t.value
 (4, 1, 21, 1, 114687, 2500)
->>> t._decode()
+>>> t.decode()
 4.362743
 >>> t = Tyf.ifd.Tag("KeyTest")
 <Orphan tag 0x0: Undefined = ''>
@@ -299,6 +300,8 @@ x00'>, 271: <Tiff tag 0x10f: Make = b'Google\x00'>}
 28: ResolutionUnit = (2,)> :: Inch, 282: <Tiff tag 0x11a: XResolution = (72, 1)>, 283: <T
 iff tag 0x11b: YResolution = (72, 1)>, 514: <Tiff tag 0x202: JPEGInterchangeFormatLength 
 = (9624,)>}
+>>>jpg.xmp
+<Element '{adobe:ns:meta/}xmpmeta' at 0x3307a90>
 
 All information, including GPS and Exif IFD are available using ``.tags()`` 
 method of its first item
@@ -326,8 +329,8 @@ And because ``JpegFile.ifd0`` is actually a shortcut to a ``Tyf.ifd.Ifd`` instan
 ``TiffFile``
 ------------
 
-``TiffFile`` class is a list of IFD found in ``TIFF`` file or ``JPEG`` marker 
-``0xffe1``. Each IFD is a dictionary containing tag-value pair.
+``TiffFile`` class is a list of IFD found in ``TIFF`` file. Each IFD is a dictionary
+containing tag-value pair.
 
 >>> for tag in tif[0].tags(): print(tag)
 ...
