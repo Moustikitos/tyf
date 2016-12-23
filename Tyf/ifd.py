@@ -89,7 +89,7 @@ class Ifd(dict):
 	size = property(
 		lambda obj: {
 			"ifd": struct.calcsize("=H" + (len(obj)*"HHLL") + "L"),
-			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)])
+			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)]) if len(obj) else 0
 		}, None, None, "return ifd-packed size and data-packed size")
 
 	interop = property(lambda obj: getattr(obj, "_40965", Ifd()), None, None, "shortcut to Interoperability sub ifd")
