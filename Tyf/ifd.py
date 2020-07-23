@@ -1,281 +1,414 @@
 # -*- encoding:utf-8 -*-
 # Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
-from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
+# from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
+# import struct
+
 import struct
+
+from Tyf import TYPES, reduce
+from Tyf import tags, encoders, decoders
 
 
 class Tag(object):
-	meaning = None
 
-	def __init__(self, tag, value=None, **kwargs):
-		db = kwargs.pop("db", False)
-		self.name = kwargs.pop("name", "Orphan tag")
-		if not db: tag, db = tags.get(tag)
+    value = property(
+        lambda cls: cls._value_getter(),
+        lambda cls, v: cls._value_setter(v),
+        None,
+        ""
+    )
 
-		self.tag, (self.key, self.__types, default, self.comment) = tag, db
-		self.type = self.__types[-1]
+    count = property(
+        lambda cls:
+            len(getattr(cls, "_v", (None, ))) //
+            (2 if getattr(cls, "type", None) in [5, 10] else 1),
+        None,
+        None,
+        ""
+    )
 
-		if value != None: self.digest(value)
-		elif default != None:
-			self.value = default
-		else:
-			try: self.value = self._encoder("\x00" if self.type in [2,7] else 0)
-			except: self.value = b"\x00" if self.type in [2,7] else \
-			                     (0, 1) if self.type in [5,10] else \
-                                 (0,)
+    def _value_getter(self):
+        if hasattr(self, "_v"):
+            if not getattr(self, "_decode", None):
+                if hasattr(self, "type"):
+                    dec = getattr(decoders, "_%s" % self.type)
+                    return dec(self._v)
+                else:
+                    return None
+            else:
+                return self._decode(self._v)
+        else:
+            return None
 
-	def __setattr__(self, attr, value):
-		# define encoder and decoder according to type
-		if attr == "type":
-			# find encoder
-			hex_enc = "_%s"%hex(self.tag)
-			if hasattr(encoders, hex_enc): object.__setattr__(self, "_encoder",  getattr(encoders, hex_enc))
-			else: object.__setattr__(self, "_encoder", getattr(encoders, "_%s"%value))
-			# find decoder
-			hex_dec = "_%s"%hex(self.tag)
-			if hasattr(decoders, hex_dec): object.__setattr__(self, "_decoder",  getattr(decoders, hex_dec))
-			else: object.__setattr__(self, "_decoder", getattr(decoders, "_%s"%value))
-		# 
-		elif attr == "value":
-			restricted = getattr(values, self.key, None)
-			if restricted != None:
-				v = value[0] if isinstance(value, tuple) and len(value) == 1 else value
-				self.meaning = restricted.get(v, "no description found ["+str(v)+"]")
-			self._deal(value)
-			self._determine_if_offset()
-		object.__setattr__(self, attr, value)
+    def _value_setter(self, value):
+        if value is None:
+            return
+        if not getattr(self, "_encode", None):
+            for typ in self._types:
+                enc = getattr(encoders, "_%s" % typ)
+                try:
+                    self._v = enc(value)
+                except Exception:  # as error:
+                    pass  # print("%r" % error)
+                else:
+                    self.type = typ
+                    break
+        else:
+            self._v = self._encode(value)
 
-	def __repr__(self):
-		return "%s 0x%x: %s = %r" % (self.name, self.tag, self.key, self.value) + ("" if not self.meaning else ' :: %s'%self.meaning)
+        self._is_offset = self.calcsize() > 4
 
-	def _deal(self, value):
-		if len(self.__types) > 1: self.type = self.__types[-1]
-		else: self.type = self.__types[0]
-		self.count = len(value) // (1 if self.type not in [5,10] else 2)
+    def __init__(self, tag_or_key, value=None):
+        self.tag, (self.key, self._types, default, self.comment) = \
+            tags.get(tag_or_key)
+        self._encode = getattr(encoders, self.key, None)
+        self._decode = getattr(decoders, self.key, None)
+        if len(self._types) == 1:
+            self.type = self._types[-1]
+        self.value = value if value is not None else default
 
-	def _determine_if_offset(self):
-		if self.count == 1 and self.type in [1, 2, 3, 4, 6, 7, 8, 9]: setattr(self, "value_is_offset", False)
-		elif self.count <= 2 and self.type in [3, 8]: setattr(self, "value_is_offset", False)
-		elif self.count <= 4 and self.type in [1, 2, 6, 7]: setattr(self, "value_is_offset", False)
-		else: setattr(self, "value_is_offset", True)
+    def __repr__(self):
+        return "%r" % (self.value, )
 
-	def _fill(self):
-		if not self.value_is_offset:
-			s = struct.calcsize("="+TYPES[self.type][0])
-			voidspace = (struct.calcsize("=L") - self.count*s)//s
-			if self.type in [2, 7]: return self.value + b"\x00"*voidspace
-			elif self.type in [1, 3, 6, 8]: return self.value + ((0,)*voidspace)
-		return self.value
+    @staticmethod
+    def read(fileobj, byteorder="<", offset=None, db=None):
+        # if offset given, go to it
+        if offset is not None:
+            fileobj.seek(offset)
 
-	def digest(self, value):
-		self.value = self._encoder(value)
+        # read tag, type and count
+        fmt = byteorder + "HHL"
+        tag, typ, cnt = struct.unpack(
+            fmt, fileobj.read(struct.calcsize(fmt))
+        )
+        # extract value_or_offset
+        value_or_offset = fileobj.read(struct.calcsize("=L"))
+        if not isinstance(value_or_offset, bytes):
+            value_or_offset = value_or_offset.encode("utf-8")
 
-	def decode(self):
-		return self._decoder(self.value)
+        # prepare structure value
+        _typ = TYPES[typ][0]
+        fmt = byteorder + ("%ds" % cnt if _typ == "s" else cnt * _typ)
+        # keep the end of tag definition position
+        bckp = fileobj.tell()
 
-	def calcsize(self):
-		return struct.calcsize("=" + TYPES[self.type][0] * (self.count*(2 if self.type in [5,10] else 1))) if self.value_is_offset else 0
+        # struct.calcsize("=L") = 4
+        data_size = cnt * struct.calcsize("=" + _typ)
+        if data_size > 4:
+            offset, = struct.unpack(byteorder+"L", value_or_offset)
+            fileobj.seek(offset)
+            value = struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
+        else:
+            value = struct.unpack(fmt, value_or_offset[:data_size])
+
+        # create tag and set value
+        tag = Tag(tag if db is None else db.get(tag, "Undefined"))
+        tag.type = typ
+        tag._v = value[0] if typ in [2, 7] else value
+        tag._is_offset = data_size > 4
+
+        fileobj.seek(bckp)
+        return tag
+
+    def getValue(self):
+        value = getattr(self, "_v", None)
+        if value and not self._is_offset:
+            s = struct.calcsize("=" + TYPES[self.type][0])
+            voidspace = (struct.calcsize("=L") - self.count*s) // s
+            if self.type in [2, 7]:
+                value += b"\x00" * voidspace
+            elif self.type in [1, 3, 6, 8]:
+                value += ((0, ) * voidspace)
+        return value
+
+    def calcsize(self):
+        return struct.calcsize("=" + TYPES[self.type][0] * self.count)
+
+    def pack(self, byteorder="<"):
+        tag, typ, cnt = self.tag, self.type, self.count
+        info = struct.pack(byteorder + "HHL", tag, typ, cnt)
+        typ_ = TYPES[typ][0]
+        fmt = \
+            byteorder + ("%ds" % cnt if typ_ == "s" else cnt * typ_)
+        packed = \
+            struct.pack(fmt, self._v) if typ_ == "s" else \
+            struct.pack(fmt, *self._v)
+        return (
+            info,
+            packed if self._is_offset else packed.ljust(4, b"\x00"),
+            self._is_offset
+        )
+
+
+# for speed reason : load raster only if asked or if needed
+def _load_raster(obj, fileobj):
+    # striped raster data
+    if "StripOffsets" in obj:
+        setattr(obj, "stripes", tuple())
+        offsets = obj["StripOffsets"].value
+        bytescounts = obj.get("StripByteCounts").value
+        if isinstance(offsets, tuple):
+            data = zip(offsets, bytescounts)
+        else:
+            data = ((offsets, bytescounts), )
+        for offset, bytecount in data:
+            fileobj.seek(offset)
+            obj.stripes += (fileobj.read(bytecount), )
+    # free raster data
+    elif "FreeOffsets" in obj:
+        setattr(obj, "free", tuple())
+        offsets = obj["FreeOffsets"].value
+        bytescounts = obj.get("FreeByteCounts").value
+        if isinstance(offsets, tuple):
+            data = zip(offsets, bytescounts)
+        else:
+            data = ((offsets, bytescounts), )
+        for offset, bytecount in data:
+            fileobj.seek(offset)
+            obj.free += (fileobj.read(bytecount), )
+    # tiled raster data
+    elif "TileOffsets" in obj:
+        setattr(obj, "tiles", tuple())
+        offsets = obj["TileOffsets"].value
+        bytescounts = obj.get("TileByteCounts").value
+        if isinstance(offsets, tuple):
+            data = zip(offsets, bytescounts)
+        else:
+            data = ((offsets, bytescounts), )
+        for offset, bytecount in data:
+            fileobj.seek(offset)
+            obj.tiles += (fileobj.read(bytecount), )
+    # get interExchange (thumbnail data for JPEG/EXIF data)
+    if "JPEGInterchangeFormat" in obj:
+        fileobj.seek(obj["JPEGInterchangeFormat"].value)
+        obj.jpegIF = fileobj.read(obj["JPEGInterchangeFormatLength"].value)
 
 
 class Ifd(dict):
-	# possible sub IFD with according tag, sub IFD name and tags family
-	sub_ifd = {
-		34665: ("Exif tag", tags.exfT),
-		34853: ("GPS tag", tags.gpsT),
-		40965: ("Interop tag", tags.itrT),
-	}
 
-	size = property(
-		lambda obj: {
-			"ifd": struct.calcsize("=H" + (len(obj)*"HHLL") + "L"),
-			"data": reduce(int.__add__, [t.calcsize() for t in dict.values(obj)]) if len(obj) else 0
-		}, None, None, "return ifd-packed size and data-packed size")
+    # interop = property(
+    #     lambda obj: getattr(obj, "itrT", Ifd(tag_family=[tags.itrT])),
+    #     None, None, "shortcut to Interoperability sub ifd"
+    # )
+    # exif = property(
+    #     lambda obj: getattr(obj, "exfT", Ifd(tag_family=[tags.exfT])),
+    #     None, None, "shortcut to EXIF sub ifd"
+    # )
+    # gps = property(
+    #     lambda obj: getattr(obj, "gpsT", Ifd(tag_family=[tags.gpsT])),
+    #     None, None, "shortcut to GPS sub ifd"
+    # )
+    raster_loaded = property(
+        lambda obj: any([
+            len(getattr(obj, name, []))
+            for name in ["stripes", "tiles", "free", "jpegIF"]
+        ]),
+        None, None, ""
+    )
 
-	interop = property(lambda obj: getattr(obj, "_40965", Ifd()), None, None, "shortcut to Interoperability sub ifd")
-	exif = property(lambda obj: getattr(obj, "_34665", Ifd()), None, None, "shortcut to EXIF sub ifd")
-	gps = property(lambda obj: getattr(obj, "_34853", Ifd()), None, None, "shortcut to GPS sub ifd")
-	has_raster = property(lambda obj: 273 in obj or 288 in obj or 324 in obj or 513 in obj, None, None, "return true if it contains raster data")
-	raster_loaded = property(lambda obj: not(obj.has_raster) or bool(len(obj.stripes+obj.tiles+obj.free)+len(obj.jpegIF)), None, None, "")
+    def __init__(self, **kwargs):
+        dict.__init__(self)
+        self.tag_family = kwargs.pop(
+            "tag_family", [tags.bTT, tags.xTT, tags.pTT]
+        )
 
-	def __init__(self, **kwargs):
-		self.tag_name = kwargs.pop("tag_name", "Tiff tag")
-		self.tag_family = kwargs.pop("tag_family", [tags.bTT, tags.xTT, tags.pTT])
+    def __setattr__(self, attr, value):
+        if attr == "gpsT":
+            self[34853] = 0
+        elif attr == "exfT":
+            self[34665] = 0
+        elif attr == "itrT":
+            self[40965] = 0
+        dict.__setattr__(self, attr, value)
 
-		dict.__init__(self)
+    def __delattr__(self, attr, value):
+        if attr == "gpsT":
+            dict.pop(self, "GPS IFD")
+        elif attr == "exfT":
+            dict.pop(self, "Exif IFD")
+        elif attr == "itrT":
+            dict.pop(self, "Interoperability IFD")
+        dict.__delattr__(self, attr, value)
 
-		self.stripes = ()
-		self.tiles = ()
-		self.free = ()
-		self.jpegIF = b""
+    def __setitem__(self, tag, value):
+        return self.append(Tag(tag, value))
 
-	def __iter__(self):
-		for tag in self.tags():
-			yield tag.key, tag.decode()
+    def __getitem__(self, tag):
+        tag, (key, typ, default, comment) = tags.get(tag)
+        if key in self:
+            return dict.__getitem__(self, key)
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                dic = getattr(self, name)
+                if key in dic:
+                    return dict.__getitem__(dic, key)
+        raise KeyError("%s tag not found" % key)
 
-	def __setitem__(self, tag, value):
-		_tag, database = self._tag(tag)
-		if not _tag:
-			raise KeyError("%s tag not a valid tag for this ifd" % tag)
-		elif _tag in Ifd.sub_ifd:
-			name, family = Ifd.sub_ifd[_tag]
-			setattr(self, "_%s"%_tag, value if isinstance(value, Ifd) else Ifd(tag_name=name, tag_family=[family]))
-			dict.__setitem__(self, _tag, Tag(_tag, 0, name=self.tag_name, db=database))
-		else:
-			dict.__setitem__(self, _tag, Tag(_tag, value, name=self.tag_name, db=database))
+    def __delitem__(self, tag):
+        tag, (key, typ, default, comment) = tags.get(tag)
+        if key in self:
+            return dict.__delitem__(self, key)
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                dic = getattr(self, name)
+                if key in dic:
+                    if len(dic) == 1:
+                        delattr(self, name)
+                    return dict.__delitem__(dic, key)
+        raise KeyError("%s tag not found" % key)
 
-	def __getitem__(self, tag):
-		_tag, database = self._tag(tag)
-		if not _tag:
-			return dict.__getitem__(self, tag)
-		elif _tag in Ifd.sub_ifd:
-			attr = "_%s"%_tag
-			if not hasattr(self, attr):
-				name, family = Ifd.sub_ifd[_tag]
-				setattr(self, attr, Ifd(tag_name=name, tag_family=[family]))
-				dict.__setitem__(self, _tag, Tag(_tag, 0, name=self.tag_name, db=database))
-			return getattr(self, attr)
-		return dict.__getitem__(self, _tag).decode()
+    def set(self, tag, typ, value):
+        tag = Tag(tag)
+        tag.type = typ
+        tag.value = value
+        return dict.__setitem__(self, tag.key, tag)
 
-	def __delitem__(self, tag):
-		_tag, database = self._tag(tag)
-		if not _tag:
-			return dict.__delitem__(self, tag)
-		elif _tag in Ifd.sub_ifd:
-			attr = "_%s"%_tag
-			if hasattr(self, attr): delattr(self, attr)
-			else: raise KeyError("Ifd does not contains %s sub ifd" % _tag)
-		return dict.__delitem__(self, _tag)
+    def get(self, tag):
+        return dict.__getitem__(self, tag)
 
-	def _tag(self, elem):
-		if elem == "GPS IFD": elem = 34853
-		elif elem == "Exif IFD": elem = 34665
-		elif elem == "Interoperability IFD": elem = 40965
+    def pop(self, tag, default=None):
+        tag, (key, typ, default, comment) = tags.get(tag)
+        if key in self:
+            return dict.pop(self, key)
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                dic = getattr(self, name)
+                if key in dic:
+                    result = dict.pop(dic, key)
+                    if len(dic) == 0:
+                        delattr(self, name)
+                    return result
+        return default
 
-		for tf in self.tag_family:
-			if elem in tf:
-				return elem, tf[elem]
-			else:
-				for tag, (key, typ, default, desc) in tf.items():
-					if elem == key:
-						return tag, (key, typ, default, desc)
-		return False, ("Undefined", [7], None, "Undefined tag %r"%elem)
+    def set_location(self, longitude, latitude, altitude=0.):
+        if not hasattr(self, "gpsT"):
+            setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
+        self["GPSVersionID"] = None
+        self["GPSLatitudeRef"] = latitude >= 0
+        self["GPSLatitude"] = latitude
+        self["GPSLongitudeRef"] = longitude >= 0
+        self["GPSLongitude"] = longitude
+        self["GPSAltitudeRef"] = altitude >= 0
+        self["GPSAltitude"] = altitude
 
-	def set(self, tag, typ, value):
-		_tag, database = self._tag(tag)
-		if not _tag: raise KeyError("%s tag not a valid tag for this ifd" % tag)
-		obj = Tag(_tag, name=self.tag_name, db=database)
-		obj.type = typ
-		obj.value = (value,) if not hasattr(value, "__len__") else value
-		return dict.__setitem__(self, _tag, obj)
+    def get_location(self):
+        ifd = self["GPS IFD"]
+        if set([
+            "GPSLatitudeRef", "GPSLatitude",
+            "GPSLongitudeRef", "GPSLongitude",
+            "GPSAltitudeRef", "GPSAltitude"
+        ]) <= set(ifd.keys()):
+            return (
+                ifd["GPSLongitudeRef"] * ifd["GPSLongitude"],
+                ifd["GPSLatitudeRef"] * ifd["GPSLatitude"],
+                ifd["GPSAltitudeRef"] * ifd["GPSAltitude"]
+            )
 
-	def get(self, tag):
-		_tag, database = self._tag(tag)
-		return dict.__getitem__(self, _tag)
+    def append(self, tag):
+        for dic in self.tag_family:
+            if tag.tag in dic:
+                return dict.__setitem__(self, tag.key, tag)
+        for name in ["exfT", "gpsT", "itrT"]:
+            dic = getattr(tags, "_" + name, {})
+            if tag.key in dic:
+                if not hasattr(self, name):
+                    setattr(self, name, Ifd(tag_family=[getattr(tags, name)]))
+                return dict.__setitem__(getattr(self, name), tag.key, tag)
+        # raise KeyError("%s tag not allowed here" % tag.key)
 
-	def pop(self, tag):
-		_tag, database = self._tag(tag)
-		attr = "_%s"%_tag
-		if hasattr(self, attr):
-			delattr(self, attr)
-		elem = dict.pop(self, _tag)
-		elem.name = "Orphan tag"
-		return elem
+    def pack(self):
+        result = {}
 
-	def append(self, tag, **kwargs):
-		if not isinstance(tag, Tag):
-			tag = Tag(tag, **kwargs)
-		tag.name = self.tag_name
-		if tag.tag in Ifd.sub_ifd:
-			return dict.__setitem__(self, tag.tag, tag)
-		for tf in self.tag_family:
-			if tag.tag in tf:
-				return dict.__setitem__(self, tag.tag, tag)
-		raise KeyError("%s tag not a valid tag for this ifd" % tag.tag)
+        for name in [n for n in ["exfT", "gpsT", "itrT"] if hasattr(self, n)]:
+            result[name] = getattr(self, name).pack()["root"]
 
-	def find(self, elem):
-		found = False
-		for tf in self.tag_family:
-			dico = dict((v[0],k) for k,v in tf.items())
-			if elem in tf and elem in self:
-				return dict.__getitem__(self, elem)
-			elif elem in dico and dico[elem] in self:
-				return dict.__getitem__(self, dico[elem])
-		for tag in Ifd.sub_ifd:
-			if hasattr(self, "_%s"%tag):
-				found = getattr(self, "_%s"%tag).find(elem)
-				if found: break
-		return found
+        tags = [
+            t.pack() for t in
+            sorted(self.values(), key=lambda e: e.tag)
+        ]
 
-	def place(self, tag, **kwargs):
-		if not isinstance(tag, Tag):
-			tag = Tag(tag, **kwargs)
-		elem = tag.tag
-		for t,(n,f) in Ifd.sub_ifd.items():
-			if elem in f:
-				tag.name = n
-				return dict.__setitem__(self[t], elem, tag)
-		tag.name = self.tag_name
-		for tf in self.tag_family:
-			if elem in tf:
-				return dict.__setitem__(self, elem, tag)
+        ifd_size = struct.calcsize("=H" + len(tags) * "HHLL" + "L")
+        ifd_data = b"".join(t[1] for t in tags if t[-1])
 
-	def set_location(self, longitude, latitude, altitude=0.):
-		ifd = self["GPS IFD"]
-		ifd[1] = ifd[2] = latitude
-		ifd[3] = ifd[4] = longitude
-		ifd[5] = ifd[6] = altitude
+        raster_length = set([
+            "TileByteCounts", "StripByteCounts", "FreeByteCounts",
+            "JPEGInterchangeFormatLength"
+        ]) & set(self.keys())
 
-	def get_location(self):
-		ifd = self["GPS IFD"]
-		if set([1,2,3,4,5,6]) <= set(ifd.keys()):
-			return (
-				ifd[3] * ifd[4],
-				ifd[1] * ifd[2],
-				ifd[5] * ifd[6]
-			)
+        if len(raster_length):
+            tag = list(raster_length)[0]
+            raster_length = self[tag].value
+            ifd_raster_size = \
+                reduce(int.__add__, raster_length) \
+                if isinstance(raster_length, tuple) else raster_length
+        else:
+            ifd_raster_size = 0
 
-	def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
-		ifd = self["GPS IFD"]
-		if set([1,2,3,4]) <= set(ifd.keys()):
-			latitude = ifd[1] * ifd[2]
-			longitude = ifd[3] * ifd[4]
-			try:
-				opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
-					latitude, longitude,
-					zoom, size, mcolor,
-					latitude, longitude,
-					format, scale
-				))
-			except:
-				return StringIO()
-			else:
-				return StringIO(opener.read())
-				print("googleapis connexion error")
-		else:
-			return StringIO()
+        result.update(root={
+            "size": ifd_size,
+            "tags": tags,
+            "data": ifd_data,
+            "raster": ifd_raster_size
+        })
+        return result
 
-	def dump_location(self, tilename, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
-		ifd = self["GPS IFD"]
-		if set([1,2,3,4]) <= set(ifd.keys()):
-			latitude = ifd[1] * ifd[2]
-			longitude = ifd[3] * ifd[4]
-			try:
-				urllib.urlretrieve("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
-						latitude, longitude,
-						zoom, size, mcolor,
-						latitude, longitude,
-						format, scale
-					),
-					os.path.splitext(tilename)[0] + "."+format
-				)
-			except:
-				print("googleapis connexion error")
 
-	def tags(self):
-		for v in sorted(dict.values(self), key=lambda e:e.tag):
-			yield v
-		for tag in Ifd.sub_ifd.keys():
-			if hasattr(self, "_%s"%tag):
-				for v in getattr(self, "_%s"%tag).tags():
-					yield v
+#     def find(self, elem):
+#         found = False
+#         for tf in self.tag_family:
+#             dico = dict((v[0],k) for k,v in tf.items())
+#             if elem in tf and elem in self:
+#                 return dict.__getitem__(self, elem)
+#             elif elem in dico and dico[elem] in self:
+#                 return dict.__getitem__(self, dico[elem])
+#         for tag in Ifd.sub_ifd:
+#             if hasattr(self, "_%s"%tag):
+#                 found = getattr(self, "_%s"%tag).find(elem)
+#                 if found: break
+#         return found
+
+#     def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
+#         ifd = self["GPS IFD"]
+#         if set([1,2,3,4]) <= set(ifd.keys()):
+#             latitude = ifd[1] * ifd[2]
+#             longitude = ifd[3] * ifd[4]
+#             try:
+#                 opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
+#                     latitude, longitude,
+#                     zoom, size, mcolor,
+#                     latitude, longitude,
+#                     format, scale
+#                 ))
+#             except:
+#                 return StringIO()
+#             else:
+#                 return StringIO(opener.read())
+#                 print("googleapis connexion error")
+#         else:
+#             return StringIO()
+
+#     def dump_location(self, tilename, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
+#         ifd = self["GPS IFD"]
+#         if set([1,2,3,4]) <= set(ifd.keys()):
+#             latitude = ifd[1] * ifd[2]
+#             longitude = ifd[3] * ifd[4]
+#             try:
+#                 urllib.urlretrieve("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
+#                         latitude, longitude,
+#                         zoom, size, mcolor,
+#                         latitude, longitude,
+#                         format, scale
+#                     ),
+#                     os.path.splitext(tilename)[0] + "."+format
+#                 )
+#             except:
+#                 print("googleapis connexion error")
+
+#     def tags(self):
+#         for v in sorted(dict.values(self), key=lambda e:e.tag):
+#             yield v
+#         for tag in Ifd.sub_ifd.keys():
+#             if hasattr(self, "_%s"%tag):
+#                 for v in getattr(self, "_%s"%tag).tags():
+#                     yield v
