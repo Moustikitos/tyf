@@ -83,6 +83,16 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
 
 
 def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
+
+    try:
+        geokey = gkd.Gkd.from_ifd(obj)
+        geokey.compute()
+        obj["GeoKeyDirectoryTag"] = geokey._34735
+        obj["GeoDoubleParamsTag"] = geokey._34736
+        obj["GeoAsciiParamsTag"] = geokey._34737
+    except Exception as error:
+        print("geokey computation: %r" % (error))
+
     ifds = obj.pack()
     if isinstance(ifd1, ifd.Ifd):
         ifds.update(ifd1=ifd1.pack()["root"])
@@ -90,6 +100,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     # compute exif, gps and interoperability offsets
     ifd_size = ifds["root"]["size"]
     ifd_values = ifds["root"]["data"]
+
     # where to put ifd values
     ifd_offset_values = offset + ifd_size
     # where to put the next sub ifd
@@ -135,6 +146,8 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     ifds = obj.pack()
     if isinstance(ifd1, ifd.Ifd):
         ifds.update(ifd1=ifd1.pack()["root"])
+
+    raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 
     for key in [
         k for k in ["root", "exfT", "gpsT", "itrT"]
@@ -208,7 +221,7 @@ def _fileobj(f, mode):
 class TiffFile(list):
 
     gkd = property(
-        lambda obj: [gkd.Gkd(ifd) for ifd in obj],
+        lambda obj: [gkd.Gkd.from_ifd(ifd) for ifd in obj],
         None, None, "list of geotiff directory"
     )
     raster_loaded = property(
@@ -238,7 +251,6 @@ class TiffFile(list):
                 tag_name="Tiff tag", tag_family=[tags.bTT, tags.pTT, tags.xTT]
             )
             next_ifd = _from_buffer(i, fileobj, next_ifd, byteorder)
-            i.pop("Interoperability IFD", False)
             ifds.append(i)
 
         if hasattr(fileobj, "name"):
@@ -380,7 +392,7 @@ class JpegFile(list):
             fileobj.close()
 
     def strip_exif(self):
-        ifd = self.ifd # strip thumbnail(s?)
+        ifd = self.ifd  # strip thumbnail(s?)
         ifd0 = self.ifd0
         while len(ifd) > 1:
             ifd.pop(-1)
