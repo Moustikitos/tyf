@@ -21,9 +21,9 @@ _M_s_byte = _M_u_byte / 2 - 1
 _m_s_long = -_M_u_long / 2
 _M_s_long = _M_u_long / 2 - 1
 
-_m_float = 1.17549e-38
+_m_float = -1.17549e38
 _M_float = 3.40282e38
-_m_double = 2.22507e-308
+_m_double = -2.22507e308
 _M_double = 1.79769e308
 
 
