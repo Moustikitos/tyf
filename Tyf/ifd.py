@@ -5,9 +5,31 @@
 # import struct
 
 import struct
+import collections
 
 from Tyf import TYPES, reduce
-from Tyf import tags, encoders, decoders
+from Tyf import tags, encoders, decoders, gkd
+
+
+GeoKeyModel = {
+    "ModelPixelScaleTag": collections.namedtuple(
+        "ModelPixelScale", "ScaleX, ScaleY, ScaleZ"
+    ),
+    "ModelTiepointTag": collections.namedtuple("ModelTiepoint", "I,J,K,X,Y,Z"),
+    "ModelTransformationTag": collections.namedtuple(
+            "ModelTransformation",
+            "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p"
+        )
+}
+
+
+def Transform(obj, x=0., y=0., z1=0., z2=1.):
+    return (
+        obj[0] * x + obj[1] * y + obj[2] * z1 + obj[3] * z2,
+        obj[4] * x + obj[5] * y + obj[6] * z1 + obj[7] * z2,
+        obj[8] * x + obj[9] * y + obj[10] * z1 + obj[11] * z2,
+        obj[12] * x + obj[13] * y + obj[14] * z1 + obj[15] * z2
+    )
 
 
 class Tag(object):
@@ -49,8 +71,8 @@ class Tag(object):
                 enc = getattr(encoders, "_%s" % typ)
                 try:
                     self._v = enc(value)
-                except Exception:  # as error:
-                    pass  # print("%r" % error)
+                except Exception as error:
+                    print("%r: %r" % (self, error))
                 else:
                     self.type = typ
                     break
@@ -69,7 +91,7 @@ class Tag(object):
         self.value = value if value is not None else default
 
     def __repr__(self):
-        return "%r" % (self.value, )
+        return "<IFD tag %s:%r>" % (self.key, self.value, )
 
     @staticmethod
     def read(fileobj, byteorder="<", offset=None, db=None):
@@ -127,6 +149,7 @@ class Tag(object):
 
     def pack(self, byteorder="<"):
         tag, typ, cnt = self.tag, self.type, self.count
+
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
         typ_ = TYPES[typ][0]
         fmt = \
@@ -187,18 +210,6 @@ def _load_raster(obj, fileobj):
 
 class Ifd(dict):
 
-    # interop = property(
-    #     lambda obj: getattr(obj, "itrT", Ifd(tag_family=[tags.itrT])),
-    #     None, None, "shortcut to Interoperability sub ifd"
-    # )
-    # exif = property(
-    #     lambda obj: getattr(obj, "exfT", Ifd(tag_family=[tags.exfT])),
-    #     None, None, "shortcut to EXIF sub ifd"
-    # )
-    # gps = property(
-    #     lambda obj: getattr(obj, "gpsT", Ifd(tag_family=[tags.gpsT])),
-    #     None, None, "shortcut to GPS sub ifd"
-    # )
     raster_loaded = property(
         lambda obj: any([
             len(getattr(obj, name, []))
@@ -315,7 +326,6 @@ class Ifd(dict):
                 if not hasattr(self, name):
                     setattr(self, name, Ifd(tag_family=[getattr(tags, name)]))
                 return dict.__setitem__(getattr(self, name), tag.key, tag)
-        # raise KeyError("%s tag not allowed here" % tag.key)
 
     def pack(self):
         result = {}
@@ -352,21 +362,6 @@ class Ifd(dict):
             "raster": ifd_raster_size
         })
         return result
-
-
-#     def find(self, elem):
-#         found = False
-#         for tf in self.tag_family:
-#             dico = dict((v[0],k) for k,v in tf.items())
-#             if elem in tf and elem in self:
-#                 return dict.__getitem__(self, elem)
-#             elif elem in dico and dico[elem] in self:
-#                 return dict.__getitem__(self, dico[elem])
-#         for tag in Ifd.sub_ifd:
-#             if hasattr(self, "_%s"%tag):
-#                 found = getattr(self, "_%s"%tag).find(elem)
-#                 if found: break
-#         return found
 
 #     def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
 #         ifd = self["GPS IFD"]
@@ -405,10 +400,35 @@ class Ifd(dict):
 #             except:
 #                 print("googleapis connexion error")
 
-#     def tags(self):
-#         for v in sorted(dict.values(self), key=lambda e:e.tag):
-#             yield v
-#         for tag in Ifd.sub_ifd.keys():
-#             if hasattr(self, "_%s"%tag):
-#                 for v in getattr(self, "_%s"%tag).tags():
-#                     yield v
+    def tags(self):
+        for v in sorted(dict.values(self), key=lambda e:e.tag):
+            yield v
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                for v in getattr(self, name).tags():
+                    yield v
+
+    def getModelTransformation(self, tie_idx=0):
+        if "ModelTransformationTag" in self:
+            matrix = GeoKeyModel["ModelTransformationTag"](
+               *self["ModelTransformationTag"].value
+            )
+        elif "ModelTiepointTag" in self and "ModelPixelScaleTag" in self:
+            Sx, Sy, Sz = self["ModelPixelScaleTag"].value
+            I, J, K, X, Y, Z = self["ModelTiepointTag"].value[
+                6 * tie_idx:6 * tie_idx + 6
+            ]
+            matrix = GeoKeyModel["ModelTransformationTag"](
+                Sx,  0., 0., X - I*Sx,
+                0., -Sy, 0., Y + J*Sy,
+                0., 0. , Sz, Z - K*Sz,
+                0., 0. , 0., 1.
+            )
+        else:
+            matrix = GeoKeyModel["ModelTransformationTag"](
+                1., 0. , 0., 0.,
+                0., -1., 0., 0.,
+                0., 0. , 1., 0.,
+                0., 0. , 0., 1.
+            )
+        return lambda x, y, z1=0., z2=1., m=matrix: Transform(m, x, y, z1, z2)

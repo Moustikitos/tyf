@@ -324,7 +324,7 @@ _BY_NAME = dict(
 
 
 def get(tag_or_key):
-    if isinstance(tag_or_key, (bytes, str)): # and tag_or_name in _BY_NAME:
+    if isinstance(tag_or_key, (bytes, str)):
         for dic in [_BY_NAME, _exfT, _gpsT, _itrT]:
             if tag_or_key in dic:
                 tag, types, default, comment = dic[tag_or_key]
