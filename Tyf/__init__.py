@@ -84,14 +84,12 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
 
 def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
 
-    try:
-        geokey = gkd.Gkd.from_ifd(obj)
+    geokey = gkd.Gkd.from_ifd(obj)
+    if len(geokey):
         geokey.compute()
         obj["GeoKeyDirectoryTag"] = geokey._34735
         obj["GeoDoubleParamsTag"] = geokey._34736
         obj["GeoAsciiParamsTag"] = geokey._34737
-    except Exception as error:
-        print("geokey computation: %r" % (error))
 
     ifds = obj.pack()
     if isinstance(ifd1, ifd.Ifd):
@@ -381,9 +379,10 @@ class JpegFile(list):
             if compression == 6:
                 fileobj.write(ifd.jpegIF)
             elif compression == 1:
-                self[0xffe1].save(fileobj, idx=1)
+                self.ifd.save(fileobj, idx=1)
 
-            if _close: fileobj.close()
+            if _close:
+                fileobj.close()
 
     def dump_exif(self, f):
         fileobj, _close = _fileobj(f, "wb")

@@ -26,7 +26,7 @@ _TAGS = {
     2058: ("GeogSemiMinorAxisGeoKey", [12], None, None),
     2059: ("GeogInvFlatteningGeoKey", [12], None, None),
     2060: ("GeogAzimuthUnitsGeoKey", [3], None, None),
-    2061: ("GeogPrimeMeridianLongGeoKey", [12], None, None), # custom prime meridian value in GeogAngularUnits
+    2061: ("GeogPrimeMeridianLongGeoKey", [12], None, None),  # custom prime meridian value in GeogAngularUnits
 
     # Projected CS Parameter GeoKeys
     3072: ("ProjectedCSTypeGeoKey", [3], None, None),        # epsg grid code [20000 - 32760]
@@ -86,7 +86,7 @@ class GkdTag:
                 self.meaning = value
             elif GkdTag.strict:
                 raise ValueError(
-                    '"%s" value must be one of %s, get %s instead' % 
+                    '"%s" value must be one of %s, get %s instead' %
                     (self.key, list(restricted.keys()), value)
                 )
 
