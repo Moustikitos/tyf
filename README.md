@@ -6,10 +6,6 @@
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 
-[<img src="https://assets.gratipay.com/gratipay.svg?etag=3tGiSB5Uw_0-oWiLLxAqpQ~~" />](https://gratipay.com/Tyf)
-
-[![](http://img.shields.io/gratipay/user/b_py.svg?style=flat-square)](https://gratipay.com/~b_py)
-
 ## Support this project
 
   * [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
