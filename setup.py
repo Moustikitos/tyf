@@ -22,7 +22,7 @@ kw.update(**{
     "long_description": long_description.read(),
     "long_description_content_type": "text/markdown",
     "packages": ["Tyf"],
-    "license": "Copyright 2015-2016, THOORENS Bruno, BSD licence",
+    "license": "Copyright 2015-2020, THOORENS Bruno, BSD licence",
     "classifiers": [
         'Development Status :: 6 - Mature',
         'Environment :: Console',
