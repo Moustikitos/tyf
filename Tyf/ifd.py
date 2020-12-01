@@ -4,11 +4,17 @@
 # from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
 # import struct
 
+import os
 import struct
 import collections
 
 from Tyf import TYPES, reduce
 from Tyf import tags, encoders, decoders
+
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
 
 
 GeoKeyModel = {
@@ -304,17 +310,19 @@ class Ifd(dict):
         self["GPSAltitude"] = altitude
 
     def get_location(self):
-        ifd = self["GPS IFD"]
+        ifd = getattr(self, "gpsT", {})
         if set([
             "GPSLatitudeRef", "GPSLatitude",
             "GPSLongitudeRef", "GPSLongitude",
             "GPSAltitudeRef", "GPSAltitude"
         ]) <= set(ifd.keys()):
             return (
-                ifd["GPSLongitudeRef"] * ifd["GPSLongitude"],
-                ifd["GPSLatitudeRef"] * ifd["GPSLatitude"],
-                ifd["GPSAltitudeRef"] * ifd["GPSAltitude"]
+                (1 if ifd["GPSLongitudeRef"] else -1) * ifd["GPSLongitude"].value,
+                (1 if ifd["GPSLatitudeRef"] else -1) * ifd["GPSLatitude"].value,
+                (1 if ifd["GPSAltitudeRef"] else -1) * ifd["GPSAltitude"].value
             )
+        else:
+            raise Exception("No location data found")
 
     def append(self, tag):
         for dic in self.tag_family:
@@ -364,10 +372,7 @@ class Ifd(dict):
         return result
 
 #     def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
-#         ifd = self["GPS IFD"]
-#         if set([1,2,3,4]) <= set(ifd.keys()):
-#             latitude = ifd[1] * ifd[2]
-#             longitude = ifd[3] * ifd[4]
+#             lon, lat, alt = self.get_location()
 #             try:
 #                 opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
 #                     latitude, longitude,
@@ -379,26 +384,25 @@ class Ifd(dict):
 #                 return StringIO()
 #             else:
 #                 return StringIO(opener.read())
-#                 print("googleapis connexion error")
-#         else:
-#             return StringIO()
 
-#     def dump_location(self, tilename, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
-#         ifd = self["GPS IFD"]
-#         if set([1,2,3,4]) <= set(ifd.keys()):
-#             latitude = ifd[1] * ifd[2]
-#             longitude = ifd[3] * ifd[4]
-#             try:
-#                 urllib.urlretrieve("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
-#                         latitude, longitude,
-#                         zoom, size, mcolor,
-#                         latitude, longitude,
-#                         format, scale
-#                     ),
-#                     os.path.splitext(tilename)[0] + "."+format
-#                 )
-#             except:
-#                 print("googleapis connexion error")
+    def dump_location(
+        self, tilename, zoom=15, format="png", width=400, height=300,
+        token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFrNXd4In0.JIyrV6sWjehsRHKVMBDFaw"
+    ):
+        longitude, latitude, alt = self.get_location()
+        try:
+            urlretrieve("https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,%(latitude)s,%(zoom)s,0/%(width)sx%(height)s@2x?access_token=%(token)s" % {
+                    "longitude": longitude,
+                    "latitude": latitude,
+                    "zoom": zoom,
+                    "width": width,
+                    "height": height,
+                    "token": token
+                },
+                os.path.splitext(tilename)[0] + "."+format
+            )
+        except Exception as error:
+            print("%r" % error)
 
     def tags(self):
         for v in sorted(dict.values(self), key=lambda e:e.tag):

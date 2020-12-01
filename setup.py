@@ -7,7 +7,7 @@ except ImportError:
 kw = {}
 
 f = open("VERSION", "r")
-long_description = open("rst/pypi.rst", "r")
+long_description = open("README.md", "r")
 kw.update(**{
     "version": f.read().strip(),
     "name": "Tyf",
