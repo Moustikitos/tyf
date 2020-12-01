@@ -41,7 +41,7 @@ Tyf provide high level functions using EXIF data from JPEG images.
 >>> jpg.save_thumbnail("test_thumb") # .jpg or .tif extension automatically added
 ```
 
-[EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
+![EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
 
 There are 2 attributes to access data within ``Tif.JpegFile`` :
  + ``ifd0`` containing picture IFD and EXIF data 
@@ -74,7 +74,7 @@ An Image File Directory (IFD) contains a serie of values identified by integers.
 >>> jpg.ifd0.dump_location("test_location")
 ```
 
-[5.1872093, 51.2095416](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png)
+![5.1872093, 51.2095416](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png)
 
 ```python
 >>> jpg.ifd0.set_location(4.362859, 48.958472, 0)
