@@ -41,7 +41,7 @@ Tyf provide high level functions using EXIF data from JPEG images.
 >>> jpg.save_thumbnail("test_thumb") # .jpg or .tif extension automatically added
 ```
 
-https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg
+[EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
 
 There are 2 attributes to access data within ``Tif.JpegFile`` :
  + ``ifd0`` containing picture IFD and EXIF data 
@@ -74,46 +74,14 @@ An Image File Directory (IFD) contains a serie of values identified by integers.
 >>> jpg.ifd0.dump_location("test_location")
 ```
 
-https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png
+[5.1872093, 51.2095416](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png)
 
 ```python
 >>> jpg.ifd0.set_location(4.362859, 48.958472, 0)
 >>> jpg.ifd0.dump_location("test_location2")
 ```
 
-https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location2.png
-
-``ifd0`` and ``ifd1`` handle data with two different ways :
- + pythonic way using ``__getitem__`` and ``__setitem__`` syntax
- + using ``Tyf.ifd.Tag`` class via ``get`` and ``append`` method
-
-```python
->>> jpg.ifd0[0x110]
-'Nexus S'
->>> jpg.ifd0.get(0x110)
-Tiff tag 0x110: Model = b'Nexus S\x00'
->>> tag = jpg.ifd0.get("Model") # same as jpg.ifd0.get(0x110)
->>> tag.digest("Kazaam Trooper")
->>> tag
-Tiff tag 0x110: Model = b'Kazaam Trooper\x00'
->>> jpg.ifd0.append(tag)
->>> jpg.ifd0["Model"] # same as jpg.ifd0[0x110]
-'Kazaam Trooper'
->>> jpg.ifd0["Model"] = "Kazaam Trooper L450"
->>> jpg.ifd0["Model"]
-'Kazaam Trooper L450'
-```
-
-Let's save our modification and check it :
-
-```python
->>> jpg.save("test.jpg")
->>> jpg = Tyf.open("test.jpg")
->>> jpg.ifd0.get_location()
-(4.362859, 48.958472, -0.0)
->>> jpg.ifd0["Model"]
-'Kazaam Trooper L450'
-```
+![4.362859, 48.958472](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location2.png)
 
 Nice !
 
