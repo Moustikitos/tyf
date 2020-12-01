@@ -8,7 +8,7 @@ import struct
 import collections
 
 from Tyf import TYPES, reduce
-from Tyf import tags, encoders, decoders, gkd
+from Tyf import tags, encoders, decoders
 
 
 GeoKeyModel = {
