@@ -1,8 +1,4 @@
 # -*- encoding:utf-8 -*-
-# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
-
-# from . import io, os, tags, encoders, decoders, reduce, values, TYPES, urllib, StringIO
-# import struct
 
 import os
 import struct
@@ -387,7 +383,8 @@ class Ifd(dict):
 
     def dump_location(
         self, tilename, zoom=15, format="png", width=400, height=300,
-        token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFrNXd4In0.JIyrV6sWjehsRHKVMBDFaw"
+        token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFr"
+              "NXd4In0.JIyrV6sWjehsRHKVMBDFaw"
     ):
         longitude, latitude, alt = self.get_location()
         try:
@@ -405,7 +402,7 @@ class Ifd(dict):
             print("%r" % error)
 
     def tags(self):
-        for v in sorted(dict.values(self), key=lambda e:e.tag):
+        for v in sorted(dict.values(self), key=lambda e: e.tag):
             yield v
         for name in ["exfT", "gpsT", "itrT"]:
             if hasattr(self, name):

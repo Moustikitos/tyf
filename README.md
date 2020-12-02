@@ -64,11 +64,6 @@ True
 ```python
 >>> jpg.ifd0.__class__
 <class 'Tyf.ifd.Ifd'>
-```
-
-An Image File Directory (IFD) contains a serie of values identified by integers.
-
-```python
 >>> jpg.ifd0.get_location()
 (5.1872093, 51.2095416, -0.0)
 >>> jpg.ifd0.dump_location("test_location")
@@ -82,8 +77,6 @@ An Image File Directory (IFD) contains a serie of values identified by integers.
 ```
 
 ![4.362859, 48.958472](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location2.png)
-
-Nice !
 
 ## Contribute
 ### Bug report & feedback
@@ -102,6 +95,12 @@ Guidance words: keep it simple and solid!
 + API documentation
 
 ## Changes
+
+### 1.4.1
++ ``Ifd`` class redefinition
++ bugfix issue #7
++ bugfix issue #14
++ removed XMP support
 
 ### 1.3.2
 + ``JpegFile`` API change
