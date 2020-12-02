@@ -388,7 +388,7 @@ class Ifd(dict):
     ):
         longitude, latitude, alt = self.get_location()
         try:
-            urlretrieve("https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,%(latitude)s,%(zoom)s,0/%(width)sx%(height)s@2x?access_token=%(token)s" % {
+            urlretrieve("https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,%(latitude)s,%(zoom)s,0/%(width)sx%(height)s?access_token=%(token)s" % {
                     "longitude": longitude,
                     "latitude": latitude,
                     "zoom": zoom,
