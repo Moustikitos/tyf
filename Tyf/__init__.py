@@ -11,7 +11,7 @@ import sys
 import struct
 import operator
 
-from xml.etree.ElementTree import Element, fromstring, tostring
+import xml.etree.ElementTree as xmp
 
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
@@ -326,7 +326,7 @@ class JpegFile(list):
                     string.close()
                     sgmt.append((0xffe1, self.ifd))
                 elif b"ns.adobe.com" in data[:30]:
-                    self.xmp = fromstring(data[data.find(b"\x00")+1:])
+                    self.xmp = xmp.fromstring(data[data.find(b"\x00")+1:])
                     sgmt.append((0xffe1, self.xmp))
             else:
                 sgmt.append((marker, fileobj.read(count-2)))
@@ -350,10 +350,10 @@ class JpegFile(list):
                         value.save(string)
                     value = b"Exif\x00\x00" + string.getvalue()
                     string.close()
-                elif isinstance(value, Element):
+                elif isinstance(value, xmp.Element):
                     value = \
                         b'http://ns.adobe.com/xap/1.0/\x00' + \
-                        tostring(self.xmp)
+                        xmp.tostring(self.xmp)
                 pack(">HH", fileobj, (marker, len(value) + 2))
 
             else:
@@ -428,46 +428,40 @@ def open(f):
         raise Exception("file is not a valid JPEG nor TIFF image")
 
 
-# # if PIL exists do some overridings
-# try: from PIL import Image as _Image
-# except ImportError: pass
-# else:
-#     def _getexif(im):
-#         try:
-#             data = im.info["exif"]
-#         except KeyError:
-#             return None
-#         fileobj = io.BytesIO(data[6:])
-#         exif = TiffFile(fileobj)
-#         fileobj.close()
-#         return exif
+# if PIL exists do some overridings
+try:
+    from PIL import Image as _Image
+except ImportError:
+    pass
+else:
+    def _getexif(im):
+        try:
+            data = im.info["exif"]
+        except KeyError:
+            return None
+        # b'Exif\x00\x00' -> 6 bytes
+        fileobj = io.BytesIO(data[6:])
+        exif = TiffFile(fileobj)
+        fileobj.close()
+        del fileobj
+        return exif
 
-#     class Image(_Image.Image):
+    class Image(_Image.Image):
 
-#         _image_ = _Image.Image
+        # keep a reference of original PIL Image object
+        _image_ = _Image.Image
 
-#         @staticmethod
-#         def open(*args, **kwargs):
-#             return _Image.open(*args, **kwargs)
+        @staticmethod
+        def open(*args, **kwargs):
+            return _Image.open(*args, **kwargs)
 
-#         def save(self, fp, format="JPEG", **params):
+        def save(self, fp, format="JPEG", **params):
+            params["exif"] = self.info["exif"]
+            return Image._image_.save(self, fp, format="JPEG", **params)
 
-#             ifd = params.pop("ifd", self._getexif())
-#             if ifd:
-#                 fileobj = StringIO()
-#                 if isinstance(ifd, TiffFile):
-#                     ifd.load_raster()
-#                     ifd.save(fileobj)
-#                 elif isinstance(ifd, JpegFile):
-#                     ifd[0xffe1].save(fileobj)
-#                 data = fileobj.getvalue()
-#                 fileobj.close()
-#                 if len(data) > 0:
-#                     params["exif"] = b"Exif\x00\x00" + (data.encode() if isinstance(data, str) else data)
+    _Image.Image = Image
 
-#             Image._image_.save(self, fp, format="JPEG", **params)
-#     _Image.Image = Image
-
-#     from PIL import JpegImagePlugin
-#     JpegImagePlugin._getexif = _getexif
-#     del _getexif
+    from PIL import JpegImagePlugin
+    JpegImagePlugin._getexif_ = JpegImagePlugin._getexif
+    JpegImagePlugin._getexif = _getexif
+    del _getexif
