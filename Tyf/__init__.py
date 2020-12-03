@@ -96,9 +96,9 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         obj["GeoDoubleParamsTag"] = geokey._34736
         obj["GeoAsciiParamsTag"] = geokey._34737
 
-    ifds = obj.pack()
+    ifds = obj.pack(byteorder)
     if isinstance(ifd1, ifd.Ifd):
-        ifds.update(ifd1=ifd1.pack()["root"])
+        ifds.update(ifd1=ifd1.pack(byteorder)["root"])
 
     # compute exif, gps and interoperability offsets
     ifd_size = ifds["root"]["size"]
@@ -147,9 +147,9 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
             obj[tag].value = raster_offset
 
     # recompute all modified tags
-    ifds = obj.pack()
+    ifds = obj.pack(byteorder)
     if isinstance(ifd1, ifd.Ifd):
-        ifds.update(ifd1=ifd1.pack()["root"])
+        ifds.update(ifd1=ifd1.pack(byteorder)["root"])
 
     raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 

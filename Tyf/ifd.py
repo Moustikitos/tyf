@@ -335,14 +335,14 @@ class Ifd(dict):
                     setattr(self, name, Ifd(tag_family=[getattr(tags, name)]))
                 return dict.__setitem__(getattr(self, name), tag.key, tag)
 
-    def pack(self):
+    def pack(self, byteorder="<"):
         result = {}
 
         for name in [n for n in ["exfT", "gpsT", "itrT"] if hasattr(self, n)]:
-            result[name] = getattr(self, name).pack()["root"]
+            result[name] = getattr(self, name).pack(byteorder)["root"]
 
         tags = [
-            t.pack() for t in
+            t.pack(byteorder) for t in
             sorted(self.values(), key=lambda e: e.tag)
         ]
 
