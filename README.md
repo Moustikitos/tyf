@@ -18,7 +18,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + read / edit EXIF data from JPEG images
  + read / edit IFD data from TIFF images
  + read / edit GEOTIFF data from IFD
- + read  XMP data from IFD
+ + read / edit XMP data from IFD
  + work directly with python numbers, string and datetime
  + interpolate coordinates using GEOTIFF ModelTransformation
 
@@ -26,7 +26,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + split exif data from JPEG into different files
  + extract TIFF or JPEG thumbnails from JPEG files
  + strip EXIF data from JPEG File
- + dump location thumbnail using google API
+ + dump location thumbnail using [mapbox API](https://docs.mapbox.com/api)
 
 ## Quick start
 ```python

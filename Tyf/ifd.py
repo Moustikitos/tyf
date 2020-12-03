@@ -9,10 +9,10 @@ from Tyf import TYPES, reduce
 from Tyf import tags, encoders, decoders
 
 try:
-    from urllib.request import urlretrieve, urlopen
+    from urllib.request import urlopen
     from io import BytesIO as StringIO
 except ImportError:
-    from urllib import urlretrieve, urlopen
+    from urllib import urlopen
     from cStringIO import StringIO
 
 
@@ -236,22 +236,13 @@ class Ifd(dict):
             "tag_family", [tags.bTT, tags.xTT, tags.pTT]
         )
 
-    def __setattr__(self, attr, value):
-        # if attr == "gpsT":
-        #     self[34853] = 0
-        # elif attr == "exfT":
-        #     self[34665] = 0
-        # elif attr == "itrT":
-        #     self[40965] = 0
-        dict.__setattr__(self, attr, value)
-
     def __delattr__(self, attr, value):
         if attr == "gpsT":
-            dict.pop(self, "GPS IFD")
+            dict.pop(self, "GPS IFD", False)
         elif attr == "exfT":
-            dict.pop(self, "Exif IFD")
+            dict.pop(self, "Exif IFD", False)
         elif attr == "itrT":
-            dict.pop(self, "Interoperability IFD")
+            dict.pop(self, "Interoperability IFD", False)
         dict.__delattr__(self, attr, value)
 
     def __setitem__(self, tag, value):
@@ -323,9 +314,12 @@ class Ifd(dict):
             "GPSAltitudeRef", "GPSAltitude"
         ]) <= set(ifd.keys()):
             return (
-                (1 if ifd["GPSLongitudeRef"] else -1) * ifd["GPSLongitude"].value,
-                (1 if ifd["GPSLatitudeRef"] else -1) * ifd["GPSLatitude"].value,
-                (1 if ifd["GPSAltitudeRef"] else -1) * ifd["GPSAltitude"].value
+                (1 if ifd["GPSLongitudeRef"] else -1) *
+                ifd["GPSLongitude"].value,
+                (1 if ifd["GPSLatitudeRef"] else -1) *
+                ifd["GPSLatitude"].value,
+                (1 if ifd["GPSAltitudeRef"] else -1) *
+                ifd["GPSAltitude"].value
             )
         else:
             raise Exception("No location data found")

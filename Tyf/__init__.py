@@ -114,7 +114,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         i = ifds[name]
         tag = \
             "Exif IFD" if name == "exfT" else \
-            "Gps IFD" if name == "gpsT" else \
+            "GPS IFD" if name == "gpsT" else \
             "Interoperability IFD"
         obj[tag].value = sub_ifd_offset
         # increment the next sub ifd offset
@@ -137,9 +137,10 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     ]:
         if "Offset" in tag:
             raster_offsets = (raster_offset,)
-            bytecounts = obj[tag.replace("Offsets", "ByteCounts")].value
+            tagname = tag.replace("Offsets", "ByteCounts")
+            bytecounts = obj[tagname].value
             if isinstance(bytecounts, tuple):
-                for bytecount in obj[tag.replace("Offsets", "ByteCounts")].value:
+                for bytecount in obj[tagname].value:
                     raster_offsets += (raster_offsets[-1] + bytecount, )
             obj[tag].value = raster_offsets
         else:  # JPEGInterchangeFormat
@@ -163,7 +164,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         else:
             sub_ifd_offset = obj[
                 "Exif IFD" if key == "exfT" else
-                "Gps IFD" if key == "gpsT" else
+                "GPS IFD" if key == "gpsT" else
                 "Interoperability IFD"
             ].value
             fileobj.seek(sub_ifd_offset)
@@ -286,8 +287,9 @@ class TiffFile(list):
             pack(byteorder+"L", fileobj, (next_ifd,))
             next_ifd = _write_IFD(i, fileobj, next_ifd, byteorder, ifd1=ifd1)
 
-        if _close:
+        if hasattr(fileobj, "close"):
             fileobj.close()
+        del fileobj
 
 
 class JpegFile(list):
@@ -360,8 +362,10 @@ class JpegFile(list):
             fileobj.write(value)
 
         pack(">H", fileobj, (0xffd9,))
-        if _close:
+
+        if hasattr(fileobj, "close"):
             fileobj.close()
+        del fileobj
 
     def save_thumbnail(self, f):
         try:
