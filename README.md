@@ -18,14 +18,15 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + read / edit EXIF data from JPEG images
  + read / edit IFD data from TIFF images
  + read / edit GEOTIFF data from IFD
+ + read  XMP data from IFD
  + work directly with python numbers, string and datetime
+ + interpolate coordinates using GEOTIFF ModelTransformation
 
 ### Do more with JPEG and TIFF files
  + split exif data from JPEG into different files
  + extract TIFF or JPEG thumbnails from JPEG files
  + strip EXIF data from JPEG File
  + dump location thumbnail using google API
- + interpolate coordinates using GEOTIFF ModelTransformation
 
 ## Quick start
 ```python
@@ -72,6 +73,57 @@ True
 ```python
 >>> jpg.ifd0.__class__
 <class 'Tyf.ifd.Ifd'>
+>>> for tag in jpg.ifd0.tags(): print(tag)
+...
+<IFD tag ImageWidth:2560>
+<IFD tag ImageLength:1920>
+<IFD tag Make:'Google'>
+<IFD tag Model:'Nexus S'>
+<IFD tag Orientation:1>
+<IFD tag Software:'KVT49L'>
+<IFD tag DateTime:datetime.datetime(2015, 7, 30, 21, 1, 16)>
+<IFD tag Artist:'THOORENS Bruno'>
+<IFD tag YCbCrPositioning:1>
+<IFD tag Copyright:'THOORENS Bruno'>
+<IFD tag Exif IFD:2286>
+<IFD tag GPS IFD:4754>
+<IFD tag XPTitle:'Beautifull Rainbow'>
+<IFD tag XPComment:'For testing purpose only !'>
+<IFD tag XPAuthor:'THOORENS Bruno'>
+<IFD tag XPKeywords:'Rainbow;Belgium'>
+<IFD tag ExposureTime:0.008333333333333333>
+<IFD tag FNumber:2.6>
+<IFD tag ExposureProgram:3>
+<IFD tag ISOSpeedRatings:50>
+<IFD tag ExifVersion:b'0220'>
+<IFD tag DateTimeOriginal:datetime.datetime(2015, 7, 30, 21, 1, 16)>
+<IFD tag DateTimeDigitized:datetime.datetime(2015, 7, 30, 21, 1, 16)>
+<IFD tag ShutterSpeedValue:7.0>
+<IFD tag ApertureValue:3.0>
+<IFD tag BrightnessValue:6.0>
+<IFD tag ExposureBiasValue:0.0>
+<IFD tag MaxApertureValue:3.0>
+<IFD tag MeteringMode:2>
+<IFD tag Flash:0>
+<IFD tag FocalLength:3.43>
+<IFD tag ColorSpace:1>
+<IFD tag PixelXDimension:2560>
+<IFD tag PixelYDimension:1920>
+<IFD tag ExposureMode:0>
+<IFD tag WhiteBalance:0>
+<IFD tag SceneCaptureType:0>
+<IFD tag GPSVersionID:(2, 2, 0, 0)>
+<IFD tag GPSLatitudeRef:True>
+<IFD tag GPSLatitude:51.2095416>
+<IFD tag GPSLongitudeRef:True>
+<IFD tag GPSLongitude:5.1872093>
+<IFD tag GPSAltitudeRef:False>
+<IFD tag GPSAltitude:0.0>
+<IFD tag GPSTimeStamp:(19.0, 1.0, 7.0)>
+<IFD tag GPSImgDirectionRef:'M'>
+<IFD tag GPSImgDirection:33.0>
+<IFD tag GPSProcessingMethod:b'ASCII\x00\x00\x00NETWORK'>
+<IFD tag GPSDateStamp:'2015:07:30'>
 >>> jpg.ifd0.get_location()
 (5.1872093, 51.2095416, -0.0)
 >>> jpg.ifd0.dump_location("test_location")

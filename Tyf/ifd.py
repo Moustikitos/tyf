@@ -1,5 +1,6 @@
 # -*- encoding:utf-8 -*-
 
+import io
 import os
 import struct
 import collections
@@ -8,9 +9,11 @@ from Tyf import TYPES, reduce
 from Tyf import tags, encoders, decoders
 
 try:
-    from urllib.request import urlretrieve
+    from urllib.request import urlretrieve, urlopen
+    from io import BytesIO as StringIO
 except ImportError:
-    from urllib import urlretrieve
+    from urllib import urlretrieve, urlopen
+    from cStringIO import StringIO
 
 
 GeoKeyModel = {
@@ -42,7 +45,6 @@ class Tag(object):
         None,
         ""
     )
-
     count = property(
         lambda cls:
             len(getattr(cls, "_v", (None, ))) //
@@ -129,7 +131,15 @@ class Tag(object):
         # create tag and set value
         tag = Tag(tag if db is None else db.get(tag, "Undefined"))
         tag.type = typ
-        tag._v = value[0] if typ in [2, 7] else value
+        if typ in [2, 7]:
+            # python 3.x
+            if len(value) == 1:
+                tag._v = value[0]
+            # python 2.x
+            else:
+                tag._v = b"".join(value)
+        else:
+            tag._v = value
         tag._is_offset = data_size > 4
 
         fileobj.seek(bckp)
@@ -227,12 +237,12 @@ class Ifd(dict):
         )
 
     def __setattr__(self, attr, value):
-        if attr == "gpsT":
-            self[34853] = 0
-        elif attr == "exfT":
-            self[34665] = 0
-        elif attr == "itrT":
-            self[40965] = 0
+        # if attr == "gpsT":
+        #     self[34853] = 0
+        # elif attr == "exfT":
+        #     self[34665] = 0
+        # elif attr == "itrT":
+        #     self[40965] = 0
         dict.__setattr__(self, attr, value)
 
     def __delattr__(self, attr, value):
@@ -367,28 +377,18 @@ class Ifd(dict):
         })
         return result
 
-#     def load_location(self, zoom=15, size="256x256", mcolor="0xff00ff", format="png", scale=1):
-#             lon, lat, alt = self.get_location()
-#             try:
-#                 opener = urllib.urlopen("https://maps.googleapis.com/maps/api/staticmap?center=%s,%s&zoom=%s&size=%s&markers=color:%s%%7C%s,%s&format=%s&scale=%s" % (
-#                     latitude, longitude,
-#                     zoom, size, mcolor,
-#                     latitude, longitude,
-#                     format, scale
-#                 ))
-#             except:
-#                 return StringIO()
-#             else:
-#                 return StringIO(opener.read())
-
-    def dump_location(
-        self, tilename, zoom=15, format="png", width=400, height=300,
+    def load_location(
+        self, zoom=15, width=400, height=300,
         token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFr"
-              "NXd4In0.JIyrV6sWjehsRHKVMBDFaw"
+              "NXd4In0.JIyrV6sWjehsRHKVMBDFaw",
     ):
         longitude, latitude, alt = self.get_location()
         try:
-            urlretrieve("https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,%(latitude)s,%(zoom)s,0/%(width)sx%(height)s?access_token=%(token)s" % {
+            opener = urlopen(
+                "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static"
+                "/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,"
+                "%(latitude)s,%(zoom)s,0/%(width)sx%(height)s?access_token="
+                "%(token)s" % {
                     "longitude": longitude,
                     "latitude": latitude,
                     "zoom": zoom,
@@ -396,10 +396,19 @@ class Ifd(dict):
                     "height": height,
                     "token": token
                 },
-                os.path.splitext(tilename)[0] + "."+format
             )
         except Exception as error:
             print("%r" % error)
+        else:
+            return StringIO(opener.read())
+
+    def dump_location(self, name, *args, **kwargs):
+        fileobj = io.open(os.path.splitext(name)[0] + ".png", "wb")
+        stringio = self.load_location(*args, **kwargs)
+        fileobj.write(stringio.getvalue())
+        fileobj.close()
+        stringio.close()
+        del fileobj, stringio
 
     def tags(self):
         for v in sorted(dict.values(self), key=lambda e: e.tag):

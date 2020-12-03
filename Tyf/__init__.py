@@ -1,13 +1,19 @@
 # -*- encoding:utf-8 -*-
-__copyright__ = "Copyright © 2015-2016\nhttp://bruno.thoorens.free.fr/licences/tyf.html"
+__copyright__ = """Copyright © 2015-2020
+http://bruno.thoorens.free.fr/licences/tyf.html"""
 __author__ = "THOORENS Bruno"
 __tiff__ = (6, 0)
 __geotiff__ = (1, 8, 1)
 
-from xml.etree.ElementTree import Element, fromstring, tostring
-import io, os, sys, struct, operator
+import io
+import os
+import sys
+import struct
+import operator
 
-__PY3__ = True if sys.version_info[0] >= 3 else False
+from xml.etree.ElementTree import Element, fromstring, tostring
+
+__PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
 unpack = lambda fmt, fileobj: \
@@ -43,7 +49,6 @@ else:
     from StringIO import StringIO
     # import urllib
     reduce = __builtins__["reduce"]
-
 
 from Tyf import ifd, gkd, tags
 
