@@ -68,12 +68,12 @@ True
 >>> jpg.ifd.__class__
 <class 'Tyf.TiffFile'>
 >>> jpg.ifd0[256]
-<IFD tag ImageWidth:2560>
+2560
 >>> jpg.ifd0["ImageWidth"]
-<IFD tag ImageWidth:2560>
->>> jpg.ifd0[256].value, jpg.ifd0[256].comment
+2560
+>>> jpg.ifd0[256], jpg.ifd0.get("ImageWidth").comment
 (2560, 'Number of columns in the image, ie, the number of pixels per row')
->>> jpg.ifd0["GPSLongitude"].value
+>>> jpg.ifd0["GPSLongitude"]
 5.1872093
 ```
 
@@ -136,6 +136,8 @@ True
 >>> jpg.ifd0.get_location()
 (5.1872093, 51.2095416, -0.0)
 >>> jpg.ifd0.dump_location("test_location")
+>>> jpg.ifd0.get("Orientation").info
+'Normal'
 ```
 
 ![5.1872093, 51.2095416](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png)

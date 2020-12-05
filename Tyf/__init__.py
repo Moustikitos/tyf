@@ -29,7 +29,7 @@ and JPEG files.
 >>> tr = tif[0].getModelTransformation()
 >>> tr(0, 0)
 (-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
->>> tr(tif[0]["ImageWidth"].value, tif[0]["ImageLength"].value)
+>>> tr(tif[0]["ImageWidth"], tif[0]["ImageLength"])
 (2358.211624949061, 4224973.143255847, 0.0, 1.0)
 ```
 """
@@ -112,7 +112,7 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
             "itrT"
         )
         _read_IFD(
-            obj, fileobj, obj[key].value, byteorder,
+            obj, fileobj, obj[key], byteorder,
             db=dict([(i[0], i[-1][0]) for i in dic.items()])
         )
     fileobj.seek(next_ifd_offset)
@@ -150,7 +150,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
             "Exif IFD" if name == "exfT" else \
             "GPS IFD" if name == "gpsT" else \
             "Interoperability IFD"
-        obj[tag].value = sub_ifd_offset
+        obj[tag] = sub_ifd_offset
         # increment the next sub ifd offset
         sub_ifd_offset += i["size"] + len(i["data"])
 
@@ -173,13 +173,13 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         if "Offset" in tag:
             raster_offsets = (raster_offset,)
             tagname = tag.replace("Offsets", "ByteCounts")
-            bytecounts = obj[tagname].value
+            bytecounts = obj[tagname]
             if isinstance(bytecounts, tuple):
-                for bytecount in obj[tagname].value:
+                for bytecount in obj[tagname]:
                     raster_offsets += (raster_offsets[-1] + bytecount, )
-            obj[tag].value = raster_offsets
+            obj[tag] = raster_offsets
         else:  # JPEGInterchangeFormat
-            obj[tag].value = raster_offset
+            obj[tag] = raster_offset
 
     # recompute all modified tags
     ifds = obj.pack(byteorder)
@@ -201,7 +201,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
                 "Exif IFD" if key == "exfT" else
                 "GPS IFD" if key == "gpsT" else
                 "Interoperability IFD"
-            ].value
+            ]
             fileobj.seek(sub_ifd_offset)
             data_offset = \
                 sub_ifd_offset + packed["size"]
@@ -422,7 +422,7 @@ class JpegFile(list):
         except Exception as error:
             print("%r" % error)
         else:
-            compression = ifd[259].value
+            compression = ifd[259]
             if hasattr(f, "close"):
                 fileobj = f
                 _close = False

@@ -6,7 +6,7 @@ import struct
 import collections
 
 from Tyf import TYPES, reduce
-from Tyf import tags, encoders, decoders
+from Tyf import tags, encoders, decoders, values
 
 try:
     from urllib.request import urlopen
@@ -49,6 +49,12 @@ class Tag(object):
         lambda cls:
             len(getattr(cls, "_v", (None, ))) //
             (2 if getattr(cls, "type", None) in [5, 10] else 1),
+        None,
+        None,
+        ""
+    )
+    info = property(
+        lambda cls: getattr(values, cls.key, {}).get(cls.value, None),
         None,
         None,
         ""
@@ -155,8 +161,8 @@ def _load_raster(obj, fileobj):
     # striped raster data
     if "StripOffsets" in obj:
         setattr(obj, "stripes", tuple())
-        offsets = obj["StripOffsets"].value
-        bytescounts = obj.get("StripByteCounts").value
+        offsets = obj["StripOffsets"]
+        bytescounts = obj["StripByteCounts"]
         if isinstance(offsets, tuple):
             data = zip(offsets, bytescounts)
         else:
@@ -167,8 +173,8 @@ def _load_raster(obj, fileobj):
     # free raster data
     elif "FreeOffsets" in obj:
         setattr(obj, "free", tuple())
-        offsets = obj["FreeOffsets"].value
-        bytescounts = obj.get("FreeByteCounts").value
+        offsets = obj["FreeOffsets"]
+        bytescounts = obj["FreeByteCounts"]
         if isinstance(offsets, tuple):
             data = zip(offsets, bytescounts)
         else:
@@ -179,8 +185,8 @@ def _load_raster(obj, fileobj):
     # tiled raster data
     elif "TileOffsets" in obj:
         setattr(obj, "tiles", tuple())
-        offsets = obj["TileOffsets"].value
-        bytescounts = obj.get("TileByteCounts").value
+        offsets = obj["TileOffsets"]
+        bytescounts = obj["TileByteCounts"]
         if isinstance(offsets, tuple):
             data = zip(offsets, bytescounts)
         else:
@@ -190,8 +196,8 @@ def _load_raster(obj, fileobj):
             obj.tiles += (fileobj.read(bytecount), )
     # get interExchange (thumbnail data for JPEG/EXIF data)
     if "JPEGInterchangeFormat" in obj:
-        fileobj.seek(obj["JPEGInterchangeFormat"].value)
-        obj.jpegIF = fileobj.read(obj["JPEGInterchangeFormatLength"].value)
+        fileobj.seek(obj["JPEGInterchangeFormat"])
+        obj.jpegIF = fileobj.read(obj["JPEGInterchangeFormatLength"])
 
 
 class Ifd(dict):
@@ -220,17 +226,20 @@ class Ifd(dict):
         dict.__delattr__(self, attr, value)
 
     def __setitem__(self, tag, value):
-        return self.append(Tag(tag, value))
+        try:
+            self.get(tag).value = value
+        except KeyError:
+            self.append(Tag(tag, value))
 
     def __getitem__(self, tag):
         tag, (key, typ, default, comment) = tags.get(tag)
         if key in self:
-            return dict.__getitem__(self, key)
+            return dict.__getitem__(self, key).value
         for name in ["exfT", "gpsT", "itrT"]:
             if hasattr(self, name):
                 dic = getattr(self, name)
                 if key in dic:
-                    return dict.__getitem__(dic, key)
+                    return dict.__getitem__(dic, key).value
         raise KeyError("%s tag not found" % key)
 
     def __delitem__(self, tag):
@@ -252,8 +261,16 @@ class Ifd(dict):
         tag.value = value
         return dict.__setitem__(self, tag.key, tag)
 
-    def get(self, tag):
-        return dict.__getitem__(self, tag)
+    def get(self, tag, default=None):
+        tag, (key, typ, default, comment) = tags.get(tag)
+        if key in self:
+            return dict.get(self, key, default)
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                dic = getattr(self, name)
+                if key in dic:
+                    return dict.get(dic, key, default)
+        raise KeyError("%s tag not found" % key)
 
     def pop(self, tag, default=None):
         tag, (key, typ, default, comment) = tags.get(tag)
@@ -272,7 +289,8 @@ class Ifd(dict):
     def set_location(self, longitude, latitude, altitude=0.):
         if not hasattr(self, "gpsT"):
             setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
-        self["GPSVersionID"] = None
+        if "GPSVersionID" not in self:
+            dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
         self["GPSLatitudeRef"] = latitude >= 0
         self["GPSLatitude"] = latitude
         self["GPSLongitudeRef"] = longitude >= 0
@@ -288,12 +306,9 @@ class Ifd(dict):
             "GPSAltitudeRef", "GPSAltitude"
         ]) <= set(ifd.keys()):
             return (
-                (1 if ifd["GPSLongitudeRef"] else -1) *
-                ifd["GPSLongitude"].value,
-                (1 if ifd["GPSLatitudeRef"] else -1) *
-                ifd["GPSLatitude"].value,
-                (1 if ifd["GPSAltitudeRef"] else -1) *
-                ifd["GPSAltitude"].value
+                (1 if ifd["GPSLongitudeRef"] else -1) * ifd["GPSLongitude"],
+                (1 if ifd["GPSLatitudeRef"] else -1) * ifd["GPSLatitude"],
+                (1 if ifd["GPSAltitudeRef"] else -1) * ifd["GPSAltitude"]
             )
         else:
             raise Exception("No location data found")
@@ -330,7 +345,7 @@ class Ifd(dict):
 
         if len(raster_length):
             tag = list(raster_length)[0]
-            raster_length = self[tag].value
+            raster_length = self[tag]
             ifd_raster_size = \
                 reduce(int.__add__, raster_length) \
                 if isinstance(raster_length, tuple) else raster_length
@@ -389,11 +404,11 @@ class Ifd(dict):
     def getModelTransformation(self, tie_idx=0):
         if "ModelTransformationTag" in self:
             matrix = GeoKeyModel["ModelTransformationTag"](
-               *self["ModelTransformationTag"].value
+               *self["ModelTransformationTag"]
             )
         elif "ModelTiepointTag" in self and "ModelPixelScaleTag" in self:
-            Sx, Sy, Sz = self["ModelPixelScaleTag"].value
-            I, J, K, X, Y, Z = self["ModelTiepointTag"].value[
+            Sx, Sy, Sz = self["ModelPixelScaleTag"]
+            I, J, K, X, Y, Z = self["ModelTiepointTag"][
                 6 * tie_idx:6 * tie_idx + 6
             ]
             matrix = GeoKeyModel["ModelTransformationTag"](

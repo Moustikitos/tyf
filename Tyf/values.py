@@ -1,5 +1,4 @@
 # -*- encoding:utf-8 -*-
-# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 
 ## Tiff tag values
 NewSubfileType = {
@@ -7301,10 +7300,10 @@ ProjectionGeoKey = {
 }
 
 InteropIndex = {
-    b'R03' : "R03 - DCF option file (Adobe RGB)",
-    b'R98' : "R98 - DCF basic file (sRGB)",
-    b'THM' : "THM - DCF thumbnail file",
-    b'R03\x00' : "R03 - DCF option file (Adobe RGB)",
-    b'R98\x00' : "R98 - DCF basic file (sRGB)",
-    b'THM\x00' : "THM - DCF thumbnail file"
+    b'R03': "R03 - DCF option file (Adobe RGB)",
+    b'R98': "R98 - DCF basic file (sRGB)",
+    b'THM': "THM - DCF thumbnail file",
+    b'R03\x00': "R03 - DCF option file (Adobe RGB)",
+    b'R98\x00': "R98 - DCF basic file (sRGB)",
+    b'THM\x00': "THM - DCF thumbnail file"
 }

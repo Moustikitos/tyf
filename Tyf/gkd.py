@@ -1,6 +1,4 @@
 # -*- encoding: utf-8 -*-
-# Copyright © 2015-2016, THOORENS Bruno
-# http://bruno.thoorens.free.fr/licences/tyf.html
 # http://www.remotesensing.org/geotiff/spec/geotiffhome.html
 
 from Tyf import values, __geotiff__
@@ -68,6 +66,15 @@ _2KEY = dict((v, k) for k, v in _2TAG.items())
 class GkdTag:
     strict = True
 
+    info = property(
+        lambda cls: getattr(
+            values, _2KEY.get(cls.tag, cls.key), {}
+        ).get(cls._decode(), None),
+        None,
+        None,
+        ""
+    )
+
     def __init__(self, tag, value=None):
         self.key, types, default, self.comment = _TAGS.get(
             tag, ("Unknown", [0], None, "Undefined tag")
@@ -119,14 +126,10 @@ class Gkd(dict):
     revision = __geotiff__[1:]
 
     def __getitem__(self, tag):
-        if isinstance(tag, str):
-            tag = _2TAG[tag]
-        return dict.__getitem__(self, tag)._decode()
+        return dict.__getitem__(self, _2TAG.get(tag, tag))._decode()
 
     def __setitem__(self, tag, value):
-        if isinstance(tag, str):
-            tag = _2TAG[tag]
-        dict.__setitem__(self, tag, GkdTag(tag, value))
+        dict.__setitem__(self, _2TAG.get(tag, tag), GkdTag(tag, value))
 
     def compute(self):
         directory_tags = (self.version, ) + self.revision + (len(self), )
@@ -150,18 +153,18 @@ class Gkd(dict):
         if hasattr(self, "_%s" % tag):
             return getattr(self, "_%s" % tag)
         else:
-            return dict.get(self, tag, error)
+            return dict.get(self, _2TAG.get(tag, tag), error)
 
     @staticmethod
     def from_ifd(dic={}, **kw):
         cls = Gkd()
         pairs = dict(dic, **kw)
         if "GeoDoubleParamsTag" in pairs:
-            _34736 = dic["GeoDoubleParamsTag"].value
+            _34736 = dic["GeoDoubleParamsTag"]
         if "GeoAsciiParamsTag" in pairs:
-            _34737 = dic["GeoAsciiParamsTag"].value
+            _34737 = dic["GeoAsciiParamsTag"]
         if "GeoKeyDirectoryTag" in pairs:
-            _34735 = dic["GeoKeyDirectoryTag"].value
+            _34735 = dic["GeoKeyDirectoryTag"]
             cls.version = _34735[0]
             cls.revision = _34735[1:3]
             for (tag, typ, count, value) in zip(
@@ -175,7 +178,7 @@ class Gkd(dict):
                     value = _34737[value:value + count - 1]
                 t = GkdTag(tag, value)
                 t.count = count
-                dict.__setitem__(cls, t.key, t)
+                dict.__setitem__(cls, tag, t)
         return cls
 
     def tags(self):

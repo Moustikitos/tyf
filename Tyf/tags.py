@@ -1,5 +1,4 @@
 # -*- encoding:utf-8 -*-
-# Copyright © 2015-2016, THOORENS Bruno - http://bruno.thoorens.free.fr/licences/tyf.html
 # ~ http://www.awaresystems.be/imaging/tiff.html
 
 from Tyf import reduce
