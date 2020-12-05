@@ -96,9 +96,9 @@ def GPSAltitude(value):
     return _5(value)
 
 
-# # GPSTimeStamp
-# _0x7 = lambda value: datetime.time(*[int(e) for e in _5(value)])
+GPSTimeStamp = lambda value: datetime.time(*[int(e) for e in _5(value)])
 
 
-# # GPSDateStamp
-# _0x1d = lambda value: datetime.datetime.strptime(_2(value), "%Y:%m:%d")
+def GPSDateStamp(value):
+    dt = datetime.datetime.strptime(_2(value), "%Y:%m:%d")
+    return datetime.date(dt.year, dt.month, dt.day)

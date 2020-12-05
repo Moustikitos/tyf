@@ -1,4 +1,39 @@
 # -*- encoding:utf-8 -*-
+"""
+Tyf package aims to provide pythoniv way to interact with metadata in TIFF
+and JPEG files.
+
+```python
+>>> import Tyf
+```
+
+# Jpeg class
+```python
+>>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
+>>> jpg.ifd0["GPS IFD"]
+<IFD tag GPS IFD:794>
+>>> jpg.ifd0.get_location()
+(5.1872093, 51.2095416, 0.0)
+>>> jpg.xmp
+<Element '{adobe:ns:meta/}xmpmeta' at 0x000001CA40C7C4A0>
+```
+
+# Tiff class
+```python
+>>> tif = Tyf.open("test/CEA.tif")
+>>> tif[0]["BitsPerSample"]
+<IFD tag BitsPerSample:8>
+>>> tif[0]["ModelTiepointTag"]
+<IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
+915, 0.0)>
+>>> tr = tif[0].getModelTransformation()
+>>> tr(0, 0)
+(-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
+>>> tr(tif[0]["ImageWidth"].value, tif[0]["ImageLength"].value)
+(2358.211624949061, 4224973.143255847, 0.0, 1.0)
+```
+"""
+
 __copyright__ = """Copyright © 2015-2020
 http://bruno.thoorens.free.fr/licences/tyf.html"""
 __author__ = "THOORENS Bruno"
@@ -42,12 +77,10 @@ if __PY3__:
     import functools
     reduce = functools.reduce
     long = int
-    # import urllib.request as urllib
 else:
     TYPES[2] = ("c", "ASCII")
     TYPES[7] = ("c", "UDEFINED")
-    from StringIO import StringIO
-    # import urllib
+    from cStringIO import StringIO
     reduce = __builtins__["reduce"]
 
 from Tyf import ifd, gkd, tags
@@ -62,6 +95,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
     # for each entry
     for i in range(nb_entry):
         obj.append(ifd.Tag.read(fileobj, byteorder, db=db))
+    # return next ifd offset, if =0 then end of TIFF
     return next_ifd_offset
 
 
@@ -69,9 +103,8 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
     # read data from offset and get next ifd offset
     next_ifd_offset = _read_IFD(obj, fileobj, offset, byteorder)
     # read sub IFD if any
-    sub_ifd_keys = \
-        set(["GPS IFD", "Exif IFD", "Interoperability IFD"]) & set(obj.keys())
-    for key in sub_ifd_keys:
+    for key in set(["GPS IFD", "Exif IFD", "Interoperability IFD"]) \
+            & set(obj.keys()):
         dic = getattr(
             tags,
             "gpsT" if "GPS" in key else
@@ -88,7 +121,7 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
 
 
 def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
-
+    # compute geotiff ifd if any found
     geokey = gkd.Gkd.from_ifd(obj)
     if len(geokey):
         geokey.compute()
@@ -96,6 +129,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         obj["GeoDoubleParamsTag"] = geokey._34736
         obj["GeoAsciiParamsTag"] = geokey._34737
 
+    # pack the ifd
     ifds = obj.pack(byteorder)
     if isinstance(ifd1, ifd.Ifd):
         ifds.update(ifd1=ifd1.pack(byteorder)["root"])
@@ -106,7 +140,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
 
     # where to put ifd values
     ifd_offset_values = offset + ifd_size
-    # where to put the next sub ifd
+    # where to put the sub ifds
     sub_ifd_offset = ifd_offset_values + len(ifd_values)
 
     # compute all possible sub ifd offsets
@@ -120,7 +154,8 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         # increment the next sub ifd offset
         sub_ifd_offset += i["size"] + len(i["data"])
 
-    # if ifd1 given (thumbnail), reserve needed space before raster data
+    # if ifd1 given (thumbnail jor Jpeg), reserve needed space before raster
+    # data
     if "ifd1" in ifds:
         raster_offset = \
             sub_ifd_offset + ifds["ifd1"]["size"] + \
@@ -150,9 +185,9 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     ifds = obj.pack(byteorder)
     if isinstance(ifd1, ifd.Ifd):
         ifds.update(ifd1=ifd1.pack(byteorder)["root"])
-
     raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 
+    # write IFDs
     for key in [
         k for k in ["root", "exfT", "gpsT", "itrT"]
         if k in ifds
@@ -196,6 +231,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         pack(byteorder+"L", fileobj, (ifd1_offset, ))
         _write_IFD(ifd1, fileobj, ifd1_offset, byteorder="<", ifd1=None)
 
+    # write raster data
     if obj.raster_loaded:
         fileobj.seek(raster_offset)
         if hasattr(obj, "jpegIF"):
@@ -223,10 +259,13 @@ def _fileobj(f, mode):
 
 
 class TiffFile(list):
-
+    """
+    :class:`TiffFile` is a :ref:`Tyf.ifd.Ifd` :class:`list` loaded from file or
+    fileobj.
+    """
     gkd = property(
         lambda obj: [gkd.Gkd.from_ifd(ifd) for ifd in obj],
-        None, None, "list of geotiff directory"
+        None, None, "Geotiff IFD"
     )
     raster_loaded = property(
         lambda obj: reduce(
@@ -239,7 +278,7 @@ class TiffFile(list):
         # determine byteorder
         first, = unpack(">H", fileobj)
         byteorder = "<" if first == 0x4949 else ">"
-
+        # manage according to magic number found
         magic_number, = unpack(byteorder+"H", fileobj)
         if magic_number not in [0x732E, 0x2A]:  # 29486, 42
             fileobj.close()
@@ -247,18 +286,18 @@ class TiffFile(list):
                 raise IOError("BigTIFF file not supported")
             else:
                 raise IOError("Bad magic number. Not a valid TIFF file")
-        next_ifd, = unpack(byteorder+"L", fileobj)
 
         ifds = []
+        next_ifd, = unpack(byteorder+"L", fileobj)
         while next_ifd != 0:
-            i = ifd.Ifd(
-                tag_name="Tiff tag", tag_family=[tags.bTT, tags.pTT, tags.xTT]
-            )
+            i = ifd.Ifd(tag_family=[tags.bTT, tags.pTT, tags.xTT])
             next_ifd = _from_buffer(i, fileobj, next_ifd, byteorder)
             ifds.append(i)
 
+        # keep filename source to load raster when needed
         if hasattr(fileobj, "name"):
             self._filename = fileobj.name
+        # load raster if initializing from fileobj
         else:
             for i in ifds:
                 ifd._load_raster(i, fileobj)
@@ -287,20 +326,22 @@ class TiffFile(list):
             pack(byteorder+"L", fileobj, (next_ifd,))
             next_ifd = _write_IFD(i, fileobj, next_ifd, byteorder, ifd1=ifd1)
 
-        if hasattr(fileobj, "close"):
+        if _close:
             fileobj.close()
-        del fileobj
+            del fileobj
 
 
 class JpegFile(list):
-
+    """
+    :class:`JpegFile` is a :class:`list` of JPEG segment.
+    """
     ifd0 = property(
-        lambda obj: getattr(obj, "ifd")[0],
-        None, None, "Image IFD"
+        lambda obj: getattr(obj, "ifd", [None, None])[0],
+        None, None, "readonly image IFD attribute"
     )
     ifd1 = property(
-        lambda obj: getattr(obj, "ifd")[1],
-        None, None, "Thumbnail IFD"
+        lambda obj: getattr(obj, "ifd", [None, None])[1],
+        None, None, "readonly thumbnail IFD attribute"
     )
 
     def __init__(self, fileobj):
@@ -348,12 +389,19 @@ class JpegFile(list):
                         value.save(string, idx=0, ifd1=value[-1])
                     else:
                         value.save(string)
-                    value = b"Exif\x00\x00" + string.getvalue()
+                    data = string.getvalue()
+                    value = b"Exif\x00\x00" + \
+                        data.encode("utf-8") if isinstance(data, bytes) \
+                        else data
                     string.close()
                 elif isinstance(value, xmp.Element):
+                    data = xmp.tostring(self.xmp)
                     value = \
-                        b'http://ns.adobe.com/xap/1.0/\x00' + \
-                        xmp.tostring(self.xmp)
+                        b"http://ns.adobe.com/xap/1.0/\x00" + \
+                        data.encode("utf-8") if isinstance(data, bytes) \
+                        else data
+                else:
+                    value = b""
                 pack(">HH", fileobj, (marker, len(value) + 2))
 
             else:
@@ -363,15 +411,15 @@ class JpegFile(list):
 
         pack(">H", fileobj, (0xffd9,))
 
-        if hasattr(fileobj, "close"):
+        if _close:
             fileobj.close()
-        del fileobj
+            del fileobj
 
     def save_thumbnail(self, f):
         try:
             ifd = self.ifd1
-        except IndexError:
-            pass
+        except Exception as error:
+            print("%r" % error)
         else:
             compression = ifd[259].value
             if hasattr(f, "close"):
@@ -392,15 +440,17 @@ class JpegFile(list):
 
             if _close:
                 fileobj.close()
+                del fileobj
 
     def dump_exif(self, f):
         fileobj, _close = _fileobj(f, "wb")
         self.ifd.save(fileobj)
         if _close:
             fileobj.close()
+            del fileobj
 
     def strip_exif(self):
-        ifd = self.ifd  # strip thumbnail(s?)
+        ifd = self.ifd
         ifd0 = self.ifd0
         while len(ifd) > 1:
             ifd.pop(-1)
@@ -456,7 +506,8 @@ else:
             return _Image.open(*args, **kwargs)
 
         def save(self, fp, format="JPEG", **params):
-            params["exif"] = self.info["exif"]
+            if params.pop("strip_exif", False):
+                params["exif"] = self.info["exif"]
             return Image._image_.save(self, fp, format="JPEG", **params)
 
     _Image.Image = Image

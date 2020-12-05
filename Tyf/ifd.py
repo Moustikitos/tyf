@@ -40,8 +40,8 @@ def Transform(obj, x=0., y=0., z1=0., z2=1.):
 class Tag(object):
 
     value = property(
-        lambda cls: cls._value_getter(),
-        lambda cls, v: cls._value_setter(v),
+        lambda cls: cls._getvalue(),
+        lambda cls, v: cls._setvalue(v),
         None,
         ""
     )
@@ -54,114 +54,87 @@ class Tag(object):
         ""
     )
 
-    def _value_getter(self):
+    def _getvalue(self):
+        if not hasattr(self, "_decode"):
+            setattr(
+                self, "_decode", getattr(
+                    decoders, self.key, getattr(
+                        decoders, "_%s" % self.type
+                    )
+                )
+            )
         if hasattr(self, "_v"):
-            if not getattr(self, "_decode", None):
-                if hasattr(self, "type"):
-                    dec = getattr(decoders, "_%s" % self.type)
-                    return dec(self._v)
-                else:
-                    return None
-            else:
-                return self._decode(self._v)
-        else:
-            return None
+            return self._decode(self._v)
+        return None
 
-    def _value_setter(self, value):
-        if value is None:
-            return
-        if not getattr(self, "_encode", None):
-            for typ in self._types:
-                enc = getattr(encoders, "_%s" % typ)
-                try:
-                    self._v = enc(value)
-                except Exception as error:
-                    print("%r: %r" % (self, error))
-                else:
-                    self.type = typ
-                    break
-        else:
-            self._v = self._encode(value)
-
-        self._is_offset = self.calcsize() > 4
+    def _setvalue(self, value):
+        if not hasattr(self, "_encode"):
+            setattr(
+                self, "_encode", getattr(
+                    encoders, self.key, getattr(
+                        encoders, "_%s" % self.type
+                    )
+                )
+            )
+        self._v = self._encode(value)
 
     def __init__(self, tag_or_key, value=None):
         self.tag, (self.key, self._types, default, self.comment) = \
             tags.get(tag_or_key)
-        self._encode = getattr(encoders, self.key, None)
-        self._decode = getattr(decoders, self.key, None)
-        if len(self._types) == 1:
-            self.type = self._types[-1]
-        self.value = value if value is not None else default
+        self.type = self._types[-1]
+        if value or default:
+            self.value = value or default
 
     def __repr__(self):
         return "<IFD tag %s:%r>" % (self.key, self.value, )
 
     @staticmethod
-    def read(fileobj, byteorder="<", offset=None, db=None):
-        # if offset given, go to it
-        if offset is not None:
-            fileobj.seek(offset)
-
+    def read(fileobj, byteorder, db=None):
         # read tag, type and count
         fmt = byteorder + "HHL"
         tag, typ, cnt = struct.unpack(
             fmt, fileobj.read(struct.calcsize(fmt))
         )
+        cls = Tag(tag)
+        cls.key, cls._types, cls.default, cls.comment = tags.get(tag)[-1]
+        cls.type = typ
         # extract value_or_offset
         value_or_offset = fileobj.read(struct.calcsize("=L"))
         if not isinstance(value_or_offset, bytes):
             value_or_offset = value_or_offset.encode("utf-8")
-
         # prepare structure value
         _typ = TYPES[typ][0]
         fmt = byteorder + ("%ds" % cnt if _typ == "s" else cnt * _typ)
-        # keep the end of tag definition position
-        bckp = fileobj.tell()
-
-        # struct.calcsize("=L") = 4
-        data_size = cnt * struct.calcsize("=" + _typ)
+        type_size = struct.calcsize("=" + _typ)
+        data_size = cnt * type_size
         if data_size > 4:
+            cls._is_offset = True
+            # keep the end of tag definition position
+            bckp = fileobj.tell()
             offset, = struct.unpack(byteorder+"L", value_or_offset)
             fileobj.seek(offset)
             value = struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
+            # go back to end of tag definition position
+            fileobj.seek(bckp)
         else:
+            cls._is_offset = False
             value = struct.unpack(fmt, value_or_offset[:data_size])
-
-        # create tag and set value
-        tag = Tag(tag if db is None else db.get(tag, "Undefined"))
-        tag.type = typ
+        # store raw value
         if typ in [2, 7]:
             # python 3.x
             if len(value) == 1:
-                tag._v = value[0]
+                value = value[0]
             # python 2.x
             else:
-                tag._v = b"".join(value)
-        else:
-            tag._v = value
-        tag._is_offset = data_size > 4
-
-        fileobj.seek(bckp)
-        return tag
-
-    def getValue(self):
-        value = getattr(self, "_v", None)
-        if value and not self._is_offset:
-            s = struct.calcsize("=" + TYPES[self.type][0])
-            voidspace = (struct.calcsize("=L") - self.count*s) // s
-            if self.type in [2, 7]:
-                value += b"\x00" * voidspace
-            elif self.type in [1, 3, 6, 8]:
-                value += ((0, ) * voidspace)
-        return value
+                value = b"".join(value)
+        cls._v = value
+        return cls
 
     def calcsize(self):
         return struct.calcsize("=" + TYPES[self.type][0] * self.count)
 
-    def pack(self, byteorder="<"):
+    def pack(self, byteorder):
         tag, typ, cnt = self.tag, self.type, self.count
-
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
         typ_ = TYPES[typ][0]
         fmt = \
@@ -169,10 +142,11 @@ class Tag(object):
         packed = \
             struct.pack(fmt, self._v) if typ_ == "s" else \
             struct.pack(fmt, *self._v)
+        value_is_offset = getattr(self, "_is_offset", False)
         return (
             info,
-            packed if self._is_offset else packed.ljust(4, b"\x00"),
-            self._is_offset
+            packed if value_is_offset else packed.ljust(4, b"\x00"),
+            value_is_offset
         )
 
 
