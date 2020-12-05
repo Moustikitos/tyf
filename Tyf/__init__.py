@@ -271,7 +271,7 @@ class TiffFile(list):
         lambda obj: reduce(
             operator.__and__, [ifd.raster_loaded for ifd in obj]
         ),
-        None, None, ""
+        None, None, "True if all raster data loaded"
     )
 
     def __init__(self, fileobj):
@@ -390,16 +390,17 @@ class JpegFile(list):
                     else:
                         value.save(string)
                     data = string.getvalue()
-                    value = b"Exif\x00\x00" + \
-                        data if isinstance(data, bytes) \
+                    value = b"Exif\x00\x00" + (
+                        data if isinstance(data, bytes)
                         else data.encode("utf-8")
+                    )
                     string.close()
                 elif isinstance(value, xmp.Element):
                     data = xmp.tostring(self.xmp)
-                    value = \
-                        b"http://ns.adobe.com/xap/1.0/\x00" + \
-                        data if isinstance(data, bytes) \
+                    value = b"http://ns.adobe.com/xap/1.0/\x00" + (
+                        data if isinstance(data, bytes)
                         else data.encode("utf-8")
+                    )
                 else:
                     value = b""
                 pack(">HH", fileobj, (marker, len(value) + 2))
@@ -505,10 +506,25 @@ else:
         def open(*args, **kwargs):
             return _Image.open(*args, **kwargs)
 
-        def save(self, fp, format="JPEG", **params):
-            if params.pop("strip_exif", False):
-                params["exif"] = self.info["exif"]
-            return Image._image_.save(self, fp, format="JPEG", **params)
+        def save(self, fp, format=None, **params):
+            if (
+                isinstance(fp, str) and
+                os.path.splitext(fp)[-1].lower() in [".jpg", ".jpeg"]
+                or
+                isinstance(format, str) and
+                format.lower() == "jpeg"
+            ) and not params.pop("strip_exif", False):
+                stringio = StringIO()
+                ifd = self._getexif()
+                ifd.save(stringio, idx=0, ifd1=ifd[1])
+                data = stringio.getvalue()
+                params["exif"] = b'Exif\x00\x00' + (
+                    data if isinstance(data, bytes) else
+                    data.encode("utf-8")
+                )
+                stringio.close()
+                del stringio, data
+            return Image._image_.save(self, fp, format, **params)
 
     _Image.Image = Image
 
