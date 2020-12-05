@@ -391,15 +391,15 @@ class JpegFile(list):
                         value.save(string)
                     data = string.getvalue()
                     value = b"Exif\x00\x00" + \
-                        data.encode("utf-8") if isinstance(data, bytes) \
-                        else data
+                        data if isinstance(data, bytes) \
+                        else data.encode("utf-8")
                     string.close()
                 elif isinstance(value, xmp.Element):
                     data = xmp.tostring(self.xmp)
                     value = \
                         b"http://ns.adobe.com/xap/1.0/\x00" + \
-                        data.encode("utf-8") if isinstance(data, bytes) \
-                        else data
+                        data if isinstance(data, bytes) \
+                        else data.encode("utf-8")
                 else:
                     value = b""
                 pack(">HH", fileobj, (marker, len(value) + 2))
