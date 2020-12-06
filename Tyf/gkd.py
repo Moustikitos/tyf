@@ -100,7 +100,10 @@ class GkdTag:
         self.type, self.count, self.value = self._encode(value, types)
 
     def __repr__(self):
-        return "<GKD tag %s:%r>" % (self.key, self.value, )
+        if self.info:
+            return "<GKD tag %s:%r - %s>" % (self.key, self.value, self.info)
+        else:
+            return "<GKD tag %s:%r>" % (self.key, self.value)
 
     def _encode(self, value, types):
         if isinstance(value, str):

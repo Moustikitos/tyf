@@ -213,7 +213,7 @@ GPSProcessingMethod = UserComment
 
 
 def GPSLatitudeRef(value):
-    return b"N\x00" if bool(value) else b"S\x00"
+    return b"N\x00" if value.lower() in ["n", b"n"] else b"S\x00"
 
 
 def GPSLatitude(value):
@@ -222,7 +222,7 @@ def GPSLatitude(value):
 
 
 def GPSLongitudeRef(value):
-    return b"E\x00" if bool(value) else b"W\x00"
+    return b"E\x00" if value.lower() in ["e", b"e"] else b"W\x00"
 
 
 def GPSLongitude(value):
@@ -231,7 +231,7 @@ def GPSLongitude(value):
 
 
 def GPSAltitudeRef(value):
-    return _3(1 if bool(value) else 0)
+    return _3(0 if bool(value) else 1)
 
 
 def GPSAltitude(value):

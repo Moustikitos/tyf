@@ -92,7 +92,10 @@ class Tag(object):
             self.value = value or default
 
     def __repr__(self):
-        return "<IFD tag %s:%r>" % (self.key, self.value, )
+        if self.info:
+            return "<IFD tag %s:%r - %s>" % (self.key, self.value, self.info)
+        else:
+            return "<IFD tag %s:%r>" % (self.key, self.value)
 
     @staticmethod
     def read(fileobj, byteorder, db=None):
@@ -291,9 +294,9 @@ class Ifd(dict):
             setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
         if "GPSVersionID" not in self:
             dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
-        self["GPSLatitudeRef"] = latitude >= 0
+        self["GPSLatitudeRef"] = "n" if latitude >= 0 else "s"
         self["GPSLatitude"] = latitude
-        self["GPSLongitudeRef"] = longitude >= 0
+        self["GPSLongitudeRef"] = "e" if longitude >= 0 else "w"
         self["GPSLongitude"] = longitude
         self["GPSAltitudeRef"] = altitude >= 0
         self["GPSAltitude"] = altitude
@@ -306,9 +309,12 @@ class Ifd(dict):
             "GPSAltitudeRef", "GPSAltitude"
         ]) <= set(ifd.keys()):
             return (
-                (1 if ifd["GPSLongitudeRef"] else -1) * ifd["GPSLongitude"],
-                (1 if ifd["GPSLatitudeRef"] else -1) * ifd["GPSLatitude"],
-                (1 if ifd["GPSAltitudeRef"] else -1) * ifd["GPSAltitude"]
+                (1 if ifd["GPSLongitudeRef"] == "E" else -1) *
+                ifd["GPSLongitude"],
+                (1 if ifd["GPSLatitudeRef"] == "N" else -1) *
+                ifd["GPSLatitude"],
+                (1 if ifd["GPSAltitudeRef"] else -1) *
+                ifd["GPSAltitude"]
             )
         else:
             raise Exception("No location data found")

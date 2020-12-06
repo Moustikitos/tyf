@@ -66,36 +66,23 @@ def _deg(d, m, s):
     return d + (m + s / 60.) / 60.
 
 
-def GPSLatitudeRef(value):
-    return \
-        True if value in [b"N\x00", b"N"] else \
-        False if value in [b"S\x00", b"S"] else \
-        None
-
-
 def GPSLatitude(value):
     return _deg(*_5(value))
-
-
-def GPSLongitudeRef(value):
-    return \
-        True if value in [b"E\x00", b"E"] else \
-        False if value in [b"W\x00", b"W"] else \
-        None
 
 
 GPSLongitude = GPSLatitude
 
 
 def GPSAltitudeRef(value):
-    return bool(_3(value))
+    return _3(value)
 
 
 def GPSAltitude(value):
     return _5(value)
 
 
-GPSTimeStamp = lambda value: datetime.time(*[int(e) for e in _5(value)])
+def GPSTimeStamp(value):
+    return datetime.time(*[int(e) for e in _5(value)])
 
 
 def GPSDateStamp(value):
