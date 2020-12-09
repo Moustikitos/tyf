@@ -51,11 +51,6 @@ import xml.etree.ElementTree as xmp
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
-unpack = lambda fmt, fileobj: \
-    struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
-pack = lambda fmt, fileobj, value: \
-    fileobj.write(struct.pack(fmt, *value))
-
 TYPES = {
     1:  ("B",  "UCHAR or USHORT"),
     2:  ("s",  "ASCII"),
@@ -83,7 +78,16 @@ else:
     from cStringIO import StringIO
     reduce = __builtins__["reduce"]
 
+# here to avoid circular import
 from Tyf import ifd, gkd, tags
+
+
+def unpack(fmt, fileobj):
+    return struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
+
+
+def pack(fmt, fileobj, value):
+    return fileobj.write(struct.pack(fmt, *value))
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
@@ -170,7 +174,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         ["StripOffsets", "TileOffsets", "FreeOffsets", "JPEGInterchangeFormat"]
         if t in dict.keys(obj)
     ]:
-        if "Offset" in tag:
+        if "Offset" in tag:  # StripOffsets, TileOffsets or FreeOffsets
             raster_offsets = (raster_offset,)
             tagname = tag.replace("Offsets", "ByteCounts")
             bytecounts = obj[tagname]
@@ -185,6 +189,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     ifds = obj.pack(byteorder)
     if isinstance(ifd1, ifd.Ifd):
         ifds.update(ifd1=ifd1.pack(byteorder)["root"])
+    # adjust raser offset with diff between first computation and second one
     raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 
     # write IFDs
@@ -193,6 +198,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         if k in ifds
     ]:
         packed = ifds[key]
+        # go to according [SUB]IFD offset and determine associated data offset
         if key == "root":
             fileobj.seek(offset)
             data_offset = ifd_offset_values
@@ -215,16 +221,16 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
             if not is_offset:
                 fileobj.write(data)
             else:
+                # put offset and shift it by len(data) for next offset value
                 pack(byteorder+"L", fileobj, (data_offset, ))
                 data_offset += len(data)
 
         if key == "root":
             next_ifd_offset = fileobj.tell()
-
         pack(byteorder+"L", fileobj, (0, ))
         fileobj.write(packed["data"])
 
-    # write IFD1
+    # write IFD1 (this should only be used with Jpeg exif thumbnail)
     if "ifd1" in ifds:
         ifd1_offset = fileobj.tell()
         fileobj.seek(next_ifd_offset)
