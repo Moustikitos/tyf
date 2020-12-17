@@ -1,6 +1,6 @@
 # `Tyf`
 
-[![pypi](https://img.shields.io/pypi/l/Tyf.svg?style=flat-square)](http://bruno.thoorens.free.fr/licences/tyf.html)
+[![pypi](https://img.shields.io/pypi/l/Tyf.svg)](http://bruno.thoorens.free.fr/licences/tyf.html)
 
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
