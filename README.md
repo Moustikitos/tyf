@@ -5,6 +5,8 @@
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg?style=flat-square)](https://pypi.python.org/pypi/Tyf)
+[![Downloads](https://pepy.tech/badge/Tyf/week)](https://pepy.tech/project/tyf)
+
 
 ## Support this project
 
