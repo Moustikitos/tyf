@@ -1,0 +1,20 @@
+loaders:
+  - type: python
+processors:
+  - type: filter
+    expression: not name.startswith('_')
+    documented_only: true
+  - type: smart
+  - type: crossref
+renderer:
+  type: mkdocs
+  pages:
+    - title: Overview
+      name: index
+      source: README.md
+    - title: Tyf API
+      contents:
+        - '*'
+  mkdocs_config:
+    site_name: Tyf doc
+    theme: mkdocs

@@ -418,16 +418,16 @@ class Ifd(dict):
                 6 * tie_idx:6 * tie_idx + 6
             ]
             matrix = GeoKeyModel["ModelTransformationTag"](
-                Sx,  0., 0., X - I*Sx,
-                0., -Sy, 0., Y + J*Sy,
-                0., 0. , Sz, Z - K*Sz,
-                0., 0. , 0., 1.
+                Sx,  0., 0., X - I * Sx,
+                0., -Sy, 0., Y + J * Sy,
+                0., 0.,  Sz, Z - K * Sz,
+                0., 0.,  0., 1.
             )
         else:
             matrix = GeoKeyModel["ModelTransformationTag"](
-                1., 0. , 0., 0.,
+                1., 0.,  0., 0.,
                 0., -1., 0., 0.,
-                0., 0. , 1., 0.,
-                0., 0. , 0., 1.
+                0., 0.,  1., 0.,
+                0., 0.,  0., 1.
             )
         return lambda x, y, z1=0., z2=1., m=matrix: Transform(m, x, y, z1, z2)

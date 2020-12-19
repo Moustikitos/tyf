@@ -6,32 +6,6 @@ and JPEG files.
 ```python
 >>> import Tyf
 ```
-
-# Jpeg class
-```python
->>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
->>> jpg.ifd0["GPS IFD"]
-<IFD tag GPS IFD:794>
->>> jpg.ifd0.get_location()
-(5.1872093, 51.2095416, 0.0)
->>> jpg.xmp
-<Element '{adobe:ns:meta/}xmpmeta' at 0x000001CA40C7C4A0>
-```
-
-# Tiff class
-```python
->>> tif = Tyf.open("test/CEA.tif")
->>> tif[0]["BitsPerSample"]
-<IFD tag BitsPerSample:8>
->>> tif[0]["ModelTiepointTag"]
-<IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
-915, 0.0)>
->>> tr = tif[0].getModelTransformation()
->>> tr(0, 0)
-(-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
->>> tr(tif[0]["ImageWidth"], tif[0]["ImageLength"])
-(2358.211624949061, 4224973.143255847, 0.0, 1.0)
-```
 """
 
 __copyright__ = """Copyright © 2015-2020
@@ -51,6 +25,7 @@ import xml.etree.ElementTree as xmp
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
+#: Type definition linking tag type value to python ``struct`` format
 TYPES = {
     1:  ("B",  "UCHAR or USHORT"),
     2:  ("s",  "ASCII"),
@@ -91,6 +66,7 @@ def pack(fmt, fileobj, value):
 
 
 def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
+    "Read IFD from file object and return next IFD offset."
     # fileobj seek must be on the start offset
     fileobj.seek(offset)
     # get number of entry
@@ -104,6 +80,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
 
 
 def _from_buffer(obj, fileobj, offset, byteorder="<"):
+    "Read IFD and sub IFD from file object and return next IFD offset."
     # read data from offset and get next ifd offset
     next_ifd_offset = _read_IFD(obj, fileobj, offset, byteorder)
     # read sub IFD if any
@@ -125,6 +102,7 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
 
 
 def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
+    "Write IFD in file object and return next ifd offset."
     # compute geotiff ifd if any found
     geokey = gkd.Gkd.from_ifd(obj)
     if len(geokey):
@@ -266,13 +244,30 @@ def _fileobj(f, mode):
 
 class TiffFile(list):
     """
-    :class:`TiffFile` is a :ref:`Tyf.ifd.Ifd` :class:`list` loaded from file or
-    fileobj.
+    List of IFD found in TIFF file.
+
+    ```python
+    >>> tif = Tyf.open("test/CEA.tif")
+    >>> tif[0]["BitsPerSample"]
+    <IFD tag BitsPerSample:8>
+    >>> tif[0]["ModelTiepointTag"]
+    <IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
+    915, 0.0)>
+    >>> tr = tif[0].getModelTransformation()
+    >>> tr(0, 0)
+    (-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
+    >>> tr(tif[0]["ImageWidth"], tif[0]["ImageLength"])
+    (2358.211624949061, 4224973.143255847, 0.0, 1.0)
+    ```
     """
+
+    #: shortcut to geokey directories
     gkd = property(
         lambda obj: [gkd.Gkd.from_ifd(ifd) for ifd in obj],
         None, None, "Geotiff IFD"
     )
+
+    #: ``True`` if raster data loaded
     raster_loaded = property(
         lambda obj: reduce(
             operator.__and__, [ifd.raster_loaded for ifd in obj]
@@ -339,18 +334,39 @@ class TiffFile(list):
 
 class JpegFile(list):
     """
-    :class:`JpegFile` is a :class:`list` of JPEG segment.
+    List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf manage
+    to extract xmd data as python ``ElementTree`` object and EXIF data as IFD.
+    ``ifd0`` is a shortcut to JPEF Exif, ``ifd1`` is a shortcut to JPEG Thumbnail
+    and ``xmp`` is a shortcut to XMP data.
+
+    ```python
+    >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
+    >>> jpg.ifd0["GPS IFD"]
+    <IFD tag GPS IFD:794>
+    >>> jpg.ifd0.get_location()
+    (5.1872093, 51.2095416, 0.0)
+    >>> jpg.xmp
+    <Element '{adobe:ns:meta/}xmpmeta' at 0x000001CA40C7C4A0>
+    ```
     """
+
+    #: shortcut to JPEG EXIF data
     ifd0 = property(
         lambda obj: getattr(obj, "ifd", [None, None])[0],
         None, None, "readonly image IFD attribute"
     )
+
+    #: shortcut to JPEG thumbnail data
     ifd1 = property(
         lambda obj: getattr(obj, "ifd", [None, None])[1],
         None, None, "readonly thumbnail IFD attribute"
     )
 
     def __init__(self, fileobj):
+        """
+        Arguments:
+            fileobj: a python file object
+        """
         sgmt = []
 
         fileobj.seek(0)
@@ -381,6 +397,14 @@ class JpegFile(list):
         list.__init__(self, sgmt)
 
     def save(self, f):
+        """
+        Save object as a JPEG file. All segmet are writed in current order,
+        only ``ifd0``, ``ifd1`` and ``xmp`` are recomputed. If ``f`` is a file
+        object, it is not closed.
+
+        Arguments:
+            f: a valid file path or a python file object
+        """
         fileobj, _close = _fileobj(f, "wb")
         pack(">H", fileobj, (0xffd8,))
 
@@ -423,6 +447,13 @@ class JpegFile(list):
             del fileobj
 
     def save_thumbnail(self, f):
+        """
+        Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
+        automatically appended. If ``f`` is a file object, it is not closed.
+
+        Arguments:
+            f: a valid file path or a python file object
+        """
         try:
             ifd = self.ifd1
         except Exception as error:
@@ -450,6 +481,13 @@ class JpegFile(list):
                 del fileobj
 
     def dump_exif(self, f):
+        """
+        Save EXIF data in a separated file. If ``f`` is a file object, it is
+        not closed.
+
+        Arguments:
+            f: a valid file path or a python file object
+        """
         fileobj, _close = _fileobj(f, "wb")
         self.ifd.save(fileobj)
         if _close:
@@ -457,6 +495,9 @@ class JpegFile(list):
             del fileobj
 
     def strip_exif(self):
+        """
+        Remove EXIF from JPEG, XMP data keeped.
+        """
         ifd = self.ifd
         ifd0 = self.ifd0
         while len(ifd) > 1:
@@ -466,6 +507,13 @@ class JpegFile(list):
 
 
 def open(f):
+    """
+    Return JpegFile or TiffFile according to ``f``. If it is a file object,
+    it is not closed.
+
+    Arguments:
+        f: a valid file path or a python file object
+    """
     fileobj, _close = _fileobj(f, "rb")
 
     first, = unpack(">H", fileobj)

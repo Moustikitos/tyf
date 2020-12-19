@@ -1,17 +1,34 @@
 # -*- encoding:utf-8 -*-
+"""
+``Tyf.decoders`` module defines simple definition to translate unpacked ifd tag
+value to python one.
+"""
 
 import datetime
 
 
 def _1(value):
+    """
+    Integer decoder.
+    ```python
+    >>> from Tyf import decoders
+    >>> decoders._1((1, ))
+    1
+    >>> decoders._1((1.0, "6", 0b111))
+    (1, 6, 7)
+    ```
+    """
     return int(value[0]) if len(value) == 1 else tuple(int(v) for v in value)
-
-
-_3 = _4 = _6 = _8 = _9 = _1
 
 
 def _2(value):
     return value[:-1].decode("utf-8")
+
+
+#: see Tyf.decoders._1
+_3 = _1
+#: see Tyf.decoders._1
+_4 = _1
 
 
 def _5(value):
@@ -22,10 +39,19 @@ def _5(value):
     return result[0] if len(result) == 1 else result
 
 
+#: see Tyf.decoders._1
+_6 = _1
+
+
 def _7(value):
     return value
 
 
+#: see Tyf.decoders._1
+_8 = _1
+#: see Tyf.decoders._1
+_9 = _1
+#: see Tyf.decoders._5
 _10 = _5
 
 
@@ -35,6 +61,7 @@ def _11(value):
         tuple(float(v) for v in value)
 
 
+#: see Tyf.decoders._11
 _12 = _11
 
 

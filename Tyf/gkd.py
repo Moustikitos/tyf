@@ -185,5 +185,5 @@ class Gkd(dict):
         return cls
 
     def tags(self):
-        for v in sorted(dict.values(self), key=lambda e:e.tag):
+        for v in sorted(dict.values(self), key=lambda e: e.tag):
             yield v

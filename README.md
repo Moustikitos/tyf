@@ -1,17 +1,18 @@
 # `Tyf`
+## Copyright
+[![pypi](https://img.shields.io/pypi/l/Tyf.svg)](https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html)
 
-[![pypi](https://img.shields.io/pypi/l/Tyf.svg)](http://bruno.thoorens.free.fr/licences/tyf.html)
-
+## Distribution
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg)](https://pypi.python.org/pypi/Tyf)
 [![Downloads](https://pepy.tech/badge/Tyf/week)](https://pepy.tech/project/tyf)
 
 ## Support this project
-
 [Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
-  * [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
-  * [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
+
+ + [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
+ + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
 
 ## Why this package ?
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
@@ -38,24 +39,24 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
 <class 'Tyf.JpegFile'>
 >>> print(Tyf.xmp.tostring(jpg.xmp).decode()) 
 <ns0:xmpmeta xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="adobe:ns:meta/" xmlns:ns3="http://ns.adobe.com/xap/1.0/" xmlns:ns4="http://ns.microsoft.com/photo/1.0/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:title><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
-                        </dc:title><dc:description><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
-                        </dc:description><dc:creator><rdf:Seq><rdf:li>THOORENS Bruno</rdf:li></rdf:Seq>
-                        </dc:creator><dc:rights><rdf:Alt><rdf:li xml:lang="x-default">THOORENS Bruno</rdf:li></rdf:Alt>
-                        </dc:rights></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" /><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns3:Rating>4</ns3:Rating></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-                        </ns4:LastKeywordXMP></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-                        </dc:subject></rdf:Description></rdf:RDF></ns0:xmpmeta>
+  </dc:title><dc:description><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
+  </dc:description><dc:creator><rdf:Seq><rdf:li>THOORENS Bruno</rdf:li></rdf:Seq>
+  </dc:creator><dc:rights><rdf:Alt><rdf:li xml:lang="x-default">THOORENS Bruno</rdf:li></rdf:Alt>
+  </dc:rights></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" /><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns3:Rating>4</ns3:Rating></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
+  </ns4:LastKeywordXMP></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
+  </dc:subject></rdf:Description></rdf:RDF></ns0:xmpmeta>
 >>> jpg.save_thumbnail("test_thumb") # extension automatically added
 ```
 
 ![EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
 
 There are 3 attributes to access data within ``Tif.JpegFile`` :
+
  + ``ifd0`` containing picture IFD, EXIF and eventually GPS data 
  + ``ifd1`` containing thubnail IFD data
  + ``xmp`` containing XMP data
 
-``ifd0`` and ``ifd1`` are shortcut to the first and second
-IFD in ``ifd`` attribute that is itself a ``Tyf.TiffFile``.
+``ifd0`` and ``ifd1`` are shortcut to the first and second IFD in ``ifd`` attribute which is itself a ``Tyf.TiffFile``.
 
 ```python
 >>> jpg.ifd[0] == jpg.ifd0
@@ -155,9 +156,9 @@ Guidance words: keep it simple and solid!
 
 1. open a issue to propose your contribution
 2. once issue is granted
-  + fork this repository
-  + edit your contribution
-  + start a pull request
+    + fork this repository
+    + edit your contribution
+    + start a pull request
 
 ## TODO
-+ API documentation
+ + API documentation
