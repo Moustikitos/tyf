@@ -1,2 +1,3 @@
 steps:
+- echo "Custom steps to produce HTML in $SITE_DIR here ..."
 - pydoc-markdown --build --site-dir $SITE_DIR

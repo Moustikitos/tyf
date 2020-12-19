@@ -17,6 +17,9 @@
 ## Why this package ?
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
 
+## Documentation [WIP]
+[![doc building](https://readthedocs.org/projects/tyf/badge/?version=latest)](https://tyf.readthedocs.io/en/latest/?badge=latest)
+
 ### Read / write EXIF and IFD data
  + read / edit EXIF data from JPEG images
  + read / edit IFD data from TIFF images
@@ -159,6 +162,3 @@ Guidance words: keep it simple and solid!
     + fork this repository
     + edit your contribution
     + start a pull request
-
-## TODO
- + API documentation
