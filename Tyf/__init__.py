@@ -242,6 +242,33 @@ def _fileobj(f, mode):
     return fileobj, _close
 
 
+def open(f):
+    """
+    Return JpegFile or TiffFile according to ``f``. If it is a file object,
+    it is not closed.
+
+    Arguments:
+        f: a valid file path or a python file object
+    """
+    fileobj, _close = _fileobj(f, "rb")
+
+    first, = unpack(">H", fileobj)
+    fileobj.seek(0)
+
+    if first == 0xffd8:
+        obj = JpegFile(fileobj)
+    elif first in [0x4d4d, 0x4949]:
+        obj = TiffFile(fileobj)
+
+    if _close:
+        fileobj.close()
+
+    try:
+        return obj
+    except Exception:
+        raise Exception("file is not a valid JPEG nor TIFF image")
+
+
 class TiffFile(list):
     """
     List of IFD found in TIFF file.
@@ -504,33 +531,6 @@ class JpegFile(list):
             ifd.pop(-1)
         for key in list(k for k in dict.__iter__(ifd0) if k not in tags.bTT):
             ifd0.pop(key)
-
-
-def open(f):
-    """
-    Return JpegFile or TiffFile according to ``f``. If it is a file object,
-    it is not closed.
-
-    Arguments:
-        f: a valid file path or a python file object
-    """
-    fileobj, _close = _fileobj(f, "rb")
-
-    first, = unpack(">H", fileobj)
-    fileobj.seek(0)
-
-    if first == 0xffd8:
-        obj = JpegFile(fileobj)
-    elif first in [0x4d4d, 0x4949]:
-        obj = TiffFile(fileobj)
-
-    if _close:
-        fileobj.close()
-
-    try:
-        return obj
-    except Exception:
-        raise Exception("file is not a valid JPEG nor TIFF image")
 
 
 # if PIL exists do some overridings

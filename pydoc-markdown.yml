@@ -2,8 +2,6 @@ loaders:
   - type: python
 processors:
   - type: filter
-    expression: not name.startswith('_')
-    documented_only: true
   - type: smart
   - type: crossref
 renderer:
@@ -12,9 +10,9 @@ renderer:
     - title: Overview
       name: index
       source: README.md
-    - title: Tyf API
+    - title: API
       contents:
-        - '*'
+        - Tyf.*
   mkdocs_config:
-    site_name: Tyf doc
-    theme: mkdocs
+    site_name: The Tyf Project
+    theme: readthedocs
