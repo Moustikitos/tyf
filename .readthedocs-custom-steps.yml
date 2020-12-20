@@ -1,5 +1,4 @@
 steps:
 - pydoc-markdown --build --site-dir $SITE_DIR
-- mv build/docs/mkdocs.yml .
-- mv build/docs/content docs
+- mv build/docs/content doc
 - ls -al
