@@ -1,5 +1,8 @@
 # -*- encoding:utf-8 -*-
 """
+# Documentation
+ + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
+ + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
 """
 
 import io
@@ -18,6 +21,17 @@ except ImportError:
     from cStringIO import StringIO
 
 
+#: Mapping of named tuple to be used with geotiff `ModelPixelScaleTag`,
+#: `ModelTiepointTag` and `ModelTransformationTag`.
+#: ```python
+#: >>> import tyf
+#: >>> from Tyf import ifd
+#: >>> tif = Tyf.open("test/CEA.tif")
+#: >>> ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
+#: ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.166784412522, Y=4255884.5438021915, Z=0.0)
+#: >>> ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
+#: ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
+#: ```
 GeoKeyModel = {
     "ModelPixelScaleTag": collections.namedtuple(
         "ModelPixelScale", "ScaleX, ScaleY, ScaleZ"
@@ -30,17 +44,49 @@ GeoKeyModel = {
 }
 
 
-def Transform(obj, x=0., y=0., z1=0., z2=1.):
+def Transform(obj, x=0., y=0., z=0.):
+    """
+    Transformation between raster and model space using a model transformation
+    matrix applied to raster coordinates plus altitude.
+
+    ```python
+    >>> Sx, Sy, Sz = ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
+    >>> I, J, K, X, Y, Z = ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
+    >>> matrix = ifd.GeoKeyModel["ModelTransformationTag"](
+    ...     Sx, 0.,  0., X - I * Sx,
+    ...     0., -Sy, 0., Y + J * Sy,
+    ...     0., 0.,  Sz, Z - K * Sz,
+    ...     0., 0.,  0., 1.
+    ... )
+    >>> ifd.Transform(matrix, 10, 10)
+    (-27892.945414580587, 4255284.32243236, 0.0)
+    ```
+
+    Arguments:
+        obj (GeoKeyModel["ModelTransformationTag"]): transformation matrix
+        x (float): pixel column index from left
+        y (float): pixel row index from top
+        z (float): altitude value
+    Returns:
+        projeted coordinates (tuple): X, Y, Z
+    """
     return (
-        obj[0] * x + obj[1] * y + obj[2] * z1 + obj[3] * z2,
-        obj[4] * x + obj[5] * y + obj[6] * z1 + obj[7] * z2,
-        obj[8] * x + obj[9] * y + obj[10] * z1 + obj[11] * z2,
-        obj[12] * x + obj[13] * y + obj[14] * z1 + obj[15] * z2
+        obj[0] * x + obj[1] * y + obj[2] * z + obj[3] * 1.,
+        obj[4] * x + obj[5] * y + obj[6] * z + obj[7] * 1.,
+        obj[8] * x + obj[9] * y + obj[10] * z + obj[11] * 1.
     )
 
 
 class Tag(object):
-
+    #: Encode and decode on the fly the `_v` attribute.
+    #: ```python
+    #: >>> tag = ifd.Tag("GPSLongitude")
+    #: >>> tag.value = 5.62347
+    #: >>> tag._v
+    #: (5, 1, 37, 1, 6123, 250)  # 5/1 deg + 37/1 min + 6123/250 sec
+    #: >>> tag.value
+    #: 5.62347
+    #: ```
     value = property(
         lambda cls: cls._getvalue(),
         lambda cls, v: cls._setvalue(v),
@@ -55,6 +101,13 @@ class Tag(object):
         None,
         ""
     )
+    #: Meaning of tag value if any (see `Tyf.values` module).
+    #: ```python
+    #: >>> ifd.Tag("PhotometricInterpretation", value=3).info
+    #: 'RGB Palette'
+    #: >>> ifd.Tag("Flash", value=0x000F).info
+    #: 'Flash fired, compulsory flash mode, return light detected'
+    #: ```
     info = property(
         lambda cls: getattr(values, cls.key, {}).get(cls.value, None),
         None,
@@ -87,6 +140,11 @@ class Tag(object):
         self._v = self._encode(value)
 
     def __init__(self, tag_or_key, value=None):
+        """
+        Arguments:
+            tag_or_key (int or string): tag value or keyword
+            value (any): value of the tag
+        """
         self.tag, (self.key, self._types, default, self.comment) = \
             tags.get(tag_or_key)
         self.type = self._types[-1]
@@ -101,6 +159,14 @@ class Tag(object):
 
     @staticmethod
     def read(fileobj, byteorder, db=None):
+        """
+        Arguments:
+            fileobj (buffer): a python file object
+            byteorder (string): `">"` if little endian used else `"<"`
+            db (dict): authorized tag database
+        Returns:
+            `Tyf.ifd.Tag`
+        """
         # read tag, type and count
         fmt = byteorder + "HHL"
         tag, typ, cnt = struct.unpack(
@@ -142,9 +208,22 @@ class Tag(object):
         return cls
 
     def calcsize(self):
+        """
+        Return tag value size in `bytes` when packed.
+        """
         return struct.calcsize("=" + TYPES[self.type][0] * self.count)
 
     def pack(self, byteorder):
+        """
+        Return a tuple containing the IFD base entry [tag, type, count], the
+        packed value and the info if value have to be written in IFD entry or
+        data.
+
+        Arguments:
+            byteorder (string): `">"` if little endian used else `"<"`
+        Returns:
+            tuple (`b"tag|type|count"`, `b"value"`, `True` if value is offset)
+        """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
         typ_ = TYPES[typ][0]
@@ -205,13 +284,44 @@ def _load_raster(obj, fileobj):
         obj.jpegIF = fileobj.read(obj["JPEGInterchangeFormatLength"])
 
 
-class Ifd(dict):
+def getModelTiePoints(cls):
+    """
+    Return tiepoint list found in `ModelTiepointTag` tags. This function sets
+    a list of all points in private attribute `_model_tie_points` on first
+    call.
 
+    ```
+    ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ..., In, Jn, Kn, Xn, Yn, Zn)
+    _model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
+    ```
+
+    Arguments:
+        cls (dict or `Tyf.ifd.Ifd`): image file directory
+    Returns:
+        Tiepoint list
+    Raises:
+        KeyError if no `ModelTiepointTag` defined
+    """
+    if not hasattr(cls, "_model_tie_points"):
+        setattr(cls, "_model_tie_points", [
+            cls["ModelTiepointTag"][i:i+6]
+            for i in range(0, len(cls["ModelTiepointTag"]), 6)
+        ])
+    return getattr(cls, "_model_tie_points", getModelTiePoints)
+
+
+class Ifd(dict):
+    #: `True` if raster is loaded
     raster_loaded = property(
         lambda obj: any([
             len(getattr(obj, name, []))
             for name in ["stripes", "tiles", "free", "jpegIF"]
         ]),
+        None, None, ""
+    )
+    #: Tiepoint list
+    tiepoints = property(
+        lambda cls: getModelTiePoints(cls),
         None, None, ""
     )
 
@@ -432,4 +542,4 @@ class Ifd(dict):
                 0., 0.,  1., 0.,
                 0., 0.,  0., 1.
             )
-        return lambda x, y, z1=0., z2=1., m=matrix: Transform(m, x, y, z1, z2)
+        return lambda x, y, z=0., m=matrix: Transform(m, x, y, z)
