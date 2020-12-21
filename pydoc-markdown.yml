@@ -12,7 +12,24 @@ renderer:
       source: README.md
     - title: API
       contents:
-        - Tyf.*
+        - Tyf
+        - Tyf.open*
+        - Tyf.JpegFile*
+        - Tyf.TiffFile*
+        - Tyf.Image*
+    - title: Core
+      contents:
+        - Tyf.ifd*
+        - Tyf.gkd*
+    - title: Extend
+      contents:
+        - Tyf.encoders*
+        - Tyf.decoders*
   mkdocs_config:
     site_name: The Tyf Project
-    theme: readthedocs
+    repo_url: https://github.com/Moustikitos/Tyf
+    repo_name: GitHub
+    copyright: BSD licence, 2015-2020, THOORENS Bruno
+    theme:
+      name: mkdocs
+      nav_style: light

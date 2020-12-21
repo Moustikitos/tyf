@@ -379,13 +379,13 @@ class JpegFile(list):
 
     #: shortcut to JPEG EXIF data
     ifd0 = property(
-        lambda obj: getattr(obj, "ifd", [None, None])[0],
+        lambda obj: getattr(obj, "ifd", [{}, {}])[0],
         None, None, "readonly image IFD attribute"
     )
 
     #: shortcut to JPEG thumbnail data
     ifd1 = property(
-        lambda obj: getattr(obj, "ifd", [None, None])[1],
+        lambda obj: getattr(obj, "ifd", [{}, {}])[1],
         None, None, "readonly thumbnail IFD attribute"
     )
 
@@ -422,6 +422,28 @@ class JpegFile(list):
                 sgmt.append((marker, fileobj.read(count-2)))
 
         list.__init__(self, sgmt)
+
+    def __getitem__(self, item):
+        """
+        Return item from ifd0.
+
+        ```python
+        >>> jpg["GPSLongitude"]
+        <IFD tag GPSLongitude:5.1872093>
+        ```
+        """
+        return self.ifd0.get(item, None)
+
+    def get(self, item, default=None):
+        """
+        Return item from ifd1.
+
+        ```python
+        >>> jpg.get("ImageWidth")
+        <IFD tag ImageWidth:320>
+        ```
+        """
+        return self.ifd1.get(item, default)
 
     def save(self, f):
         """
@@ -552,6 +574,9 @@ else:
         return exif
 
     class Image(_Image.Image):
+        """
+        Pillow Image class override.
+        """
 
         # keep a reference of original PIL Image object
         _image_ = _Image.Image
@@ -580,6 +605,7 @@ else:
                 del stringio, data
             return Image._image_.save(self, fp, format, **params)
 
+    #: Pillow override
     _Image.Image = Image
 
     from PIL import JpegImagePlugin
