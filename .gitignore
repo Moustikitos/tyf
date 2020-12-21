@@ -107,3 +107,4 @@ $RECYCLE.BIN/
 # custom
 # =========================
 debug.py
+.generated-files.txt

@@ -5,6 +5,8 @@ processors:
   - type: smart
   - type: crossref
 renderer:
+  output_directory: .
+  content_directory_name: docs
   type: mkdocs
   pages:
     - title: Overview
