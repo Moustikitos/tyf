@@ -107,4 +107,6 @@ $RECYCLE.BIN/
 # custom
 # =========================
 debug.py
+.vscode
 .generated-files.txt
+site/
