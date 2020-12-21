@@ -91,6 +91,14 @@
             
             <li class="nav-item" data-level="1"><a href="#tyfifd" class="nav-link">Tyf.ifd</a>
               <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#tag-objects" class="nav-link">Tag Objects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#ifd-objects" class="nav-link">Ifd Objects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
               </ul>
             </li>
         </ul>
@@ -101,7 +109,140 @@
 <p><a name="Tyf.gkd"></a></p>
 <h1 id="tyfgkd">Tyf.gkd</h1>
 <p><a name="Tyf.ifd"></a></p>
-<h1 id="tyfifd">Tyf.ifd</h1></div>
+<h1 id="tyfifd">Tyf.ifd</h1>
+<p><strong>Documentation</strong></p>
+<ul>
+<li><a href="https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf">Tiff 6.0 spec</a></li>
+<li><a href="https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html">GeoTiFF 1.8.1 spec</a></li>
+</ul>
+<p><a name="Tyf.ifd.GeoKeyModel"></a></p>
+<h4 id="geokeymodel">GeoKeyModel</h4>
+<p>Mapping of named tuple to be used with geotiff <code>ModelPixelScaleTag</code>,
+<code>ModelTiepointTag</code> and <code>ModelTransformationTag</code>.</p>
+<pre><code class="language-python">&gt;&gt;&gt; import tyf
+&gt;&gt;&gt; from Tyf import ifd
+&gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
+&gt;&gt;&gt; ifd.GeoKeyModel[&quot;ModelTiepointTag&quot;](*tif[0].tiepoints[0])
+ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.166784412522, Y=4255884.5438021915, Z=0.0)
+&gt;&gt;&gt; ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;](*tif[0][&quot;ModelPixelScaleTag&quot;])
+ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
+</code></pre>
+<p><a name="Tyf.ifd.Transform"></a></p>
+<h4 id="transform">Transform</h4>
+<pre><code class="language-python">Transform(obj, x=0., y=0., z=0.)
+</code></pre>
+<p>Transformation between raster and model space using a model transformation
+matrix applied to raster coordinates plus altitude.</p>
+<pre><code class="language-python">&gt;&gt;&gt; Sx, Sy, Sz = ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;](*tif[0][&quot;ModelPixelScaleTag&quot;])
+&gt;&gt;&gt; I, J, K, X, Y, Z = ifd.GeoKeyModel[&quot;ModelTiepointTag&quot;](*tif[0].tiepoints[0])
+&gt;&gt;&gt; matrix = ifd.GeoKeyModel[&quot;ModelTransformationTag&quot;](
+...     Sx, 0.,  0., X - I * Sx,
+...     0., -Sy, 0., Y + J * Sy,
+...     0., 0.,  Sz, Z - K * Sz,
+...     0., 0.,  0., 1.
+... )
+&gt;&gt;&gt; ifd.Transform(matrix, 10, 10)
+(-27892.945414580587, 4255284.32243236, 0.0)
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>obj</code> <em>GeoKeyModel["ModelTransformationTag"]</em> - transformation matrix</li>
+<li><code>x</code> <em>float</em> - pixel column index from left</li>
+<li><code>y</code> <em>float</em> - pixel row index from top</li>
+<li><code>z</code> <em>float</em> - altitude value</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<p>projeted coordinates (tuple): X, Y, Z</p>
+<p><a name="Tyf.ifd.Tag"></a></p>
+<h2 id="tag-objects">Tag Objects</h2>
+<pre><code class="language-python">class Tag(object)
+</code></pre>
+<p><a name="Tyf.ifd.Tag.value"></a></p>
+<h4 id="value">value</h4>
+<p>Encode and decode on the fly the <code>_v</code> attribute.</p>
+<pre><code class="language-python">&gt;&gt;&gt; tag = ifd.Tag(&quot;GPSLongitude&quot;)
+&gt;&gt;&gt; tag.value = 5.62347
+&gt;&gt;&gt; tag._v
+(5, 1, 37, 1, 6123, 250)  # 5/1 deg + 37/1 min + 6123/250 sec
+&gt;&gt;&gt; tag.value
+5.62347
+</code></pre>
+<p><a name="Tyf.ifd.Tag.info"></a></p>
+<h4 id="info">info</h4>
+<p>Meaning of tag value if any (see <code>Tyf.values</code> module).</p>
+<pre><code class="language-python">&gt;&gt;&gt; ifd.Tag(&quot;PhotometricInterpretation&quot;, value=3).info
+'RGB Palette'
+&gt;&gt;&gt; ifd.Tag(&quot;Flash&quot;, value=0x000F).info
+'Flash fired, compulsory flash mode, return light detected'
+</code></pre>
+<p><a name="Tyf.ifd.Tag.__init__"></a></p>
+<h4 id="__init__">__init__</h4>
+<pre><code class="language-python"> | __init__(tag_or_key, value=None)
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>tag_or_key</code> <em>int or string</em> - tag value or keyword</li>
+<li><code>value</code> <em>any</em> - value of the tag</li>
+</ul>
+<p><a name="Tyf.ifd.Tag.read"></a></p>
+<h4 id="read">read</h4>
+<pre><code class="language-python"> | @staticmethod
+ | read(fileobj, byteorder, db=None)
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>fileobj</code> <em>buffer</em> - a python file object</li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
+<li><code>db</code> <em>dict</em> - authorized tag database</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<p><code>Tyf.ifd.Tag</code></p>
+<p><a name="Tyf.ifd.Tag.calcsize"></a></p>
+<h4 id="calcsize">calcsize</h4>
+<pre><code class="language-python"> | calcsize()
+</code></pre>
+<p>Return tag value size in <code>bytes</code> when packed.</p>
+<p><a name="Tyf.ifd.Tag.pack"></a></p>
+<h4 id="pack">pack</h4>
+<pre><code class="language-python"> | pack(byteorder)
+</code></pre>
+<p>Return a tuple containing the IFD base entry [tag, type, count], the
+packed value and the info if value have to be written in IFD entry or
+data.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<p>tuple (<code>b"tag|type|count"</code>, <code>b"value"</code>, <code>True</code> if value is offset)</p>
+<p><a name="Tyf.ifd.getModelTiePoints"></a></p>
+<h4 id="getmodeltiepoints">getModelTiePoints</h4>
+<pre><code class="language-python">getModelTiePoints(cls)
+</code></pre>
+<p>Return tiepoint list found in <code>ModelTiepointTag</code> tags. This function sets
+a list of all points in private attribute <code>_model_tie_points</code> on first
+call.</p>
+<pre><code>ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ..., In, Jn, Kn, Xn, Yn, Zn)
+_model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>cls</code> <em>dict or <code>Tyf.ifd.Ifd</code></em> - image file directory</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<p>Tiepoint list</p>
+<p><strong>Raises</strong>:</p>
+<p>KeyError if no <code>ModelTiepointTag</code> defined</p>
+<p><a name="Tyf.ifd.Ifd"></a></p>
+<h2 id="ifd-objects">Ifd Objects</h2>
+<pre><code class="language-python">class Ifd(dict)
+</code></pre>
+<p><a name="Tyf.ifd.Ifd.raster_loaded"></a></p>
+<h4 id="raster_loaded">raster_loaded</h4>
+<p><code>True</code> if raster is loaded</p>
+<p><a name="Tyf.ifd.Ifd.tiepoints"></a></p>
+<h4 id="tiepoints">tiepoints</h4>
+<p>Tiepoint list</p></div>
             </div>
         </div>
 
