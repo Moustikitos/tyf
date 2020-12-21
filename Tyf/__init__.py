@@ -8,8 +8,7 @@ and JPEG files.
 ```
 """
 
-__copyright__ = """Copyright © 2015-2020
-http://bruno.thoorens.free.fr/licences/tyf.html"""
+__copyright__ = """Copyright © 2015-2020 - BSD Licence"""
 __author__ = "THOORENS Bruno"
 __tiff__ = (6, 0)
 __geotiff__ = (1, 8, 1)
@@ -277,9 +276,8 @@ class TiffFile(list):
     >>> tif = Tyf.open("test/CEA.tif")
     >>> tif[0]["BitsPerSample"]
     <IFD tag BitsPerSample:8>
-    >>> tif[0]["ModelTiepointTag"]
-    <IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
-    915, 0.0)>
+    >>> tif[0]["ModelTiepointTag"].value
+    (0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021915, 0.0)
     >>> tr = tif[0].getModelTransformation()
     >>> tr(0, 0)
     (-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
@@ -361,10 +359,10 @@ class TiffFile(list):
 
 class JpegFile(list):
     """
-    List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf manage
-    to extract xmd data as python ``ElementTree`` object and EXIF data as IFD.
-    ``ifd0`` is a shortcut to JPEF Exif, ``ifd1`` is a shortcut to JPEG Thumbnail
-    and ``xmp`` is a shortcut to XMP data.
+    List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf
+    manage to extract xmd data as python ``ElementTree`` object and EXIF data
+    as IFD. ``ifd0`` is a shortcut to JPEF Exif, ``ifd1`` is a shortcut to JPEG
+    Thumbnail and ``xmp`` is a shortcut to XMP data.
 
     ```python
     >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
