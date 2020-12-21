@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>API - The Tyf Project</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="..">The Tyf Project</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Overview</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">API</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../core/" class="nav-link">Core</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../extend/" class="nav-link">Extend</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../core/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/Moustikitos/Tyf/edit/master/docs/api.md" class="nav-link"><i class="fa fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#tyf" class="nav-link">Tyf</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#tifffile-objects" class="nav-link">TiffFile Objects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#jpegfile-objects" class="nav-link">JpegFile Objects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<p><a name="Tyf"></a></p>
+<h1 id="tyf">Tyf</h1>
+<p>Tyf package aims to provide pythoniv way to interact with metadata in TIFF
+and JPEG files.</p>
+<pre><code class="language-python">&gt;&gt;&gt; import Tyf
+</code></pre>
+<p><a name="Tyf.open"></a></p>
+<h4 id="open">open</h4>
+<pre><code class="language-python">open(f)
+</code></pre>
+<p>Return JpegFile or TiffFile according to <code>f</code>. If it is a file object,
+it is not closed.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> - a valid file path or a python file object</li>
+</ul>
+<p><a name="Tyf.TiffFile"></a></p>
+<h2 id="tifffile-objects">TiffFile Objects</h2>
+<pre><code class="language-python">class TiffFile(list)
+</code></pre>
+<p>List of IFD found in TIFF file.</p>
+<pre><code class="language-python">&gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
+&gt;&gt;&gt; tif[0][&quot;BitsPerSample&quot;]
+&lt;IFD tag BitsPerSample:8&gt;
+&gt;&gt;&gt; tif[0][&quot;ModelTiepointTag&quot;]
+&lt;IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
+915, 0.0)&gt;
+&gt;&gt;&gt; tr = tif[0].getModelTransformation()
+&gt;&gt;&gt; tr(0, 0)
+(-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
+&gt;&gt;&gt; tr(tif[0][&quot;ImageWidth&quot;], tif[0][&quot;ImageLength&quot;])
+(2358.211624949061, 4224973.143255847, 0.0, 1.0)
+</code></pre>
+<p><a name="Tyf.TiffFile.gkd"></a></p>
+<h4 id="gkd">gkd</h4>
+<p>shortcut to geokey directories</p>
+<p><a name="Tyf.TiffFile.raster_loaded"></a></p>
+<h4 id="raster_loaded">raster_loaded</h4>
+<p><code>True</code> if raster data loaded</p>
+<p><a name="Tyf.JpegFile"></a></p>
+<h2 id="jpegfile-objects">JpegFile Objects</h2>
+<pre><code class="language-python">class JpegFile(list)
+</code></pre>
+<p>List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf manage
+to extract xmd data as python <code>ElementTree</code> object and EXIF data as IFD.
+<code>ifd0</code> is a shortcut to JPEF Exif, <code>ifd1</code> is a shortcut to JPEG Thumbnail
+and <code>xmp</code> is a shortcut to XMP data.</p>
+<pre><code class="language-python">&gt;&gt;&gt; jpg = Tyf.open(&quot;test/IMG_20150730_210115.jpg&quot;)
+&gt;&gt;&gt; jpg.ifd0[&quot;GPS IFD&quot;]
+&lt;IFD tag GPS IFD:794&gt;
+&gt;&gt;&gt; jpg.ifd0.get_location()
+(5.1872093, 51.2095416, 0.0)
+&gt;&gt;&gt; jpg.xmp
+&lt;Element '{adobe:ns:meta/}xmpmeta' at 0x000001CA40C7C4A0&gt;
+</code></pre>
+<p><a name="Tyf.JpegFile.ifd0"></a></p>
+<h4 id="ifd0">ifd0</h4>
+<p>shortcut to JPEG EXIF data</p>
+<p><a name="Tyf.JpegFile.ifd1"></a></p>
+<h4 id="ifd1">ifd1</h4>
+<p>shortcut to JPEG thumbnail data</p>
+<p><a name="Tyf.JpegFile.__init__"></a></p>
+<h4 id="__init__">__init__</h4>
+<pre><code class="language-python"> | __init__(fileobj)
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>fileobj</code> - a python file object</li>
+</ul>
+<p><a name="Tyf.JpegFile.__getitem__"></a></p>
+<h4 id="__getitem__">__getitem__</h4>
+<pre><code class="language-python"> | __getitem__(item)
+</code></pre>
+<p>Return item from ifd0.</p>
+<pre><code class="language-python">&gt;&gt;&gt; jpg[&quot;GPSLongitude&quot;]
+&lt;IFD tag GPSLongitude:5.1872093&gt;
+</code></pre>
+<p><a name="Tyf.JpegFile.get"></a></p>
+<h4 id="get">get</h4>
+<pre><code class="language-python"> | get(item, default=None)
+</code></pre>
+<p>Return item from ifd1.</p>
+<pre><code class="language-python">&gt;&gt;&gt; jpg.get(&quot;ImageWidth&quot;)
+&lt;IFD tag ImageWidth:320&gt;
+</code></pre>
+<p><a name="Tyf.JpegFile.save"></a></p>
+<h4 id="save">save</h4>
+<pre><code class="language-python"> | save(f)
+</code></pre>
+<p>Save object as a JPEG file. All segmet are writed in current order,
+only <code>ifd0</code>, <code>ifd1</code> and <code>xmp</code> are recomputed. If <code>f</code> is a file
+object, it is not closed.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> - a valid file path or a python file object</li>
+</ul>
+<p><a name="Tyf.JpegFile.save_thumbnail"></a></p>
+<h4 id="save_thumbnail">save_thumbnail</h4>
+<pre><code class="language-python"> | save_thumbnail(f)
+</code></pre>
+<p>Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
+automatically appended. If <code>f</code> is a file object, it is not closed.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> - a valid file path or a python file object</li>
+</ul>
+<p><a name="Tyf.JpegFile.dump_exif"></a></p>
+<h4 id="dump_exif">dump_exif</h4>
+<pre><code class="language-python"> | dump_exif(f)
+</code></pre>
+<p>Save EXIF data in a separated file. If <code>f</code> is a file object, it is
+not closed.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> - a valid file path or a python file object</li>
+</ul>
+<p><a name="Tyf.JpegFile.strip_exif"></a></p>
+<h4 id="strip_exif">strip_exif</h4>
+<pre><code class="language-python"> | strip_exif()
+</code></pre>
+<p>Remove EXIF from JPEG, XMP data keeped.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>BSD licence, 2015-2020, THOORENS Bruno</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
