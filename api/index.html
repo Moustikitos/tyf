@@ -115,7 +115,7 @@ and JPEG files.</p>
 it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.TiffFile"></a></p>
 <h2 id="tifffile-objects">TiffFile Objects</h2>
@@ -125,9 +125,8 @@ it is not closed.</p>
 <pre><code class="language-python">&gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
 &gt;&gt;&gt; tif[0][&quot;BitsPerSample&quot;]
 &lt;IFD tag BitsPerSample:8&gt;
-&gt;&gt;&gt; tif[0][&quot;ModelTiepointTag&quot;]
-&lt;IFD tag ModelTiepointTag:(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021\
-915, 0.0)&gt;
+&gt;&gt;&gt; tif[0][&quot;ModelTiepointTag&quot;].value
+(0.0, 0.0, 0.0, -28493.166784412522, 4255884.5438021915, 0.0)
 &gt;&gt;&gt; tr = tif[0].getModelTransformation()
 &gt;&gt;&gt; tr(0, 0)
 (-28493.166784412522, 4255884.5438021915, 0.0, 1.0)
@@ -140,14 +139,28 @@ it is not closed.</p>
 <p><a name="Tyf.TiffFile.raster_loaded"></a></p>
 <h4 id="raster_loaded">raster_loaded</h4>
 <p><code>True</code> if raster data loaded</p>
+<p><a name="Tyf.TiffFile.save"></a></p>
+<h4 id="save">save</h4>
+<pre><code class="language-python"> | save(f, byteorder=&quot;&lt;&quot;, idx=None, ifd1=None)
+</code></pre>
+<p>Save object as a TIFF file. If <code>f</code> is a file object, it is not
+closed.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
+<li><code>idx</code> <em>int</em> - IFD index to save</li>
+<li><code>ifd1</code> <em>Tyf.ifd.Ifd</em> - IFD to be sused as thumbnail (only used for
+  JPEG saving)</li>
+</ul>
 <p><a name="Tyf.JpegFile"></a></p>
 <h2 id="jpegfile-objects">JpegFile Objects</h2>
 <pre><code class="language-python">class JpegFile(list)
 </code></pre>
-<p>List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf manage
-to extract xmd data as python <code>ElementTree</code> object and EXIF data as IFD.
-<code>ifd0</code> is a shortcut to JPEF Exif, <code>ifd1</code> is a shortcut to JPEG Thumbnail
-and <code>xmp</code> is a shortcut to XMP data.</p>
+<p>List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf
+manage to extract xmd data as python <code>ElementTree</code> object and EXIF data
+as IFD. <code>ifd0</code> is a shortcut to JPEF Exif, <code>ifd1</code> is a shortcut to JPEG
+Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 <pre><code class="language-python">&gt;&gt;&gt; jpg = Tyf.open(&quot;test/IMG_20150730_210115.jpg&quot;)
 &gt;&gt;&gt; jpg.ifd0[&quot;GPS IFD&quot;]
 &lt;IFD tag GPS IFD:794&gt;
@@ -187,7 +200,7 @@ and <code>xmp</code> is a shortcut to XMP data.</p>
 &lt;IFD tag ImageWidth:320&gt;
 </code></pre>
 <p><a name="Tyf.JpegFile.save"></a></p>
-<h4 id="save">save</h4>
+<h4 id="save_1">save</h4>
 <pre><code class="language-python"> | save(f)
 </code></pre>
 <p>Save object as a JPEG file. All segmet are writed in current order,
@@ -195,7 +208,7 @@ only <code>ifd0</code>, <code>ifd1</code> and <code>xmp</code> are recomputed. I
 object, it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.save_thumbnail"></a></p>
 <h4 id="save_thumbnail">save_thumbnail</h4>
@@ -205,7 +218,7 @@ object, it is not closed.</p>
 automatically appended. If <code>f</code> is a file object, it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.dump_exif"></a></p>
 <h4 id="dump_exif">dump_exif</h4>
@@ -215,7 +228,7 @@ automatically appended. If <code>f</code> is a file object, it is not closed.</p
 not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.strip_exif"></a></p>
 <h4 id="strip_exif">strip_exif</h4>
