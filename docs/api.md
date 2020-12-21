@@ -20,7 +20,7 @@ it is not closed.
 
 **Arguments**:
 
-- `f` _buffer_ - a valid file path or a python file object
+- `f` _buffer or string_ - a valid file path or a python file object
 
 <a name="Tyf.TiffFile"></a>
 ## TiffFile Objects
@@ -66,7 +66,7 @@ closed.
 
 **Arguments**:
 
-- `f` _buffer_ - a valid file path or a python file object
+- `f` _buffer or string_ - a valid file path or a python file object
 - `byteorder` _string_ - `">"` if little endian used else `"<"`
 - `idx` _int_ - IFD index to save
 - `ifd1` _Tyf.ifd.Ifd_ - IFD to be sused as thumbnail (only used for
@@ -156,7 +156,7 @@ object, it is not closed.
 
 **Arguments**:
 
-- `f` _buffer_ - a valid file path or a python file object
+- `f` _buffer or string_ - a valid file path or a python file object
 
 <a name="Tyf.JpegFile.save_thumbnail"></a>
 #### save\_thumbnail
@@ -170,7 +170,7 @@ automatically appended. If ``f`` is a file object, it is not closed.
 
 **Arguments**:
 
-- `f` _buffer_ - a valid file path or a python file object
+- `f` _buffer or string_ - a valid file path or a python file object
 
 <a name="Tyf.JpegFile.dump_exif"></a>
 #### dump\_exif
@@ -184,7 +184,7 @@ not closed.
 
 **Arguments**:
 
-- `f` _buffer_ - a valid file path or a python file object
+- `f` _buffer or string_ - a valid file path or a python file object
 
 <a name="Tyf.JpegFile.strip_exif"></a>
 #### strip\_exif
