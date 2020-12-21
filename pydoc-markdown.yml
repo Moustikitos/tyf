@@ -31,7 +31,7 @@ renderer:
     site_name: The Tyf Project
     repo_url: https://github.com/Moustikitos/Tyf
     repo_name: GitHub
-    copyright: BSD licence, 2015-2020, THOORENS Bruno
+    copyright: Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence
     theme:
       name: mkdocs
       nav_style: light
