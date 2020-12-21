@@ -115,7 +115,7 @@ and JPEG files.</p>
 it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.TiffFile"></a></p>
 <h2 id="tifffile-objects">TiffFile Objects</h2>
@@ -147,7 +147,7 @@ it is not closed.</p>
 closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 <li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
 <li><code>idx</code> <em>int</em> - IFD index to save</li>
 <li><code>ifd1</code> <em>Tyf.ifd.Ifd</em> - IFD to be sused as thumbnail (only used for
@@ -208,7 +208,7 @@ only <code>ifd0</code>, <code>ifd1</code> and <code>xmp</code> are recomputed. I
 object, it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.save_thumbnail"></a></p>
 <h4 id="save_thumbnail">save_thumbnail</h4>
@@ -218,7 +218,7 @@ object, it is not closed.</p>
 automatically appended. If <code>f</code> is a file object, it is not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.dump_exif"></a></p>
 <h4 id="dump_exif">dump_exif</h4>
@@ -228,7 +228,7 @@ automatically appended. If <code>f</code> is a file object, it is not closed.</p
 not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 </ul>
 <p><a name="Tyf.JpegFile.strip_exif"></a></p>
 <h4 id="strip_exif">strip_exif</h4>
