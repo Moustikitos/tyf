@@ -247,7 +247,7 @@ def open(f):
     it is not closed.
 
     Arguments:
-        f: a valid file path or a python file object
+        f (buffer): a valid file path or a python file object
     """
     fileobj, _close = _fileobj(f, "rb")
 
@@ -339,6 +339,17 @@ class TiffFile(list):
             in_.close()
 
     def save(self, f, byteorder="<", idx=None, ifd1=None):
+        """
+        Save object as a TIFF file. If ``f`` is a file object, it is not
+        closed.
+
+        Arguments:
+            f (buffer): a valid file path or a python file object
+            byteorder (string): `">"` if little endian used else `"<"`
+            idx (int): IFD index to save
+            ifd1 (Tyf.ifd.Ifd): IFD to be sused as thumbnail (only used for
+                                JPEG saving)
+        """
         self.load_raster()
         fileobj, _close = _fileobj(f, "wb")
 
@@ -450,7 +461,7 @@ class JpegFile(list):
         object, it is not closed.
 
         Arguments:
-            f: a valid file path or a python file object
+            f (buffer): a valid file path or a python file object
         """
         fileobj, _close = _fileobj(f, "wb")
         pack(">H", fileobj, (0xffd8,))
@@ -499,7 +510,7 @@ class JpegFile(list):
         automatically appended. If ``f`` is a file object, it is not closed.
 
         Arguments:
-            f: a valid file path or a python file object
+            f (buffer): a valid file path or a python file object
         """
         try:
             ifd = self.ifd1
@@ -533,7 +544,7 @@ class JpegFile(list):
         not closed.
 
         Arguments:
-            f: a valid file path or a python file object
+            f (buffer): a valid file path or a python file object
         """
         fileobj, _close = _fileobj(f, "wb")
         self.ifd.save(fileobj)
