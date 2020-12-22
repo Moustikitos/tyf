@@ -110,7 +110,7 @@
 <h1 id="tyfgkd">Tyf.gkd</h1>
 <p><a name="Tyf.ifd"></a></p>
 <h1 id="tyfifd">Tyf.ifd</h1>
-<p><strong>Documentation</strong></p>
+<p><strong>Bibliography</strong></p>
 <ul>
 <li><a href="https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf">Tiff 6.0 spec</a></li>
 <li><a href="https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html">GeoTiFF 1.8.1 spec</a></li>
@@ -161,7 +161,8 @@ matrix applied to raster coordinates plus altitude.</p>
 </code></pre>
 <p><a name="Tyf.ifd.Tag.value"></a></p>
 <h4 id="value">value</h4>
-<p>Encode and decode on the fly the <code>_v</code> attribute.</p>
+<p>Encode and decode on the fly the <code>_v</code> attribute (see <code>Tyf.encoders</code> and
+<code>Tyf.decoders</code> modules).</p>
 <pre><code class="language-python">&gt;&gt;&gt; tag = ifd.Tag(&quot;GPSLongitude&quot;)
 &gt;&gt;&gt; tag.value = 5.62347
 &gt;&gt;&gt; tag._v
@@ -184,7 +185,9 @@ matrix applied to raster coordinates plus altitude.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>tag_or_key</code> <em>int or string</em> - tag value or keyword</li>
-<li><code>value</code> <em>any</em> - value of the tag</li>
+<li><code>value</code> <em>any</em> - value of the tag. If <code>None</code> is given, it is set to
+  default value if anyone is defined else <code>_v</code> attribute
+  is not created.</li>
 </ul>
 <p><a name="Tyf.ifd.Tag.read"></a></p>
 <h4 id="read">read</h4>
@@ -253,7 +256,7 @@ _model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
 </code></pre>
 <p>Provide a very similar python <code>dict</code> interface to create and store IFD tags
 with automatic sub IFD management. <code>exfT</code>, <code>gpsT</code> and <code>itrT</code> are
-<code>Tyf.ifd.Ifd</code> sub IFD storing Exif, GPS and Interoperability tags.</p>
+<code>Tyf.ifd.Ifd</code> attributes (sub IFD) for Exif, GPS and Interoperability tags.</p>
 <pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
 &gt;&gt;&gt; i[&quot;GPSLongitude&quot;] = 5.62347  # --&gt; GPS IFD
 &gt;&gt;&gt; i[&quot;FlashpixVersion&quot;] = None  # None will set default value --&gt; Exif IFD
@@ -263,13 +266,53 @@ with automatic sub IFD management. <code>exfT</code>, <code>gpsT</code> and <cod
 {'GPSLongitude': &lt;IFD tag GPSLongitude:5.62347&gt;}
 &gt;&gt;&gt; i.exfT
 {'FlashpixVersion': &lt;IFD tag FlashpixVersion:b'0100'&gt;}
+&gt;&gt;&gt; i.get(&quot;GPSLongitude&quot;)  # get method returns tag object
+&lt;IFD tag GPSLongitude:5.62347&gt;
+&gt;&gt;&gt; i[&quot;GPSLongitude&quot;]  # __getitem__ interface returns the python value
+5.62347
+&gt;&gt;&gt; i.pop(&quot;FlashpixVersion&quot;)  # delete &quot;FlashpixVersion&quot; tag
+&lt;IFD tag FlashpixVersion:b'0100'&gt;
+&gt;&gt;&gt; hasattr(i, &quot;exfT&quot;)  # empty exfT sub IFD attribute removed
+False
 </code></pre>
 <p><a name="Tyf.ifd.Ifd.raster_loaded"></a></p>
 <h4 id="raster_loaded">raster_loaded</h4>
 <p><code>True</code> if raster is loaded</p>
 <p><a name="Tyf.ifd.Ifd.tiepoints"></a></p>
 <h4 id="tiepoints">tiepoints</h4>
-<p>Geotiff tiepoint list</p></div>
+<p>Geotiff tiepoint list</p>
+<p><a name="Tyf.ifd.Ifd.tags"></a></p>
+<h4 id="tags">tags</h4>
+<pre><code class="language-python"> | tags()
+</code></pre>
+<p>return iterator over all IFD values including sub IFD values in the
+order: <code>exfT</code> - <code>gpsT</code> - <code>itrT</code>.</p>
+<p><a name="Tyf.ifd.Ifd.pack"></a></p>
+<h4 id="pack_1">pack</h4>
+<pre><code class="language-python"> | pack(byteorder)
+</code></pre>
+<pre><code class="language-python">&gt;&gt;&gt; i.pack(&quot;&gt;&quot;)
+{
+  'exfT': {
+    'size': 18,
+    'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
+    'data': b'',
+    'raster': 0
+},
+  'gpsT': {
+    'size': 18,
+    'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
+    'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
+    'raster': 0
+},
+  'root': {
+    'size': 6,
+    'tags': [],
+    'data': b'',
+    'raster': 0
+  }
+}
+</code></pre></div>
             </div>
         </div>
 

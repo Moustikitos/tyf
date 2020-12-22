@@ -103,8 +103,8 @@
 
 <p><a name="Tyf"></a></p>
 <h1 id="tyf">Tyf</h1>
-<p>Tyf package aims to provide pythoniv way to interact with metadata in TIFF
-and JPEG files.</p>
+<p>Tyf package aims to provide pythonic way to interact with metadata in TIFF and
+JPEG files.</p>
 <pre><code class="language-python">&gt;&gt;&gt; import Tyf
 </code></pre>
 <p><a name="Tyf.open"></a></p>
@@ -150,7 +150,7 @@ closed.</p>
 <li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
 <li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 <li><code>idx</code> <em>int</em> - IFD index to save</li>
-<li><code>ifd1</code> <em>Tyf.ifd.Ifd</em> - IFD to be sused as thumbnail (only used for
+<li><code>ifd1</code> <em>Tyf.ifd.Ifd</em> - IFD to be used as thumbnail (only needed with
   JPEG saving)</li>
 </ul>
 <p><a name="Tyf.JpegFile"></a></p>
@@ -174,7 +174,7 @@ Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 <p>shortcut to JPEG EXIF data</p>
 <p><a name="Tyf.JpegFile.ifd1"></a></p>
 <h4 id="ifd1">ifd1</h4>
-<p>shortcut to JPEG thumbnail data</p>
+<p>shortcut to JPEG thumbnail</p>
 <p><a name="Tyf.JpegFile.__init__"></a></p>
 <h4 id="__init__">__init__</h4>
 <pre><code class="language-python"> | __init__(fileobj)
@@ -187,7 +187,7 @@ Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 <h4 id="__getitem__">__getitem__</h4>
 <pre><code class="language-python"> | __getitem__(item)
 </code></pre>
-<p>Return item from ifd0.</p>
+<p>Return item from <code>ifd0</code>.</p>
 <pre><code class="language-python">&gt;&gt;&gt; jpg[&quot;GPSLongitude&quot;]
 &lt;IFD tag GPSLongitude:5.1872093&gt;
 </code></pre>
@@ -195,7 +195,7 @@ Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 <h4 id="get">get</h4>
 <pre><code class="language-python"> | get(item, default=None)
 </code></pre>
-<p>Return item from ifd1.</p>
+<p>Return item from <code>ifd1</code>.</p>
 <pre><code class="language-python">&gt;&gt;&gt; jpg.get(&quot;ImageWidth&quot;)
 &lt;IFD tag ImageWidth:320&gt;
 </code></pre>
@@ -234,7 +234,7 @@ not closed.</p>
 <h4 id="strip_exif">strip_exif</h4>
 <pre><code class="language-python"> | strip_exif()
 </code></pre>
-<p>Remove EXIF from JPEG, XMP data keeped.</p></div>
+<p>Remove EXIF from JPEG, keeping XMP segment untouched.</p></div>
             </div>
         </div>
 
