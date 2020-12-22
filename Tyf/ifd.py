@@ -336,7 +336,7 @@ class Ifd(dict):
     """
     Provide a very similar python `dict` interface to create and store IFD tags
     with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
-    `Tyf.ifd.Ifd` sub IFD storing Exif, GPS and Interoperability tags.
+    `Tyf.ifd.Ifd` attributes (sub IFD) for Exif, GPS and Interoperability tags.
 
     ```python
     >>> i = ifd.Ifd()
@@ -352,9 +352,9 @@ class Ifd(dict):
     <IFD tag GPSLongitude:5.62347>
     >>> i["GPSLongitude"]  # __getitem__ interface returns the python value
     5.62347
-    >>> i.pop("FlashpixVersion")
+    >>> i.pop("FlashpixVersion")  # delete "FlashpixVersion" tag
     <IFD tag FlashpixVersion:b'0100'>
-    >>> hasattr(i, "exfT")
+    >>> hasattr(i, "exfT")  # empty exfT sub IFD attribute removed
     False
     ```
     """
@@ -448,36 +448,6 @@ class Ifd(dict):
                     return result
         return default
 
-    def set_location(self, longitude, latitude, altitude=0.):
-        if not hasattr(self, "gpsT"):
-            setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
-        if "GPSVersionID" not in self:
-            dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
-        self["GPSLatitudeRef"] = "n" if latitude >= 0 else "s"
-        self["GPSLatitude"] = latitude
-        self["GPSLongitudeRef"] = "e" if longitude >= 0 else "w"
-        self["GPSLongitude"] = longitude
-        self["GPSAltitudeRef"] = altitude >= 0
-        self["GPSAltitude"] = altitude
-
-    def get_location(self):
-        ifd = getattr(self, "gpsT", {})
-        if set([
-            "GPSLatitudeRef", "GPSLatitude",
-            "GPSLongitudeRef", "GPSLongitude",
-            "GPSAltitudeRef", "GPSAltitude"
-        ]) <= set(ifd.keys()):
-            return (
-                (1 if ifd["GPSLongitudeRef"] == "E" else -1) *
-                ifd["GPSLongitude"],
-                (1 if ifd["GPSLatitudeRef"] == "N" else -1) *
-                ifd["GPSLatitude"],
-                (1 if ifd["GPSAltitudeRef"] else -1) *
-                ifd["GPSAltitude"]
-            )
-        else:
-            raise Exception("No location data found")
-
     def append(self, tag):
         for dic in self.tag_family:
             if tag.tag in dic:
@@ -489,7 +459,44 @@ class Ifd(dict):
                     setattr(self, name, Ifd(tag_family=[getattr(tags, name)]))
                 return dict.__setitem__(getattr(self, name), tag.key, tag)
 
-    def pack(self, byteorder="<"):
+    def tags(self):
+        """
+        Return iterator over all IFD values including sub IFD values in the
+        order: `exfT` - `gpsT` - `itrT`.
+        """
+        for v in sorted(dict.values(self), key=lambda e: e.tag):
+            yield v
+        for name in ["exfT", "gpsT", "itrT"]:
+            if hasattr(self, name):
+                for v in getattr(self, name).tags():
+                    yield v
+
+    def pack(self, byteorder):
+        """
+        ```python
+        >>> i.pack(">")
+        {
+          'exfT': {
+            'size': 18,
+            'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
+            'data': b'',
+            'raster': 0
+        },
+          'gpsT': {
+            'size': 18,
+            'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
+            'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
+            'raster': 0
+        },
+          'root': {
+            'size': 6,
+            'tags': [],
+            'data': b'',
+            'raster': 0
+          }
+        }
+        ```
+        """
         result = {}
 
         for name in [n for n in ["exfT", "gpsT", "itrT"] if hasattr(self, n)]:
@@ -525,6 +532,40 @@ class Ifd(dict):
         })
         return result
 
+    def set_location(self, longitude, latitude, altitude=0.):
+        """
+        """
+        if not hasattr(self, "gpsT"):
+            setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
+        if "GPSVersionID" not in self:
+            dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
+        self["GPSLatitudeRef"] = "n" if latitude >= 0 else "s"
+        self["GPSLatitude"] = latitude
+        self["GPSLongitudeRef"] = "e" if longitude >= 0 else "w"
+        self["GPSLongitude"] = longitude
+        self["GPSAltitudeRef"] = altitude >= 0
+        self["GPSAltitude"] = altitude
+
+    def get_location(self):
+        """
+        """
+        ifd = getattr(self, "gpsT", {})
+        if set([
+            "GPSLatitudeRef", "GPSLatitude",
+            "GPSLongitudeRef", "GPSLongitude",
+            "GPSAltitudeRef", "GPSAltitude"
+        ]) <= set(ifd.keys()):
+            return (
+                (1 if ifd["GPSLongitudeRef"] == "E" else -1) *
+                ifd["GPSLongitude"],
+                (1 if ifd["GPSLatitudeRef"] == "N" else -1) *
+                ifd["GPSLatitude"],
+                (1 if ifd["GPSAltitudeRef"] else -1) *
+                ifd["GPSAltitude"]
+            )
+        else:
+            raise Exception("No location data found")
+
     def url_load_location(self, url, **kwargs):
         longitude, latitude, alt = self.get_location()
         kwargs.update(lon=longitude, lat=latitude, alt=alt)
@@ -542,14 +583,6 @@ class Ifd(dict):
         fileobj.close()
         stringio.close()
         del fileobj, stringio
-
-    def tags(self):
-        for v in sorted(dict.values(self), key=lambda e: e.tag):
-            yield v
-        for name in ["exfT", "gpsT", "itrT"]:
-            if hasattr(self, name):
-                for v in getattr(self, name).tags():
-                    yield v
 
     def getModelTransformation(self, tie_idx=0):
         if "ModelTransformationTag" in self:
