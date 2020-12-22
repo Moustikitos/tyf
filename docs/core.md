@@ -4,7 +4,7 @@
 <a name="Tyf.ifd"></a>
 # Tyf.ifd
 
-__Documentation__
+__Bibliography__
 
  + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
  + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
@@ -71,7 +71,8 @@ class Tag(object)
 <a name="Tyf.ifd.Tag.value"></a>
 #### value
 
-Encode and decode on the fly the `_v` attribute.
+Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
+`Tyf.decoders` modules).
 ```python
 >>> tag = ifd.Tag("GPSLongitude")
 >>> tag.value = 5.62347
@@ -102,7 +103,9 @@ Meaning of tag value if any (see `Tyf.values` module).
 **Arguments**:
 
 - `tag_or_key` _int or string_ - tag value or keyword
-- `value` _any_ - value of the tag
+- `value` _any_ - value of the tag. If `None` is given, it is set to
+  default value if anyone is defined else `_v` attribute
+  is not created.
 
 <a name="Tyf.ifd.Tag.read"></a>
 #### read
@@ -204,7 +207,7 @@ class Ifd(dict)
 
 Provide a very similar python `dict` interface to create and store IFD tags
 with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
-`Tyf.ifd.Ifd` sub IFD storing Exif, GPS and Interoperability tags.
+`Tyf.ifd.Ifd` attributes (sub IFD) for Exif, GPS and Interoperability tags.
 
 ```python
 >>> i = ifd.Ifd()
@@ -216,6 +219,14 @@ with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
 {'GPSLongitude': <IFD tag GPSLongitude:5.62347>}
 >>> i.exfT
 {'FlashpixVersion': <IFD tag FlashpixVersion:b'0100'>}
+>>> i.get("GPSLongitude")  # get method returns tag object
+<IFD tag GPSLongitude:5.62347>
+>>> i["GPSLongitude"]  # __getitem__ interface returns the python value
+5.62347
+>>> i.pop("FlashpixVersion")  # delete "FlashpixVersion" tag
+<IFD tag FlashpixVersion:b'0100'>
+>>> hasattr(i, "exfT")  # empty exfT sub IFD attribute removed
+False
 ```
 
 <a name="Tyf.ifd.Ifd.raster_loaded"></a>
@@ -227,4 +238,45 @@ with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
 #### tiepoints
 
 Geotiff tiepoint list
+
+<a name="Tyf.ifd.Ifd.tags"></a>
+#### tags
+
+```python
+ | tags()
+```
+
+Return iterator over all IFD values including sub IFD values in the
+order: `exfT` - `gpsT` - `itrT`.
+
+<a name="Tyf.ifd.Ifd.pack"></a>
+#### pack
+
+```python
+ | pack(byteorder)
+```
+
+```python
+>>> i.pack(">")
+{
+  'exfT': {
+    'size': 18,
+    'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
+    'data': b'',
+    'raster': 0
+},
+  'gpsT': {
+    'size': 18,
+    'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
+    'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
+    'raster': 0
+},
+  'root': {
+    'size': 6,
+    'tags': [],
+    'data': b'',
+    'raster': 0
+  }
+}
+```
 

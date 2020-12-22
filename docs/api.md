@@ -1,8 +1,8 @@
 <a name="Tyf"></a>
 # Tyf
 
-Tyf package aims to provide pythoniv way to interact with metadata in TIFF
-and JPEG files.
+Tyf package aims to provide pythonic way to interact with metadata in TIFF and
+JPEG files.
 
 ```python
 >>> import Tyf
@@ -15,7 +15,7 @@ and JPEG files.
 open(f)
 ```
 
-Return JpegFile or TiffFile according to ``f``. If it is a file object,
+Return JpegFile or TiffFile according to `f`. If it is a file object,
 it is not closed.
 
 **Arguments**:
@@ -52,7 +52,7 @@ shortcut to geokey directories
 <a name="Tyf.TiffFile.raster_loaded"></a>
 #### raster\_loaded
 
-``True`` if raster data loaded
+`True` if raster data loaded
 
 <a name="Tyf.TiffFile.save"></a>
 #### save
@@ -61,7 +61,7 @@ shortcut to geokey directories
  | save(f, byteorder="<", idx=None, ifd1=None)
 ```
 
-Save object as a TIFF file. If ``f`` is a file object, it is not
+Save object as a TIFF file. If `f` is a file object, it is not
 closed.
 
 **Arguments**:
@@ -69,7 +69,7 @@ closed.
 - `f` _buffer or string_ - a valid file path or a python file object
 - `byteorder` _string_ - `">"` if big-endian used else `"<"`
 - `idx` _int_ - IFD index to save
-- `ifd1` _Tyf.ifd.Ifd_ - IFD to be sused as thumbnail (only used for
+- `ifd1` _Tyf.ifd.Ifd_ - IFD to be used as thumbnail (only needed with
   JPEG saving)
 
 <a name="Tyf.JpegFile"></a>
@@ -80,9 +80,9 @@ class JpegFile(list)
 ```
 
 List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf
-manage to extract xmd data as python ``ElementTree`` object and EXIF data
-as IFD. ``ifd0`` is a shortcut to JPEF Exif, ``ifd1`` is a shortcut to JPEG
-Thumbnail and ``xmp`` is a shortcut to XMP data.
+manage to extract xmd data as python `ElementTree` object and EXIF data
+as IFD. `ifd0` is a shortcut to JPEF Exif, `ifd1` is a shortcut to JPEG
+Thumbnail and `xmp` is a shortcut to XMP data.
 
 ```python
 >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
@@ -102,7 +102,7 @@ shortcut to JPEG EXIF data
 <a name="Tyf.JpegFile.ifd1"></a>
 #### ifd1
 
-shortcut to JPEG thumbnail data
+shortcut to JPEG thumbnail
 
 <a name="Tyf.JpegFile.__init__"></a>
 #### \_\_init\_\_
@@ -122,7 +122,7 @@ shortcut to JPEG thumbnail data
  | __getitem__(item)
 ```
 
-Return item from ifd0.
+Return item from `ifd0`.
 
 ```python
 >>> jpg["GPSLongitude"]
@@ -136,7 +136,7 @@ Return item from ifd0.
  | get(item, default=None)
 ```
 
-Return item from ifd1.
+Return item from `ifd1`.
 
 ```python
 >>> jpg.get("ImageWidth")
@@ -151,7 +151,7 @@ Return item from ifd1.
 ```
 
 Save object as a JPEG file. All segmet are writed in current order,
-only ``ifd0``, ``ifd1`` and ``xmp`` are recomputed. If ``f`` is a file
+only `ifd0`, `ifd1` and `xmp` are recomputed. If `f` is a file
 object, it is not closed.
 
 **Arguments**:
@@ -166,7 +166,7 @@ object, it is not closed.
 ```
 
 Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
-automatically appended. If ``f`` is a file object, it is not closed.
+automatically appended. If `f` is a file object, it is not closed.
 
 **Arguments**:
 
@@ -179,7 +179,7 @@ automatically appended. If ``f`` is a file object, it is not closed.
  | dump_exif(f)
 ```
 
-Save EXIF data in a separated file. If ``f`` is a file object, it is
+Save EXIF data in a separated file. If `f` is a file object, it is
 not closed.
 
 **Arguments**:
@@ -193,5 +193,5 @@ not closed.
  | strip_exif()
 ```
 
-Remove EXIF from JPEG, XMP data keeped.
+Remove EXIF from JPEG, keeping XMP segment untouched.
 

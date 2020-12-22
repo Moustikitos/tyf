@@ -26,7 +26,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + read / edit GEOTIFF data from IFD
  + read / edit XMP data from IFD
  + work directly with python numbers, string and datetime
- + interpolate coordinates using GEOTIFF ModelTransformation
+ + interpolate map coordinates using GEOTIFF ModelTransformation
 
 ### Do more with JPEG and TIFF files
  + extract TIFF or JPEG thumbnails from JPEG files
@@ -53,13 +53,13 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
 
 ![EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
 
-There are 3 attributes to access data within ``Tyf.JpegFile`` :
+There are 3 attributes to access data within `Tyf.JpegFile` :
 
  + ``ifd0`` containing picture IFD, EXIF and eventually GPS data 
- + ``ifd1`` containing thubnail IFD data
+ + ``ifd1`` containing thubnail data
  + ``xmp`` containing XMP data
 
-``ifd0`` and ``ifd1`` are shortcut to the first and second IFD in ``ifd`` attribute which is itself a ``Tyf.TiffFile``.
+`ifd0` and `ifd1` are shortcut to the first and second IFD in `ifd` attribute which is itself a `Tyf.TiffFile`.
 
 ```python
 >>> jpg.ifd[0] == jpg.ifd0
@@ -78,7 +78,7 @@ True
 5.1872093
 ```
 
-### ``Tyf.ifd.Ifd`` class
+### `Tyf.ifd.Ifd` class
 
 ```python
 >>> jpg.ifd0.__class__

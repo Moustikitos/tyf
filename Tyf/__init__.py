@@ -1,7 +1,7 @@
 # -*- encoding:utf-8 -*-
 """
-Tyf package aims to provide pythoniv way to interact with metadata in TIFF
-and JPEG files.
+Tyf package aims to provide pythonic way to interact with metadata in TIFF and
+JPEG files.
 
 ```python
 >>> import Tyf
@@ -24,7 +24,7 @@ import xml.etree.ElementTree as xmp
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
-#: Type definition linking tag type value to python ``struct`` format
+#: Type definition linking tag type value to python `struct` format
 TYPES = {
     1:  ("B",  "UCHAR or USHORT"),
     2:  ("s",  "ASCII"),
@@ -243,7 +243,7 @@ def _fileobj(f, mode):
 
 def open(f):
     """
-    Return JpegFile or TiffFile according to ``f``. If it is a file object,
+    Return JpegFile or TiffFile according to `f`. If it is a file object,
     it is not closed.
 
     Arguments:
@@ -300,7 +300,7 @@ class TiffFile(list):
         None, None, "Geotiff IFD"
     )
 
-    #: ``True`` if raster data loaded
+    #: `True` if raster data loaded
     raster_loaded = property(
         lambda obj: reduce(
             operator.__and__, [ifd.raster_loaded for ifd in obj]
@@ -348,14 +348,14 @@ class TiffFile(list):
 
     def save(self, f, byteorder="<", idx=None, ifd1=None):
         """
-        Save object as a TIFF file. If ``f`` is a file object, it is not
+        Save object as a TIFF file. If `f` is a file object, it is not
         closed.
 
         Arguments:
             f (buffer or string): a valid file path or a python file object
             byteorder (string): `">"` if big-endian used else `"<"`
             idx (int): IFD index to save
-            ifd1 (Tyf.ifd.Ifd): IFD to be sused as thumbnail (only used for
+            ifd1 (Tyf.ifd.Ifd): IFD to be used as thumbnail (only needed with
                                 JPEG saving)
         """
         self.load_raster()
@@ -379,9 +379,9 @@ class TiffFile(list):
 class JpegFile(list):
     """
     List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf
-    manage to extract xmd data as python ``ElementTree`` object and EXIF data
-    as IFD. ``ifd0`` is a shortcut to JPEF Exif, ``ifd1`` is a shortcut to JPEG
-    Thumbnail and ``xmp`` is a shortcut to XMP data.
+    manage to extract xmd data as python `ElementTree` object and EXIF data
+    as IFD. `ifd0` is a shortcut to JPEF Exif, `ifd1` is a shortcut to JPEG
+    Thumbnail and `xmp` is a shortcut to XMP data.
 
     ```python
     >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
@@ -400,7 +400,7 @@ class JpegFile(list):
         None, None, "readonly image IFD attribute"
     )
 
-    #: shortcut to JPEG thumbnail data
+    #: shortcut to JPEG thumbnail
     ifd1 = property(
         lambda obj: getattr(obj, "ifd", [{}, {}])[1],
         None, None, "readonly thumbnail IFD attribute"
@@ -442,7 +442,7 @@ class JpegFile(list):
 
     def __getitem__(self, item):
         """
-        Return item from ifd0.
+        Return item from `ifd0`.
 
         ```python
         >>> jpg["GPSLongitude"]
@@ -453,7 +453,7 @@ class JpegFile(list):
 
     def get(self, item, default=None):
         """
-        Return item from ifd1.
+        Return item from `ifd1`.
 
         ```python
         >>> jpg.get("ImageWidth")
@@ -465,7 +465,7 @@ class JpegFile(list):
     def save(self, f):
         """
         Save object as a JPEG file. All segmet are writed in current order,
-        only ``ifd0``, ``ifd1`` and ``xmp`` are recomputed. If ``f`` is a file
+        only `ifd0`, `ifd1` and `xmp` are recomputed. If `f` is a file
         object, it is not closed.
 
         Arguments:
@@ -515,7 +515,7 @@ class JpegFile(list):
     def save_thumbnail(self, f):
         """
         Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
-        automatically appended. If ``f`` is a file object, it is not closed.
+        automatically appended. If `f` is a file object, it is not closed.
 
         Arguments:
             f (buffer or string): a valid file path or a python file object
@@ -548,7 +548,7 @@ class JpegFile(list):
 
     def dump_exif(self, f):
         """
-        Save EXIF data in a separated file. If ``f`` is a file object, it is
+        Save EXIF data in a separated file. If `f` is a file object, it is
         not closed.
 
         Arguments:
@@ -562,7 +562,7 @@ class JpegFile(list):
 
     def strip_exif(self):
         """
-        Remove EXIF from JPEG, XMP data keeped.
+        Remove EXIF from JPEG, keeping XMP segment untouched.
         """
         ifd = self.ifd
         ifd0 = self.ifd0
