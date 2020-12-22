@@ -268,6 +268,14 @@ def open(f):
         raise Exception("file is not a valid JPEG nor TIFF image")
 
 
+def getGeokeyDirectories(cls):
+    if not hasattr(cls, "_geokey_directories"):
+        setattr(cls, "_geokey_directories", [
+            gkd.Gkd.from_ifd(ifd) for ifd in cls
+        ])
+    return getattr(cls, "_geokey_directories")
+
+
 class TiffFile(list):
     """
     List of IFD found in TIFF file.
@@ -288,7 +296,7 @@ class TiffFile(list):
 
     #: shortcut to geokey directories
     gkd = property(
-        lambda obj: [gkd.Gkd.from_ifd(ifd) for ifd in obj],
+        lambda obj: getGeokeyDirectories(obj),
         None, None, "Geotiff IFD"
     )
 
@@ -345,7 +353,7 @@ class TiffFile(list):
 
         Arguments:
             f (buffer or string): a valid file path or a python file object
-            byteorder (string): `">"` if little endian used else `"<"`
+            byteorder (string): `">"` if big-endian used else `"<"`
             idx (int): IFD index to save
             ifd1 (Tyf.ifd.Ifd): IFD to be sused as thumbnail (only used for
                                 JPEG saving)
