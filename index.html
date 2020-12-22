@@ -150,10 +150,10 @@
 </ul>
 <h3 id="do-more-with-jpeg-and-tiff-files">Do more with JPEG and TIFF files</h3>
 <ul>
-<li>split exif data from JPEG into different files</li>
 <li>extract TIFF or JPEG thumbnails from JPEG files</li>
 <li>strip EXIF data from JPEG File</li>
-<li>dump location thumbnail using <a href="https://docs.mapbox.com/api">mapbox API</a></li>
+<li>dump EXIF data from JPEG into file</li>
+<li>dump location thumbnail using any map provider API</li>
 </ul>
 <h2 id="quick-view">Quick view</h2>
 <pre><code class="language-python">&gt;&gt;&gt; import Tyf
@@ -171,7 +171,7 @@
 &gt;&gt;&gt; jpg.save_thumbnail(&quot;test/test_thumb&quot;) # extension automatically added
 </code></pre>
 <p><img alt="EXIF thumbnail" src="https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg" /></p>
-<p>There are 3 attributes to access data within <code>Tif.JpegFile</code> :</p>
+<p>There are 3 attributes to access data within <code>Tyf.JpegFile</code> :</p>
 <ul>
 <li><code>ifd0</code> containing picture IFD, EXIF and eventually GPS data </li>
 <li><code>ifd1</code> containing thubnail IFD data</li>
@@ -357,5 +357,5 @@ True
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2020-12-22 13:36:48.264457+00:00
+Build Date UTC : 2020-12-22 16:24:11.616993+00:00
 -->
