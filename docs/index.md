@@ -29,10 +29,10 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + interpolate coordinates using GEOTIFF ModelTransformation
 
 ### Do more with JPEG and TIFF files
- + split exif data from JPEG into different files
  + extract TIFF or JPEG thumbnails from JPEG files
  + strip EXIF data from JPEG File
- + dump location thumbnail using [mapbox API](https://docs.mapbox.com/api)
+ + dump EXIF data from JPEG into file
+ + dump location thumbnail using any map provider API
 
 ## Quick view
 ```python
@@ -53,7 +53,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
 
 ![EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
 
-There are 3 attributes to access data within ``Tif.JpegFile`` :
+There are 3 attributes to access data within ``Tyf.JpegFile`` :
 
  + ``ifd0`` containing picture IFD, EXIF and eventually GPS data 
  + ``ifd1`` containing thubnail IFD data

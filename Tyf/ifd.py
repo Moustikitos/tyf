@@ -242,7 +242,6 @@ class Tag(object):
             byteorder (string): `">"` if big-endian used else `"<"`
         Returns:
             tuple (`|tag|type|count|`, `|value|`, `True` if value is offset)
-
         """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)

@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-# http://www.remotesensing.org/geotiff/spec/geotiffhome.html
 
 from Tyf import values, __geotiff__
 
