@@ -123,9 +123,9 @@
 &gt;&gt;&gt; from Tyf import ifd
 &gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
 &gt;&gt;&gt; ifd.GeoKeyModel[&quot;ModelTiepointTag&quot;](*tif[0].tiepoints[0])
-ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.166784412522, Y=4255884.5438021915, Z=0.0)
+ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.1667844, Y=4255884.54380, Z=0.0)
 &gt;&gt;&gt; ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;](*tif[0][&quot;ModelPixelScaleTag&quot;])
-ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
+ModelPixelScale(ScaleX=60.022136983193, ScaleY=60.022136983193, ScaleZ=0.0)
 </code></pre>
 <p><a name="Tyf.ifd.Transform"></a></p>
 <h4 id="transform">Transform</h4>
@@ -133,8 +133,10 @@ ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
 </code></pre>
 <p>Transformation between raster and model space using a model transformation
 matrix applied to raster coordinates plus altitude.</p>
-<pre><code class="language-python">&gt;&gt;&gt; Sx, Sy, Sz = ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;](*tif[0][&quot;ModelPixelScaleTag&quot;])
-&gt;&gt;&gt; I, J, K, X, Y, Z = ifd.GeoKeyModel[&quot;ModelTiepointTag&quot;](*tif[0].tiepoints[0])
+<pre><code class="language-python">&gt;&gt;&gt; mps = ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;]
+&gt;&gt;&gt; mtt = ifd.GeoKeyModel[&quot;ModelTiepointTag&quot;]
+&gt;&gt;&gt; Sx, Sy, Sz = mps(*tif[0][&quot;ModelPixelScaleTag&quot;])
+&gt;&gt;&gt; I, J, K, X, Y, Z = mtt(*tif[0].tiepoints[0])
 &gt;&gt;&gt; matrix = ifd.GeoKeyModel[&quot;ModelTransformationTag&quot;](
 ...     Sx, 0.,  0., X - I * Sx,
 ...     0., -Sy, 0., Y + J * Sy,
@@ -152,7 +154,7 @@ matrix applied to raster coordinates plus altitude.</p>
 <li><code>z</code> <em>float</em> - altitude value</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>projeted coordinates (tuple): X, Y, Z</p>
+<p>projeted coordinates X, Y, Z</p>
 <p><a name="Tyf.ifd.Tag"></a></p>
 <h2 id="tag-objects">Tag Objects</h2>
 <pre><code class="language-python">class Tag(object)
@@ -189,6 +191,8 @@ matrix applied to raster coordinates plus altitude.</p>
 <pre><code class="language-python"> | @staticmethod
  | read(fileobj, byteorder, db=None)
 </code></pre>
+<p>Extract an IFD tag from buffer current position. Buffer position is
+adjusted to the end of IFD entry before returning the value.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>fileobj</code> <em>buffer</em> - a python file object</li>
@@ -222,8 +226,8 @@ data.</p>
 <p>Return tiepoint list found in <code>ModelTiepointTag</code> tags. This function sets
 a list of all points in private attribute <code>_model_tie_points</code> on first
 call.</p>
-<pre><code>ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ..., In, Jn, Kn, Xn, Yn, Zn)
-_model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
+<pre><code>ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
+_model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
 </code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
