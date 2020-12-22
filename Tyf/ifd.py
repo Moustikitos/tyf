@@ -1,9 +1,4 @@
 # -*- encoding:utf-8 -*-
-"""
-# Bibliography
- + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
- + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
-"""
 
 import io
 import struct
@@ -244,7 +239,7 @@ class Tag(object):
         Arguments:
             byteorder (string): `">"` if big-endian used else `"<"`
         Returns:
-            tuple (`|tag|type|count|`, `|value|`, `True` if value is offset)
+            (packed ifd entry - packed value - is offset boolean)
         """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
@@ -461,7 +456,7 @@ class Ifd(dict):
 
     def tags(self):
         """
-        Return iterator over all IFD values including sub IFD values in the
+        Return iterator over all IFD values including sub IFD ones in the
         order: `exfT` - `gpsT` - `itrT`.
         """
         for v in sorted(dict.values(self), key=lambda e: e.tag):
@@ -470,33 +465,9 @@ class Ifd(dict):
             if hasattr(self, name):
                 for v in getattr(self, name).tags():
                     yield v
+    __iter__ = tags
 
     def pack(self, byteorder):
-        """
-        ```python
-        >>> i.pack(">")
-        {
-          'exfT': {
-            'size': 18,
-            'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
-            'data': b'',
-            'raster': 0
-        },
-          'gpsT': {
-            'size': 18,
-            'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
-            'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
-            'raster': 0
-        },
-          'root': {
-            'size': 6,
-            'tags': [],
-            'data': b'',
-            'raster': 0
-          }
-        }
-        ```
-        """
         result = {}
 
         for name in [n for n in ["exfT", "gpsT", "itrT"] if hasattr(self, n)]:
@@ -532,22 +503,61 @@ class Ifd(dict):
         })
         return result
 
-    def set_location(self, longitude, latitude, altitude=0.):
+    def set_location(self, lon, lat, alt=0.):
         """
+        Set GPS IFD tags according to given longitude, latitude nd altitude.
+        If no GPS IFD exists, it is created according to version
+        `(2, 2, 0, 0)`.
+
+        ```python
+        >>> i = ifd.Ifd()
+        >>> i.set_location(5.62347, 45.21345, 12)
+        >>> for t in i: print(t)
+        ...
+        <IFD tag GPSVersionID:(2, 2, 0, 0)>
+        <IFD tag GPSLatitudeRef:'N'>
+        <IFD tag GPSLatitude:45.21345>
+        <IFD tag GPSLongitudeRef:'E'>
+        <IFD tag GPSLongitude:5.62347>
+        <IFD tag GPSAltitudeRef:0 - Above sea level>
+        <IFD tag GPSAltitude:12.0>
+        ```
+
+        Arguments:
+            lon (float): longitude in decimal degrees
+            lat (float): latitude in decimal degrees
+            alt (float): altitude in meters
         """
         if not hasattr(self, "gpsT"):
             setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
         if "GPSVersionID" not in self:
             dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
-        self["GPSLatitudeRef"] = "n" if latitude >= 0 else "s"
-        self["GPSLatitude"] = latitude
-        self["GPSLongitudeRef"] = "e" if longitude >= 0 else "w"
-        self["GPSLongitude"] = longitude
-        self["GPSAltitudeRef"] = altitude >= 0
-        self["GPSAltitude"] = altitude
+        self["GPSLatitudeRef"] = "n" if lat >= 0 else "s"
+        self["GPSLatitude"] = lat
+        self["GPSLongitudeRef"] = "e" if lon >= 0 else "w"
+        self["GPSLongitude"] = lon
+        self["GPSAltitudeRef"] = alt >= 0
+        self["GPSAltitude"] = alt
 
     def get_location(self):
         """
+        ```python
+        >>> i = ifd.Ifd()
+        >>> i.get_location()
+        Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File "X:/path/to/Tyf/ifd.py", line 568, in get_location
+            raise Exception("No location data found")
+        Exception: No location data found
+        >>> i.set_location(5.62347, 45.21345, 12)
+        >>> i.get_location()
+        (5.62347, 45.21345, 12.0)
+        ```
+
+        Returns:
+            longitude - latitude - altitude tuple
+        Raises:
+            Exception if no GPS IFD found
         """
         ifd = getattr(self, "gpsT", {})
         if set([
@@ -560,15 +570,17 @@ class Ifd(dict):
                 ifd["GPSLongitude"],
                 (1 if ifd["GPSLatitudeRef"] == "N" else -1) *
                 ifd["GPSLatitude"],
-                (1 if ifd["GPSAltitudeRef"] else -1) *
+                (-1 if ifd["GPSAltitudeRef"] else 1) *
                 ifd["GPSAltitude"]
             )
         else:
             raise Exception("No location data found")
 
     def url_load_location(self, url, **kwargs):
-        longitude, latitude, alt = self.get_location()
-        kwargs.update(lon=longitude, lat=latitude, alt=alt)
+        """
+        """
+        lon, lat, alt = self.get_location()
+        kwargs.update(lon=lon, lat=lat, alt=alt)
         try:
             opener = urlopen(url % kwargs)
         except Exception as error:
@@ -577,6 +589,8 @@ class Ifd(dict):
             return StringIO(opener.read())
 
     def dump_location(self, name, *args, **kwargs):
+        """
+        """
         fileobj = io.open(name, "wb")
         stringio = self.url_load_location(*args, **kwargs)
         fileobj.write(stringio.getvalue())
@@ -585,6 +599,8 @@ class Ifd(dict):
         del fileobj, stringio
 
     def getModelTransformation(self, tie_idx=0):
+        """
+        """
         if "ModelTransformationTag" in self:
             matrix = GeoKeyModel["ModelTransformationTag"](
                *self["ModelTransformationTag"]
@@ -615,6 +631,8 @@ def dump_mapbox_location(
     token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFrNXd4"
           "In0.JIyrV6sWjehsRHKVMBDFaw",
 ):
+    """
+    """
     return cls.dump_location(
         name,
         "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/"
