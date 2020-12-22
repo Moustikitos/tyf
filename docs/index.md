@@ -48,7 +48,7 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
   </dc:rights></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" /><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns3:Rating>4</ns3:Rating></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
   </ns4:LastKeywordXMP></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
   </dc:subject></rdf:Description></rdf:RDF></ns0:xmpmeta>
->>> jpg.save_thumbnail("test_thumb") # extension automatically added
+>>> jpg.save_thumbnail("test/test_thumb") # extension automatically added
 ```
 
 ![EXIF thumbnail](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg)
@@ -134,18 +134,19 @@ True
 <IFD tag GPSImgDirection:33.0>
 <IFD tag GPSProcessingMethod:b'ASCII\x00\x00\x00NETWORK'>
 <IFD tag GPSDateStamp:datetime.date(2015, 7, 30)>
->>> jpg.ifd0.get_location()
-(5.1872093, 51.2095416, -0.0)
->>> jpg.ifd0.dump_location("test_location")
 >>> jpg.ifd0.get("Orientation").info
 'Normal'
+>>> jpg.ifd0.get_location()
+(5.1872093, 51.2095416, -0.0)
+>>> from Tyf import ifd
+>>> ifd.dump_mapbox_location(jpg.ifd0, "test/test_location.png")
 ```
 
 ![5.1872093, 51.2095416](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location.png)
 
 ```python
 >>> jpg.ifd0.set_location(4.362859, 48.958472, 0)
->>> jpg.ifd0.dump_location("test_location2")
+>>> ifd.dump_mapbox_location(jpg.ifd0, "test/test_location2.png")
 ```
 
 ![4.362859, 48.958472](https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_location2.png)

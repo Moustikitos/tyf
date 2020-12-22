@@ -67,7 +67,7 @@ closed.
 **Arguments**:
 
 - `f` _buffer or string_ - a valid file path or a python file object
-- `byteorder` _string_ - `">"` if little endian used else `"<"`
+- `byteorder` _string_ - `">"` if big-endian used else `"<"`
 - `idx` _int_ - IFD index to save
 - `ifd1` _Tyf.ifd.Ifd_ - IFD to be sused as thumbnail (only used for
   JPEG saving)

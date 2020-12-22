@@ -19,9 +19,9 @@ Mapping of named tuple to be used with geotiff `ModelPixelScaleTag`,
 >>> from Tyf import ifd
 >>> tif = Tyf.open("test/CEA.tif")
 >>> ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
-ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.166784412522, Y=4255884.5438021915, Z=0.0)
+ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.1667844, Y=4255884.54380, Z=0.0)
 >>> ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
-ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
+ModelPixelScale(ScaleX=60.022136983193, ScaleY=60.022136983193, ScaleZ=0.0)
 ```
 
 <a name="Tyf.ifd.Transform"></a>
@@ -36,8 +36,10 @@ matrix applied to raster coordinates plus altitude.
 
 
 ```python
->>> Sx, Sy, Sz = ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
->>> I, J, K, X, Y, Z = ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
+>>> mps = ifd.GeoKeyModel["ModelPixelScaleTag"]
+>>> mtt = ifd.GeoKeyModel["ModelTiepointTag"]
+>>> Sx, Sy, Sz = mps(*tif[0]["ModelPixelScaleTag"])
+>>> I, J, K, X, Y, Z = mtt(*tif[0].tiepoints[0])
 >>> matrix = ifd.GeoKeyModel["ModelTransformationTag"](
 ...     Sx, 0.,  0., X - I * Sx,
 ...     0., -Sy, 0., Y + J * Sy,
@@ -57,7 +59,7 @@ matrix applied to raster coordinates plus altitude.
 
 **Returns**:
 
-  projeted coordinates (tuple): X, Y, Z
+  projeted coordinates X, Y, Z
 
 <a name="Tyf.ifd.Tag"></a>
 ## Tag Objects
@@ -110,10 +112,13 @@ Meaning of tag value if any (see `Tyf.values` module).
  | read(fileobj, byteorder, db=None)
 ```
 
+Extract an IFD tag from buffer current position. Buffer position is
+adjusted to the end of IFD entry before returning the value.
+
 **Arguments**:
 
 - `fileobj` _buffer_ - a python file object
-- `byteorder` _string_ - `">"` if little endian used else `"<"`
+- `byteorder` _string_ - `">"` if big-endian used else `"<"`
 - `db` _dict_ - authorized tag database
 
 **Returns**:
@@ -136,17 +141,30 @@ Return tag value size in `bytes` when packed.
  | pack(byteorder)
 ```
 
-Return a tuple containing the IFD base entry [tag, type, count], the
+Return a tuple containing packed IFD base entry [tag, type, count],
 packed value and the info if value have to be written in IFD entry or
 data.
 
+
+```python
+>>> ttc, val, ofs = ifd.Tag("GPSLongitude", value=5.62347).pack(">")
+>>> ttc.hex()
+'0004000500000003'
+>>> val.hex()
+'00000005000000010000002500000001000017eb000000fa'
+>>> #   5,      1,     37,      1,   6123,    250
+>>> # 5/1 deg   + 37/1 min         + 6123/250 sec
+>>> ofs
+True
+```
+
 **Arguments**:
 
-- `byteorder` _string_ - `">"` if little endian used else `"<"`
+- `byteorder` _string_ - `">"` if big-endian used else `"<"`
 
 **Returns**:
 
-  tuple (`b"tag|type|count"`, `b"value"`, `True` if value is offset)
+  tuple (`|tag|type|count|`, `|value|`, `True` if value is offset)
 
 <a name="Tyf.ifd.getModelTiePoints"></a>
 #### getModelTiePoints
@@ -156,22 +174,22 @@ getModelTiePoints(cls)
 ```
 
 Return tiepoint list found in `ModelTiepointTag` tags. This function sets
-a list of all points in private attribute `_model_tie_points` on first
+a list of all points in private attribute `_model_tiepoints` on first
 call.
 
 
 ```
-ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ..., In, Jn, Kn, Xn, Yn, Zn)
-_model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
+ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
+_model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
 ```
 
 **Arguments**:
 
-- `cls` _dict or `Tyf.ifd.Ifd`_ - image file directory
+- `cls` _dict or Tyf.ifd.Ifd_ - image file directory
 
 **Returns**:
 
-  Tiepoint list
+  Tiepoint `list`
 
 **Raises**:
 
@@ -184,6 +202,22 @@ _model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
 class Ifd(dict)
 ```
 
+Provide a very similar python `dict` interface to create and store IFD tags
+with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
+`Tyf.ifd.Ifd` sub IFD storing Exif, GPS and Interoperability tags.
+
+```python
+>>> i = ifd.Ifd()
+>>> i["GPSLongitude"] = 5.62347  # --> GPS IFD
+>>> i["FlashpixVersion"] = None  # None will set default value --> Exif IFD
+>>> i
+{}
+>>> i.gpsT
+{'GPSLongitude': <IFD tag GPSLongitude:5.62347>}
+>>> i.exfT
+{'FlashpixVersion': <IFD tag FlashpixVersion:b'0100'>}
+```
+
 <a name="Tyf.ifd.Ifd.raster_loaded"></a>
 #### raster\_loaded
 
@@ -192,5 +226,5 @@ class Ifd(dict)
 <a name="Tyf.ifd.Ifd.tiepoints"></a>
 #### tiepoints
 
-Tiepoint list
+Geotiff tiepoint list
 
