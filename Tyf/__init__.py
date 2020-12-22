@@ -1,5 +1,10 @@
 # -*- encoding:utf-8 -*-
 """
+# Bibliography
+ + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
+ + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
+ + [JPEG FIF 1.02](https://www.w3.org/Graphics/JPEG/jfif3.pdf)
+
 Tyf package aims to provide pythonic way to interact with metadata in TIFF and
 JPEG files.
 

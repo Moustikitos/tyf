@@ -4,11 +4,6 @@
 <a name="Tyf.ifd"></a>
 # Tyf.ifd
 
-__Bibliography__
-
- + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
- + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
-
 <a name="Tyf.ifd.GeoKeyModel"></a>
 #### GeoKeyModel
 
@@ -167,7 +162,7 @@ True
 
 **Returns**:
 
-  tuple (`|tag|type|count|`, `|value|`, `True` if value is offset)
+  (packed ifd entry - packed value - is offset boolean)
 
 <a name="Tyf.ifd.getModelTiePoints"></a>
 #### getModelTiePoints
@@ -246,37 +241,67 @@ Geotiff tiepoint list
  | tags()
 ```
 
-Return iterator over all IFD values including sub IFD values in the
+Return iterator over all IFD values including sub IFD ones in the
 order: `exfT` - `gpsT` - `itrT`.
 
-<a name="Tyf.ifd.Ifd.pack"></a>
-#### pack
+<a name="Tyf.ifd.Ifd.set_location"></a>
+#### set\_location
 
 ```python
- | pack(byteorder)
+ | set_location(lon, lat, alt=0.)
 ```
 
+Set GPS IFD tags according to given longitude, latitude nd altitude.
+If no GPS IFD exists, it is created according to version
+`(2, 2, 0, 0)`.
+
+
 ```python
->>> i.pack(">")
-{
-  'exfT': {
-    'size': 18,
-    'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
-    'data': b'',
-    'raster': 0
-},
-  'gpsT': {
-    'size': 18,
-    'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
-    'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
-    'raster': 0
-},
-  'root': {
-    'size': 6,
-    'tags': [],
-    'data': b'',
-    'raster': 0
-  }
-}
+>>> i = ifd.Ifd()
+>>> i.set_location(5.62347, 45.21345, 12)
+>>> for t in i: print(t)
+...
+<IFD tag GPSVersionID:(2, 2, 0, 0)>
+<IFD tag GPSLatitudeRef:'N'>
+<IFD tag GPSLatitude:45.21345>
+<IFD tag GPSLongitudeRef:'E'>
+<IFD tag GPSLongitude:5.62347>
+<IFD tag GPSAltitudeRef:0 - Above sea level>
+<IFD tag GPSAltitude:12.0>
 ```
+
+**Arguments**:
+
+- `lon` _float_ - longitude in decimal degrees
+- `lat` _float_ - latitude in decimal degrees
+- `alt` _float_ - altitude in meters
+
+<a name="Tyf.ifd.Ifd.get_location"></a>
+#### get\_location
+
+```python
+ | get_location()
+```
+
+
+```python
+>>> i = ifd.Ifd()
+>>> i.get_location()
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+File "X:/path/to/Tyf/ifd.py", line 568, in get_location
+    raise Exception("No location data found")
+Exception: No location data found
+>>> i.set_location(5.62347, 45.21345, 12)
+>>> i.get_location()
+(5.62347, 45.21345, 12.0)
+```
+
+**Returns**:
+
+  longitude - latitude - altitude tuple
+
+**Raises**:
+
+  Exception if no GPS IFD found
 
