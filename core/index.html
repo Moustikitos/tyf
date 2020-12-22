@@ -110,11 +110,6 @@
 <h1 id="tyfgkd">Tyf.gkd</h1>
 <p><a name="Tyf.ifd"></a></p>
 <h1 id="tyfifd">Tyf.ifd</h1>
-<p><strong>Bibliography</strong></p>
-<ul>
-<li><a href="https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf">Tiff 6.0 spec</a></li>
-<li><a href="https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html">GeoTiFF 1.8.1 spec</a></li>
-</ul>
 <p><a name="Tyf.ifd.GeoKeyModel"></a></p>
 <h4 id="geokeymodel">GeoKeyModel</h4>
 <p>Mapping of named tuple to be used with geotiff <code>ModelPixelScaleTag</code>,
@@ -231,7 +226,7 @@ True
 <li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>tuple (<code>|tag|type|count|</code>, <code>|value|</code>, <code>True</code> if value is offset)</p>
+<p>(packed ifd entry - packed value - is offset boolean)</p>
 <p><a name="Tyf.ifd.getModelTiePoints"></a></p>
 <h4 id="getmodeltiepoints">getModelTiePoints</h4>
 <pre><code class="language-python">getModelTiePoints(cls)
@@ -285,34 +280,52 @@ False
 <h4 id="tags">tags</h4>
 <pre><code class="language-python"> | tags()
 </code></pre>
-<p>return iterator over all IFD values including sub IFD values in the
+<p>Return iterator over all IFD values including sub IFD ones in the
 order: <code>exfT</code> - <code>gpsT</code> - <code>itrT</code>.</p>
-<p><a name="Tyf.ifd.Ifd.pack"></a></p>
-<h4 id="pack_1">pack</h4>
-<pre><code class="language-python"> | pack(byteorder)
+<p><a name="Tyf.ifd.Ifd.set_location"></a></p>
+<h4 id="set_location">set_location</h4>
+<pre><code class="language-python"> | set_location(lon, lat, alt=0.)
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; i.pack(&quot;&gt;&quot;)
-{
-  'exfT': {
-    'size': 18,
-    'tags': [(b'\xa0\x00\x00\x07\x00\x00\x00\x04', b'0100', False)],
-    'data': b'',
-    'raster': 0
-},
-  'gpsT': {
-    'size': 18,
-    'tags': [(b'\x00\x04\x00\x05\x00\x00\x00\x03', b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa', True)],
-    'data': b'\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00%\x00\x00\x00\x01\x00\x00\x17\xeb\x00\x00\x00\xfa',
-    'raster': 0
-},
-  'root': {
-    'size': 6,
-    'tags': [],
-    'data': b'',
-    'raster': 0
-  }
-}
-</code></pre></div>
+<p>Set GPS IFD tags according to given longitude, latitude nd altitude.
+If no GPS IFD exists, it is created according to version
+<code>(2, 2, 0, 0)</code>.</p>
+<pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
+&gt;&gt;&gt; i.set_location(5.62347, 45.21345, 12)
+&gt;&gt;&gt; for t in i: print(t)
+...
+&lt;IFD tag GPSVersionID:(2, 2, 0, 0)&gt;
+&lt;IFD tag GPSLatitudeRef:'N'&gt;
+&lt;IFD tag GPSLatitude:45.21345&gt;
+&lt;IFD tag GPSLongitudeRef:'E'&gt;
+&lt;IFD tag GPSLongitude:5.62347&gt;
+&lt;IFD tag GPSAltitudeRef:0 - Above sea level&gt;
+&lt;IFD tag GPSAltitude:12.0&gt;
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>lon</code> <em>float</em> - longitude in decimal degrees</li>
+<li><code>lat</code> <em>float</em> - latitude in decimal degrees</li>
+<li><code>alt</code> <em>float</em> - altitude in meters</li>
+</ul>
+<p><a name="Tyf.ifd.Ifd.get_location"></a></p>
+<h4 id="get_location">get_location</h4>
+<pre><code class="language-python"> | get_location()
+</code></pre>
+<pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
+&gt;&gt;&gt; i.get_location()
+Traceback (most recent call last):
+File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+File &quot;X:/path/to/Tyf/ifd.py&quot;, line 568, in get_location
+    raise Exception(&quot;No location data found&quot;)
+Exception: No location data found
+&gt;&gt;&gt; i.set_location(5.62347, 45.21345, 12)
+&gt;&gt;&gt; i.get_location()
+(5.62347, 45.21345, 12.0)
+</code></pre>
+<p><strong>Returns</strong>:</p>
+<p>longitude - latitude - altitude tuple</p>
+<p><strong>Raises</strong>:</p>
+<p>Exception if no GPS IFD found</p></div>
             </div>
         </div>
 
