@@ -6,7 +6,6 @@
 """
 
 import io
-import os
 import struct
 import collections
 
@@ -28,9 +27,9 @@ except ImportError:
 #: >>> from Tyf import ifd
 #: >>> tif = Tyf.open("test/CEA.tif")
 #: >>> ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
-#: ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.166784412522, Y=4255884.5438021915, Z=0.0)
+#: ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.1667844, Y=4255884.54380, Z=0.0)
 #: >>> ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
-#: ModelPixelScale(ScaleX=60.02213698319374, ScaleY=60.02213698319374, ScaleZ=0.0)
+#: ModelPixelScale(ScaleX=60.022136983193, ScaleY=60.022136983193, ScaleZ=0.0)
 #: ```
 GeoKeyModel = {
     "ModelPixelScaleTag": collections.namedtuple(
@@ -50,8 +49,10 @@ def Transform(obj, x=0., y=0., z=0.):
     matrix applied to raster coordinates plus altitude.
 
     ```python
-    >>> Sx, Sy, Sz = ifd.GeoKeyModel["ModelPixelScaleTag"](*tif[0]["ModelPixelScaleTag"])
-    >>> I, J, K, X, Y, Z = ifd.GeoKeyModel["ModelTiepointTag"](*tif[0].tiepoints[0])
+    >>> mps = ifd.GeoKeyModel["ModelPixelScaleTag"]
+    >>> mtt = ifd.GeoKeyModel["ModelTiepointTag"]
+    >>> Sx, Sy, Sz = mps(*tif[0]["ModelPixelScaleTag"])
+    >>> I, J, K, X, Y, Z = mtt(*tif[0].tiepoints[0])
     >>> matrix = ifd.GeoKeyModel["ModelTransformationTag"](
     ...     Sx, 0.,  0., X - I * Sx,
     ...     0., -Sy, 0., Y + J * Sy,
@@ -68,7 +69,7 @@ def Transform(obj, x=0., y=0., z=0.):
         y (float): pixel row index from top
         z (float): altitude value
     Returns:
-        projeted coordinates (tuple): X, Y, Z
+        projeted coordinates X, Y, Z
     """
     return (
         obj[0] * x + obj[1] * y + obj[2] * z + obj[3] * 1.,
@@ -138,6 +139,9 @@ class Tag(object):
                 )
             )
         self._v = self._encode(value)
+        self._is_offset = self.count * struct.calcsize(
+            "=" + TYPES[self.type][0]
+        ) > 4
 
     def __init__(self, tag_or_key, value=None):
         """
@@ -160,9 +164,12 @@ class Tag(object):
     @staticmethod
     def read(fileobj, byteorder, db=None):
         """
+        Extract an IFD tag from buffer current position. Buffer position is
+        adjusted to the end of IFD entry before returning the value.
+
         Arguments:
             fileobj (buffer): a python file object
-            byteorder (string): `">"` if little endian used else `"<"`
+            byteorder (string): `">"` if big-endian used else `"<"`
             db (dict): authorized tag database
         Returns:
             `Tyf.ifd.Tag`
@@ -215,14 +222,27 @@ class Tag(object):
 
     def pack(self, byteorder):
         """
-        Return a tuple containing the IFD base entry [tag, type, count], the
+        Return a tuple containing packed IFD base entry [tag, type, count],
         packed value and the info if value have to be written in IFD entry or
         data.
 
+        ```python
+        >>> ttc, val, ofs = ifd.Tag("GPSLongitude", value=5.62347).pack(">")
+        >>> ttc.hex()
+        '0004000500000003'
+        >>> val.hex()
+        '00000005000000010000002500000001000017eb000000fa'
+        >>> #   5,      1,     37,      1,   6123,    250
+        >>> # 5/1 deg   + 37/1 min         + 6123/250 sec
+        >>> ofs
+        True
+        ```
+
         Arguments:
-            byteorder (string): `">"` if little endian used else `"<"`
+            byteorder (string): `">"` if big-endian used else `"<"`
         Returns:
-            tuple (`b"tag|type|count"`, `b"value"`, `True` if value is offset)
+            tuple (`|tag|type|count|`, `|value|`, `True` if value is offset)
+
         """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
@@ -287,30 +307,47 @@ def _load_raster(obj, fileobj):
 def getModelTiePoints(cls):
     """
     Return tiepoint list found in `ModelTiepointTag` tags. This function sets
-    a list of all points in private attribute `_model_tie_points` on first
+    a list of all points in private attribute `_model_tiepoints` on first
     call.
 
     ```
-    ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ..., In, Jn, Kn, Xn, Yn, Zn)
-    _model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ..., (In, Jn, Kn, Xn, Yn, Zn)]
+    ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
+    _model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
     ```
 
     Arguments:
-        cls (dict or `Tyf.ifd.Ifd`): image file directory
+        cls (dict or Tyf.ifd.Ifd): image file directory
     Returns:
-        Tiepoint list
+        Tiepoint `list`
     Raises:
         KeyError if no `ModelTiepointTag` defined
     """
-    if not hasattr(cls, "_model_tie_points"):
-        setattr(cls, "_model_tie_points", [
+    if not hasattr(cls, "_model_tiepoints"):
+        setattr(cls, "_model_tiepoints", [
             cls["ModelTiepointTag"][i:i+6]
             for i in range(0, len(cls["ModelTiepointTag"]), 6)
         ])
-    return getattr(cls, "_model_tie_points", getModelTiePoints)
+    return getattr(cls, "_model_tiepoints")
 
 
 class Ifd(dict):
+    """
+    Provide a very similar python `dict` interface to create and store IFD tags
+    with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
+    `Tyf.ifd.Ifd` sub IFD storing Exif, GPS and Interoperability tags.
+
+    ```python
+    >>> i = ifd.Ifd()
+    >>> i["GPSLongitude"] = 5.62347  # --> GPS IFD
+    >>> i["FlashpixVersion"] = None  # None will set default value --> Exif IFD
+    >>> i
+    {}
+    >>> i.gpsT
+    {'GPSLongitude': <IFD tag GPSLongitude:5.62347>}
+    >>> i.exfT
+    {'FlashpixVersion': <IFD tag FlashpixVersion:b'0100'>}
+    ```
+    """
     #: `True` if raster is loaded
     raster_loaded = property(
         lambda obj: any([
@@ -319,7 +356,7 @@ class Ifd(dict):
         ]),
         None, None, ""
     )
-    #: Tiepoint list
+    #: Geotiff tiepoint list
     tiepoints = property(
         lambda cls: getModelTiePoints(cls),
         None, None, ""
@@ -478,34 +515,19 @@ class Ifd(dict):
         })
         return result
 
-    def load_location(
-        self, zoom=15, width=400, height=300,
-        token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFr"
-              "NXd4In0.JIyrV6sWjehsRHKVMBDFaw",
-    ):
+    def url_load_location(self, url, **kwargs):
         longitude, latitude, alt = self.get_location()
+        kwargs.update(lon=longitude, lat=latitude, alt=alt)
         try:
-            opener = urlopen(
-                "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static"
-                "/pin-s+f74e4e(%(longitude)s,%(latitude)s)/%(longitude)s,"
-                "%(latitude)s,%(zoom)s,0/%(width)sx%(height)s?access_token="
-                "%(token)s" % {
-                    "longitude": longitude,
-                    "latitude": latitude,
-                    "zoom": zoom,
-                    "width": width,
-                    "height": height,
-                    "token": token
-                },
-            )
+            opener = urlopen(url % kwargs)
         except Exception as error:
             print("%r" % error)
         else:
             return StringIO(opener.read())
 
     def dump_location(self, name, *args, **kwargs):
-        fileobj = io.open(os.path.splitext(name)[0] + ".png", "wb")
-        stringio = self.load_location(*args, **kwargs)
+        fileobj = io.open(name, "wb")
+        stringio = self.url_load_location(*args, **kwargs)
         fileobj.write(stringio.getvalue())
         fileobj.close()
         stringio.close()
@@ -543,3 +565,17 @@ class Ifd(dict):
                 0., 0.,  0., 1.
             )
         return lambda x, y, z=0., m=matrix: Transform(m, x, y, z)
+
+
+def dump_mapbox_location(
+    cls, name, zoom=15, width=400, height=300,
+    token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFrNXd4"
+          "In0.JIyrV6sWjehsRHKVMBDFaw",
+):
+    return cls.dump_location(
+        name,
+        "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/"
+        "pin-s+f74e4e(%(lon)s,%(lat)s)/%(lon)s,%(lat)s,%(zoom)s,0/"
+        "%(width)sx%(height)s?access_token=%(token)s",
+        zoom=15, width=400, height=300, token=token
+    )
