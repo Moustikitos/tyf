@@ -196,7 +196,7 @@ adjusted to the end of IFD entry before returning the value.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>fileobj</code> <em>buffer</em> - a python file object</li>
-<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 <li><code>db</code> <em>dict</em> - authorized tag database</li>
 </ul>
 <p><strong>Returns</strong>:</p>
@@ -210,43 +210,66 @@ adjusted to the end of IFD entry before returning the value.</p>
 <h4 id="pack">pack</h4>
 <pre><code class="language-python"> | pack(byteorder)
 </code></pre>
-<p>Return a tuple containing the IFD base entry [tag, type, count], the
+<p>Return a tuple containing packed IFD base entry [tag, type, count],
 packed value and the info if value have to be written in IFD entry or
 data.</p>
+<pre><code class="language-python">&gt;&gt;&gt; ttc, val, ofs = ifd.Tag(&quot;GPSLongitude&quot;, value=5.62347).pack(&quot;&gt;&quot;)
+&gt;&gt;&gt; ttc.hex()
+'0004000500000003'
+&gt;&gt;&gt; val.hex()
+'00000005000000010000002500000001000017eb000000fa'
+&gt;&gt;&gt; #   5,      1,     37,      1,   6123,    250
+&gt;&gt;&gt; # 5/1 deg   + 37/1 min         + 6123/250 sec
+&gt;&gt;&gt; ofs
+True
+</code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if little endian used else <code>"&lt;"</code></li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>tuple (<code>b"tag|type|count"</code>, <code>b"value"</code>, <code>True</code> if value is offset)</p>
+<p>tuple (<code>|tag|type|count|</code>, <code>|value|</code>, <code>True</code> if value is offset)</p>
 <p><a name="Tyf.ifd.getModelTiePoints"></a></p>
 <h4 id="getmodeltiepoints">getModelTiePoints</h4>
 <pre><code class="language-python">getModelTiePoints(cls)
 </code></pre>
 <p>Return tiepoint list found in <code>ModelTiepointTag</code> tags. This function sets
-a list of all points in private attribute <code>_model_tie_points</code> on first
+a list of all points in private attribute <code>_model_tiepoints</code> on first
 call.</p>
 <pre><code>ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
-_model_tie_points = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
+_model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
 </code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>cls</code> <em>dict or <code>Tyf.ifd.Ifd</code></em> - image file directory</li>
+<li><code>cls</code> <em>dict or Tyf.ifd.Ifd</em> - image file directory</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>Tiepoint list</p>
+<p>Tiepoint <code>list</code></p>
 <p><strong>Raises</strong>:</p>
 <p>KeyError if no <code>ModelTiepointTag</code> defined</p>
 <p><a name="Tyf.ifd.Ifd"></a></p>
 <h2 id="ifd-objects">Ifd Objects</h2>
 <pre><code class="language-python">class Ifd(dict)
 </code></pre>
+<p>Provide a very similar python <code>dict</code> interface to create and store IFD tags
+with automatic sub IFD management. <code>exfT</code>, <code>gpsT</code> and <code>itrT</code> are
+<code>Tyf.ifd.Ifd</code> sub IFD storing Exif, GPS and Interoperability tags.</p>
+<pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
+&gt;&gt;&gt; i[&quot;GPSLongitude&quot;] = 5.62347  # --&gt; GPS IFD
+&gt;&gt;&gt; i[&quot;FlashpixVersion&quot;] = None  # None will set default value --&gt; Exif IFD
+&gt;&gt;&gt; i
+{}
+&gt;&gt;&gt; i.gpsT
+{'GPSLongitude': &lt;IFD tag GPSLongitude:5.62347&gt;}
+&gt;&gt;&gt; i.exfT
+{'FlashpixVersion': &lt;IFD tag FlashpixVersion:b'0100'&gt;}
+</code></pre>
 <p><a name="Tyf.ifd.Ifd.raster_loaded"></a></p>
 <h4 id="raster_loaded">raster_loaded</h4>
 <p><code>True</code> if raster is loaded</p>
 <p><a name="Tyf.ifd.Ifd.tiepoints"></a></p>
 <h4 id="tiepoints">tiepoints</h4>
-<p>Tiepoint list</p></div>
+<p>Geotiff tiepoint list</p></div>
             </div>
         </div>
 
