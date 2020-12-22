@@ -1,6 +1,6 @@
 # -*- encoding:utf-8 -*-
 """
-# Documentation
+# Bibliography
  + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
  + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
 """
@@ -79,7 +79,8 @@ def Transform(obj, x=0., y=0., z=0.):
 
 
 class Tag(object):
-    #: Encode and decode on the fly the `_v` attribute.
+    #: Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
+    #: `Tyf.decoders` modules).
     #: ```python
     #: >>> tag = ifd.Tag("GPSLongitude")
     #: >>> tag.value = 5.62347
@@ -147,7 +148,9 @@ class Tag(object):
         """
         Arguments:
             tag_or_key (int or string): tag value or keyword
-            value (any): value of the tag
+            value (any): value of the tag. If `None` is given, it is set to
+                         default value if anyone is defined else `_v` attribute
+                         is not created.
         """
         self.tag, (self.key, self._types, default, self.comment) = \
             tags.get(tag_or_key)
@@ -345,6 +348,14 @@ class Ifd(dict):
     {'GPSLongitude': <IFD tag GPSLongitude:5.62347>}
     >>> i.exfT
     {'FlashpixVersion': <IFD tag FlashpixVersion:b'0100'>}
+    >>> i.get("GPSLongitude")  # get method returns tag object
+    <IFD tag GPSLongitude:5.62347>
+    >>> i["GPSLongitude"]  # __getitem__ interface returns the python value
+    5.62347
+    >>> i.pop("FlashpixVersion")
+    <IFD tag FlashpixVersion:b'0100'>
+    >>> hasattr(i, "exfT")
+    False
     ```
     """
     #: `True` if raster is loaded
@@ -367,14 +378,14 @@ class Ifd(dict):
             "tag_family", [tags.bTT, tags.xTT, tags.pTT]
         )
 
-    def __delattr__(self, attr, value):
+    def __delattr__(self, attr):
         if attr == "gpsT":
             dict.pop(self, "GPS IFD", False)
         elif attr == "exfT":
             dict.pop(self, "Exif IFD", False)
         elif attr == "itrT":
             dict.pop(self, "Interoperability IFD", False)
-        dict.__delattr__(self, attr, value)
+        dict.__delattr__(self, attr)
 
     def __setitem__(self, tag, value):
         try:
