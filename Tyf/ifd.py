@@ -505,7 +505,7 @@ class Ifd(dict):
 
     def set_location(self, lon, lat, alt=0.):
         """
-        Set GPS IFD tags according to given longitude, latitude nd altitude.
+        Set GPS IFD tags according to given longitude, latitude and altitude.
         If no GPS IFD exists, it is created according to version
         `(2, 2, 0, 0)`.
 
