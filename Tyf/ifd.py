@@ -145,7 +145,7 @@ class Tag(object):
             tag_or_key (int or string): tag value or keyword
             value (any): value of the tag. If `None` is given, it is set to
                          default value if anyone is defined else `_v` attribute
-                         is not created.
+                         is not created
         """
         self.tag, (self.key, self._types, default, self.comment) = \
             tags.get(tag_or_key)
@@ -239,7 +239,7 @@ class Tag(object):
         Arguments:
             byteorder (string): `">"` if big-endian used else `"<"`
         Returns:
-            (packed ifd entry - packed value - is offset boolean)
+            packed ifd entry - packed value - is offset boolean
         """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
@@ -303,9 +303,9 @@ def _load_raster(obj, fileobj):
 
 def getModelTiePoints(cls):
     """
-    Return tiepoint list found in `ModelTiepointTag` tags. This function sets
-    a list of all points in private attribute `_model_tiepoints` on first
-    call.
+    Return tiepoint list found in `ModelTiepointTag` tags. This function
+    creates a list of all points in private attribute `_model_tiepoints` on
+    first call.
 
     ```
     ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
@@ -555,7 +555,7 @@ class Ifd(dict):
         ```
 
         Returns:
-            longitude - latitude - altitude tuple
+            longitude - latitude - altitude
         Raises:
             Exception if no GPS IFD found
         """
@@ -578,6 +578,32 @@ class Ifd(dict):
 
     def url_load_location(self, url, **kwargs):
         """
+        Return a static map image data from map provider.
+
+        ```python
+        >>> from Tyf import ifd
+        >>> i = ifd.Ifd()
+        >>> i.set_location(5.62347, 45.21345, 12)
+        >>> # below a mapbox-static-map url centered on [lon, lat] with a red
+        >>> # pin, width, height and zoom to be specified on call
+        >>> url = "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static"
+        ... "/pin-s+f74e4e(%(lon)f,%(lat)f)/%(lon)f,%(lat)f,%(zoom)d,0"
+        ... "/%(width)dx%(height)d?access_token=%(token)s"
+        >>> data = i.url_load_location(
+        ...    url, zoom=15, width=600, height=400, token="xx-xxxxxx-xx"
+        ... )
+        >>> with io.open("dump.png", "wb") as f:
+        ...    f.write(data)
+        ```
+
+        Arguments:
+            url (str): map provider url containing `%(lon)f` and `%(lat)f`
+                       format expression to be replaced by longitude and
+                       latitude found in GPS data
+            **kwargs (dict): key-value pairs to match entries in url according
+                             to python string formatting
+        Returns:
+            Image data as `bytes` (py3) or `str` (py2)
         """
         lon, lat, alt = self.get_location()
         kwargs.update(lon=lon, lat=lat, alt=alt)
@@ -586,17 +612,22 @@ class Ifd(dict):
         except Exception as error:
             print("%r" % error)
         else:
-            return StringIO(opener.read())
+            return opener.read()
 
-    def dump_location(self, name, *args, **kwargs):
+    def dump_location(self, name, url, **kwargs):
         """
+        Dump a static map image from map provider into filesystem.
+
+        Arguments:
+            name (str): a valid filepath
+            url (str): map provider url containing `%(lon)f` and `%(lat)f`
+                       format expression to be replaced by longitude and
+                       latitude found in GPS data
+            **kwargs (dict): key-value pairs to match entries in url according
+                             to python string formatting
         """
-        fileobj = io.open(name, "wb")
-        stringio = self.url_load_location(*args, **kwargs)
-        fileobj.write(stringio.getvalue())
-        fileobj.close()
-        stringio.close()
-        del fileobj, stringio
+        with io.open(name, "wb") as fileobj:
+            fileobj.write(self.url_load_location(url, **kwargs))
 
     def getModelTransformation(self, tie_idx=0):
         """
@@ -632,11 +663,21 @@ def dump_mapbox_location(
           "In0.JIyrV6sWjehsRHKVMBDFaw",
 ):
     """
+    Free `Tyf.ifd.Ifd.url_load_location` use case.
+    [Use your own Mapbox token](https://docs.mapbox.com/api/overview/#access-tokens-and-token-scopes).
+
+    Arguments:
+        cls (dict or Tyf.ifd.Ifd): IFD containing GPS data
+        name (str): filename to use
+        zoom (int): map zoom level
+        width (int): image width in pixel
+        height (int): image height in pixel
+        token (str): a valid Mapbox API token
     """
     return cls.dump_location(
         name,
         "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static/"
-        "pin-s+f74e4e(%(lon)s,%(lat)s)/%(lon)s,%(lat)s,%(zoom)s,0/"
-        "%(width)sx%(height)s?access_token=%(token)s",
-        zoom=15, width=400, height=300, token=token
+        "pin-s+f74e4e(%(lon)f,%(lat)f)/%(lon)f,%(lat)f,%(zoom)d,0/"
+        "%(width)dx%(height)d?access_token=%(token)s",
+        zoom=zoom, width=width, height=height, token=token
     )

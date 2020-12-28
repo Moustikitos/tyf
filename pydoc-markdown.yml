@@ -21,12 +21,14 @@ renderer:
         - Tyf.Image*
     - title: Core
       contents:
-        - Tyf.ifd*
-        - Tyf.gkd*
-    - title: Extend
-      contents:
-        - Tyf.encoders*
-        - Tyf.decoders*
+        - Tyf.ifd.GeoKeyModel
+        - Tyf.ifd.Transform
+        - Tyf.ifd.Tag*
+        - Tyf.ifd.Ifd*
+    # - title: Extend
+    #   contents:
+    #     - Tyf.encoders*
+    #     - Tyf.decoders*
   mkdocs_config:
     site_name: The Tyf Project
     repo_url: https://github.com/Moustikitos/Tyf

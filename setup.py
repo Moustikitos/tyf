@@ -17,7 +17,7 @@ kw.update(**{
     "maintainer": "Bruno THOORENS",
     "maintainer_email": "moustikitos@gmail.com",
     "url": "https://Moustikitos.github.io/tyf/",
-    "download_url": "https://github.com/Moustikitos/tyf",
+    "download_url": "https://github.com/Moustikitos/tyf/archive/master.zip",
     "description": "Pythonic way to read and edit IFD and EXIF tags.",
     "long_description": long_description.read(),
     "long_description_content_type": "text/markdown",

@@ -1,6 +1,3 @@
-<a name="Tyf.gkd"></a>
-# Tyf.gkd
-
 <a name="Tyf.ifd"></a>
 # Tyf.ifd
 
@@ -100,7 +97,7 @@ Meaning of tag value if any (see `Tyf.values` module).
 - `tag_or_key` _int or string_ - tag value or keyword
 - `value` _any_ - value of the tag. If `None` is given, it is set to
   default value if anyone is defined else `_v` attribute
-  is not created.
+  is not created
 
 <a name="Tyf.ifd.Tag.read"></a>
 #### read
@@ -162,36 +159,7 @@ True
 
 **Returns**:
 
-  (packed ifd entry - packed value - is offset boolean)
-
-<a name="Tyf.ifd.getModelTiePoints"></a>
-#### getModelTiePoints
-
-```python
-getModelTiePoints(cls)
-```
-
-Return tiepoint list found in `ModelTiepointTag` tags. This function sets
-a list of all points in private attribute `_model_tiepoints` on first
-call.
-
-
-```
-ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
-_model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
-```
-
-**Arguments**:
-
-- `cls` _dict or Tyf.ifd.Ifd_ - image file directory
-
-**Returns**:
-
-  Tiepoint `list`
-
-**Raises**:
-
-  KeyError if no `ModelTiepointTag` defined
+  packed ifd entry - packed value - is offset boolean
 
 <a name="Tyf.ifd.Ifd"></a>
 ## Ifd Objects
@@ -299,9 +267,65 @@ Exception: No location data found
 
 **Returns**:
 
-  longitude - latitude - altitude tuple
+  longitude - latitude - altitude
 
 **Raises**:
 
   Exception if no GPS IFD found
+
+<a name="Tyf.ifd.Ifd.url_load_location"></a>
+#### url\_load\_location
+
+```python
+ | url_load_location(url, **kwargs)
+```
+
+Return a static map image data from map provider.
+
+
+```python
+>>> from Tyf import ifd
+>>> i = ifd.Ifd()
+>>> i.set_location(5.62347, 45.21345, 12)
+>>> # below a mapbox-static-map url centered on [lon, lat] with a red
+>>> # pin, width, height and zoom to be specified on call
+>>> url = "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static"
+... "/pin-s+f74e4e(%(lon)f,%(lat)f)/%(lon)f,%(lat)f,%(zoom)d,0"
+... "/%(width)dx%(height)d?access_token=%(token)s"
+>>> data = i.url_load_location(
+...    url, zoom=15, width=600, height=400, token="xx-xxxxxx-xx"
+... )
+>>> with io.open("dump.png", "wb") as f:
+...    f.write(data)
+```
+
+**Arguments**:
+
+- `url` _str_ - map provider url containing `%(lon)f` and `%(lat)f`
+  format expression to be replaced by longitude and
+  latitude found in GPS data
+- `**kwargs` _dict_ - key-value pairs to match entries in url according
+  to python string formatting
+
+**Returns**:
+
+  Image data as `bytes` (py3) or `str` (py2)
+
+<a name="Tyf.ifd.Ifd.dump_location"></a>
+#### dump\_location
+
+```python
+ | dump_location(name, url, **kwargs)
+```
+
+Dump a static map image from map provider into filesystem.
+
+**Arguments**:
+
+- `name` _str_ - a valid filepath
+- `url` _str_ - map provider url containing `%(lon)f` and `%(lat)f`
+  format expression to be replaced by longitude and
+  latitude found in GPS data
+- `**kwargs` _dict_ - key-value pairs to match entries in url according
+  to python string formatting
 
