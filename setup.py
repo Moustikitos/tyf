@@ -11,7 +11,9 @@ long_description = open("README.md", "r")
 kw.update(**{
     "version": f.read().strip(),
     "name": "Tyf",
-    "keywords": ["ifd", "tiff", "jpeg", "exif", "gps", "geotiff", "PIL", "Pillow"],
+    "keywords": [
+        "ifd", "tiff", "jpeg", "exif", "gps", "geotiff", "PIL", "Pillow"
+    ],
     "author": "Bruno THOORENS",
     "author_email": "moustikitos@gmail.com",
     "maintainer": "Bruno THOORENS",
