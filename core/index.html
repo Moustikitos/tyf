@@ -42,9 +42,6 @@
                             <li class="navitem active">
                                 <a href="./" class="nav-link">Core</a>
                             </li>
-                            <li class="navitem">
-                                <a href="../extend/" class="nav-link">Extend</a>
-                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav ml-auto">
@@ -59,7 +56,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a rel="next" href="../extend/" class="nav-link">
+                                <a rel="next" class="nav-link disabled">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -84,11 +81,6 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="1"><a href="#tyfgkd" class="nav-link">Tyf.gkd</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            
             <li class="nav-item" data-level="1"><a href="#tyfifd" class="nav-link">Tyf.ifd</a>
               <ul class="nav flex-column">
             <li class="nav-item" data-level="2"><a href="#tag-objects" class="nav-link">Tag Objects</a>
@@ -106,8 +98,6 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<p><a name="Tyf.gkd"></a></p>
-<h1 id="tyfgkd">Tyf.gkd</h1>
 <p><a name="Tyf.ifd"></a></p>
 <h1 id="tyfifd">Tyf.ifd</h1>
 <p><a name="Tyf.ifd.GeoKeyModel"></a></p>
@@ -182,7 +172,7 @@ matrix applied to raster coordinates plus altitude.</p>
 <li><code>tag_or_key</code> <em>int or string</em> - tag value or keyword</li>
 <li><code>value</code> <em>any</em> - value of the tag. If <code>None</code> is given, it is set to
   default value if anyone is defined else <code>_v</code> attribute
-  is not created.</li>
+  is not created</li>
 </ul>
 <p><a name="Tyf.ifd.Tag.read"></a></p>
 <h4 id="read">read</h4>
@@ -226,25 +216,7 @@ True
 <li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>(packed ifd entry - packed value - is offset boolean)</p>
-<p><a name="Tyf.ifd.getModelTiePoints"></a></p>
-<h4 id="getmodeltiepoints">getModelTiePoints</h4>
-<pre><code class="language-python">getModelTiePoints(cls)
-</code></pre>
-<p>Return tiepoint list found in <code>ModelTiepointTag</code> tags. This function sets
-a list of all points in private attribute <code>_model_tiepoints</code> on first
-call.</p>
-<pre><code>ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
-_model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
-</code></pre>
-<p><strong>Arguments</strong>:</p>
-<ul>
-<li><code>cls</code> <em>dict or Tyf.ifd.Ifd</em> - image file directory</li>
-</ul>
-<p><strong>Returns</strong>:</p>
-<p>Tiepoint <code>list</code></p>
-<p><strong>Raises</strong>:</p>
-<p>KeyError if no <code>ModelTiepointTag</code> defined</p>
+<p>packed ifd entry - packed value - is offset boolean</p>
 <p><a name="Tyf.ifd.Ifd"></a></p>
 <h2 id="ifd-objects">Ifd Objects</h2>
 <pre><code class="language-python">class Ifd(dict)
@@ -286,7 +258,7 @@ order: <code>exfT</code> - <code>gpsT</code> - <code>itrT</code>.</p>
 <h4 id="set_location">set_location</h4>
 <pre><code class="language-python"> | set_location(lon, lat, alt=0.)
 </code></pre>
-<p>Set GPS IFD tags according to given longitude, latitude nd altitude.
+<p>Set GPS IFD tags according to given longitude, latitude and altitude.
 If no GPS IFD exists, it is created according to version
 <code>(2, 2, 0, 0)</code>.</p>
 <pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
@@ -323,9 +295,52 @@ Exception: No location data found
 (5.62347, 45.21345, 12.0)
 </code></pre>
 <p><strong>Returns</strong>:</p>
-<p>longitude - latitude - altitude tuple</p>
+<p>longitude - latitude - altitude</p>
 <p><strong>Raises</strong>:</p>
-<p>Exception if no GPS IFD found</p></div>
+<p>Exception if no GPS IFD found</p>
+<p><a name="Tyf.ifd.Ifd.url_load_location"></a></p>
+<h4 id="url_load_location">url_load_location</h4>
+<pre><code class="language-python"> | url_load_location(url, **kwargs)
+</code></pre>
+<p>Return a static map image data from map provider.</p>
+<pre><code class="language-python">&gt;&gt;&gt; from Tyf import ifd
+&gt;&gt;&gt; i = ifd.Ifd()
+&gt;&gt;&gt; i.set_location(5.62347, 45.21345, 12)
+&gt;&gt;&gt; # below a mapbox-static-map url centered on [lon, lat] with a red
+&gt;&gt;&gt; # pin, width, height and zoom to be specified on call
+&gt;&gt;&gt; url = &quot;https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/static&quot;
+... &quot;/pin-s+f74e4e(%(lon)f,%(lat)f)/%(lon)f,%(lat)f,%(zoom)d,0&quot;
+... &quot;/%(width)dx%(height)d?access_token=%(token)s&quot;
+&gt;&gt;&gt; data = i.url_load_location(
+...    url, zoom=15, width=600, height=400, token=&quot;xx-xxxxxx-xx&quot;
+... )
+&gt;&gt;&gt; with io.open(&quot;dump.png&quot;, &quot;wb&quot;) as f:
+...    f.write(data)
+</code></pre>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>url</code> <em>str</em> - map provider url containing <code>%(lon)f</code> and <code>%(lat)f</code>
+  format expression to be replaced by longitude and
+  latitude found in GPS data</li>
+<li><code>**kwargs</code> <em>dict</em> - key-value pairs to match entries in url according
+  to python string formatting</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<p>Image data as <code>bytes</code> (py3) or <code>str</code> (py2)</p>
+<p><a name="Tyf.ifd.Ifd.dump_location"></a></p>
+<h4 id="dump_location">dump_location</h4>
+<pre><code class="language-python"> | dump_location(name, url, **kwargs)
+</code></pre>
+<p>Dump a static map image from map provider into filesystem.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>name</code> <em>str</em> - a valid filepath</li>
+<li><code>url</code> <em>str</em> - map provider url containing <code>%(lon)f</code> and <code>%(lat)f</code>
+  format expression to be replaced by longitude and
+  latitude found in GPS data</li>
+<li><code>**kwargs</code> <em>dict</em> - key-value pairs to match entries in url according
+  to python string formatting</li>
+</ul></div>
             </div>
         </div>
 
