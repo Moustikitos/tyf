@@ -9,10 +9,11 @@
 [![Downloads](https://pepy.tech/badge/Tyf/week)](https://pepy.tech/project/tyf)
 
 ## Support this project
-[Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
-
- + [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
- + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
+ + Patron me directly:
+   * [X] [![Liberapay receiving](https://img.shields.io/liberapay/receives/Toons)](https://liberapay.com/Toons/donate)
+ + [Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
+   * [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
+   * [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
 
 ## Why this package ?
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
