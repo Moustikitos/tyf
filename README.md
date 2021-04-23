@@ -12,7 +12,7 @@
 [Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
 
  + [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
- + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
+ + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://dpos.arky-delegate.info/arky)
 
 ## Why this package ?
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
