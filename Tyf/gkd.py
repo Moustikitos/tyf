@@ -63,8 +63,9 @@ _2KEY = dict((v, k) for k, v in _2TAG.items())
 
 
 class GkdTag:
+    #: 
     strict = True
-
+    #: 
     info = property(
         lambda cls: getattr(
             values, _2KEY.get(cls.tag, cls.key), {}
@@ -186,3 +187,4 @@ class Gkd(dict):
     def tags(self):
         for v in sorted(dict.values(self), key=lambda e: e.tag):
             yield v
+    __iter__ = tags
