@@ -29,6 +29,13 @@ import xml.etree.ElementTree as xmp
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
+class InvalidFileError(Exception):
+  """
+  Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a bigtiff
+  """
+  pass
+
+
 #: Type definition linking tag type value to python `struct` format
 TYPES = {
     1:  ("B",  "UCHAR or USHORT"),
@@ -263,14 +270,16 @@ def open(f):
         obj = JpegFile(fileobj)
     elif first in [0x4d4d, 0x4949]:
         obj = TiffFile(fileobj)
+    else:
+        obj = None
 
     if _close:
         fileobj.close()
 
-    try:
+    if obj is None:
+        raise InvalidFileError("file is not a valid JPEG nor TIFF image")
+    else:
         return obj
-    except Exception:
-        raise Exception("file is not a valid JPEG nor TIFF image")
 
 
 def getGeokeyDirectories(cls):
@@ -322,9 +331,9 @@ class TiffFile(list):
         if magic_number not in [0x732E, 0x2A]:  # 29486, 42
             fileobj.close()
             if magic_number == 0x2B:  # 43
-                raise IOError("BigTIFF file not supported")
+                raise InvalidFileError("BigTIFF file not supported")
             else:
-                raise IOError("Bad magic number. Not a valid TIFF file")
+                raise InvalidFileError("Bad magic number. Not a valid TIFF file")
 
         ifds = []
         next_ifd, = unpack(byteorder+"L", fileobj)
@@ -421,7 +430,7 @@ class JpegFile(list):
         fileobj.seek(0)
         marker, = unpack(">H", fileobj)
         if marker != 0xffd8:
-            raise Exception("not a valid jpeg file")
+            raise InvalidFileError("not a valid jpeg file")
 
         while marker != 0xffd9:  # EOI (End Of Image) Marker
             marker, count = unpack(">HH", fileobj)
