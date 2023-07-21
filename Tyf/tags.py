@@ -1,5 +1,6 @@
 # -*- encoding:utf-8 -*-
 # ~ http://www.awaresystems.be/imaging/tiff.html
+# ~ https://www.exiv2.org/tags.html
 
 from Tyf import reduce
 
@@ -250,6 +251,7 @@ exfT = {
     41995: ("DeviceSettingDescription", [7], None, "This tag indicates information on the picture-taking conditions of a particular camera model"),
     41996: ("SubjectDistanceRange", [1], None, "Indicates the distance to the subject"),
     42016: ("ImageUniqueID", [2], None, "Indicates an identifier assigned uniquely to each image"),
+    42033: ("BodySerialNumber", [2], None, "This tag records the serial number of the body of the camera that was used in photography as an ASCII string."),
     0xea1c: ("Padding", [7], None, ""),
 }
 _exfT = dict(
@@ -327,7 +329,7 @@ def get(tag_or_key):
         for dic in [_BY_NAME, _exfT, _gpsT, _itrT]:
             if tag_or_key in dic:
                 tag, types, default, comment = dic[tag_or_key]
-                return tag, (tag_or_key, types, default, comment) 
+                return tag, (tag_or_key, types, default, comment)
     else:
         for dic in [_BY_TAG, exfT, gpsT, itrT]:
             if tag_or_key in dic:
