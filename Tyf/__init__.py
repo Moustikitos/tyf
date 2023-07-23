@@ -460,7 +460,7 @@ class JpegFile(list):
                 elif b"ns.adobe.com" in data[:30]:
                     xmp_data_idx = data.find(b"\x00")
                     self.__xmp_idx = len(sgmt)
-                    self.__xmp_header = data[:xmp_data_idx]
+                    self.__xmp_ns = data[:xmp_data_idx]
                     sgmt.append(
                         (0xffe1, xmp.fromstring(data[xmp_data_idx+1:]))
                     )
@@ -490,6 +490,40 @@ class JpegFile(list):
         ```
         """
         return self.ifd1.get(item, default)
+
+    def set_xmp(self, tag, value, ns="http://ns.adobe.com/exif/1.0/"):
+        """
+        Set xmp tag value. Custom namespace can be used.
+
+        Arguments:
+            tag (str): tag.
+            value (str): tag value.
+            ns (url): xml namespace url (default to
+                http://ns.adobe.com/exif/1.0/).
+        """
+        item = "{%s}%s" % (ns, tag)
+        elem = self.xmp.find(".//" + item)
+        if elem is None:
+            elem = xmp.SubElement(self.xmp[0], item)
+        elem.text = "%s" % value
+
+    def get_xmp(self, tag, ns="http://ns.adobe.com/exif/1.0/"):
+        """
+        Get xmp tag value. Custom namespace can be used.
+
+        Arguments:
+            tag (str): tag.
+            ns (url): xml namespace url (default to
+                http://ns.adobe.com/exif/1.0/).
+
+        Returns:
+            str: tag value.
+        """
+
+        item = "{%s}%s" % (ns, tag)
+        elem = self.xmp.find(".//" + item)
+        if elem is not None:
+            return elem.text
 
     def save(self, f):
         """
@@ -522,7 +556,7 @@ class JpegFile(list):
                     string.close()
                 elif isinstance(value, xmp.Element):
                     data = xmp.tostring(self.xmp)
-                    value = self.__xmp_header + b"\x00" + (
+                    value = self.__xmp_ns + b"\x00" + (
                         data if isinstance(data, bytes)
                         else data.encode("utf-8")
                     )
