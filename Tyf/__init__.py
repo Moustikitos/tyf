@@ -29,11 +29,13 @@ import xml.etree.ElementTree as xmp
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
 
+
 class InvalidFileError(Exception):
-  """
-  Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a bigtiff
-  """
-  pass
+    """
+    Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a
+    bigtiff
+    """
+    pass
 
 
 #: Type definition linking tag type value to python `struct` format
@@ -333,7 +335,9 @@ class TiffFile(list):
             if magic_number == 0x2B:  # 43
                 raise InvalidFileError("BigTIFF file not supported")
             else:
-                raise InvalidFileError("Bad magic number. Not a valid TIFF file")
+                raise InvalidFileError(
+                    "Bad magic number. Not a valid TIFF file"
+                )
 
         ifds = []
         next_ifd, = unpack(byteorder+"L", fileobj)
@@ -420,6 +424,13 @@ class JpegFile(list):
         None, None, "readonly thumbnail IFD attribute"
     )
 
+    @property
+    def xmp(obj):
+        try:
+            return list.__getitem__(obj, obj.__xmp_idx)[-1]
+        except AttributeError:
+            return None
+
     def __init__(self, fileobj):
         """
         Arguments:
@@ -447,8 +458,12 @@ class JpegFile(list):
                     string.close()
                     sgmt.append((0xffe1, self.ifd))
                 elif b"ns.adobe.com" in data[:30]:
-                    self.xmp = xmp.fromstring(data[data.find(b"\x00")+1:])
-                    sgmt.append((0xffe1, self.xmp))
+                    xmp_data_idx = data.find(b"\x00")
+                    self.__xmp_idx = len(sgmt)
+                    self.__xmp_header = data[:xmp_data_idx]
+                    sgmt.append(
+                        (0xffe1, xmp.fromstring(data[xmp_data_idx+1:]))
+                    )
             else:
                 sgmt.append((marker, fileobj.read(count-2)))
 
@@ -507,7 +522,7 @@ class JpegFile(list):
                     string.close()
                 elif isinstance(value, xmp.Element):
                     data = xmp.tostring(self.xmp)
-                    value = b"http://ns.adobe.com/xap/1.0/\x00" + (
+                    value = self.__xmp_header + b"\x00" + (
                         data if isinstance(data, bytes)
                         else data.encode("utf-8")
                     )
