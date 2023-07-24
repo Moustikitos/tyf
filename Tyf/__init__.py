@@ -27,7 +27,20 @@ import operator
 import xml.etree.ElementTree as xmp
 
 __PY3__ = sys.version_info[0] >= 3
+
 __XMP__ = True
+
+#: Adobe namespaces mapping related to TIFF and JPEG File
+XmpNamespace = dict(
+    RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    TIFF="http://ns.adobe.com/tiff/1.0/",
+    ADOBE="http://ns.adobe.com/xap/1.0/",
+    PHOTOSHOP="http://ns.adobe.com/photoshop/1.0/",
+    EXIF="http://ns.adobe.com/exif/1.0/",
+    MICROSOFT="http://ns.microsoft.com/photo/1.0",
+    CAMERA_RAW_SETTINGS="http://ns.adobe.com/camera-raw-settings/1.0/",
+    IPTC="http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"
+)
 
 
 class InvalidFileError(Exception):
@@ -35,7 +48,6 @@ class InvalidFileError(Exception):
     Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a
     bigtiff
     """
-    pass
 
 
 #: Type definition linking tag type value to python `struct` format
@@ -92,6 +104,7 @@ def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
     return next_ifd_offset
 
 
+# TODO: improve speed
 def _from_buffer(obj, fileobj, offset, byteorder="<"):
     "Read IFD and sub IFD from file object and return next IFD offset."
     # read data from offset and get next ifd offset
@@ -107,7 +120,7 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
         )
         _read_IFD(
             obj, fileobj, obj[key], byteorder,
-            db=dict([(i[0], i[-1][0]) for i in dic.items()])
+            db=dict((k, v[0]) for k, v in dic.items())
         )
     fileobj.seek(next_ifd_offset)
     next_ifd, = unpack(byteorder+"L", fileobj)
@@ -501,11 +514,19 @@ class JpegFile(list):
             ns (url): xml namespace url (default to
                 http://ns.adobe.com/exif/1.0/).
         """
-        item = "{%s}%s" % (ns, tag)
-        elem = self.xmp.find(".//" + item)
-        if elem is None:
-            elem = xmp.SubElement(self.xmp[0], item)
+        ns = XmpNamespace.get(ns, ns)
+        # try to get a parent node containing at least one tag with the
+        # according namespace
+        parent = self.xmp.find(".//{%s}*/..." % ns)
+        if parent is None:
+            # create a 'Description' node in root element with rdf namespace
+            parent = xmp.SubElement(
+                self.xmp[0], "{%s}Description" % XmpNamespace["RDF"]
+            )
+        # add element with the appropriate namespace
+        elem = xmp.SubElement(parent, "{%s}%s" % (ns, tag))
         elem.text = "%s" % value
+        return elem
 
     def get_xmp(self, tag, ns="http://ns.adobe.com/exif/1.0/"):
         """
@@ -519,8 +540,7 @@ class JpegFile(list):
         Returns:
             str: tag value.
         """
-
-        item = "{%s}%s" % (ns, tag)
+        item = "{%s}%s" % (XmpNamespace.get(ns, ns), tag)
         elem = self.xmp.find(".//" + item)
         if elem is not None:
             return elem.text

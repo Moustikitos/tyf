@@ -4,6 +4,7 @@
 
 from Tyf import reduce
 
+
 # Baseline TIFF tags
 bTT = {
     254:   ("NewSubfileType", [1], (0,), "A general indication of the kind of data contained in this subfile"),
