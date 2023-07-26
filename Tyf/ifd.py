@@ -9,10 +9,8 @@ from Tyf import tags, encoders, decoders, values
 
 try:
     from urllib.request import urlopen
-    from io import BytesIO as StringIO
 except ImportError:
     from urllib import urlopen
-    from cStringIO import StringIO
 
 
 #: Mapping of named tuple to be used with geotiff `ModelPixelScaleTag`,
@@ -160,7 +158,7 @@ class Tag(object):
             return "<IFD tag %s:%r>" % (self.key, self.value)
 
     @staticmethod
-    def read(fileobj, byteorder, db=None):
+    def read(fileobj, byteorder):
         """
         Extract an IFD tag from buffer current position. Buffer position is
         adjusted to the end of IFD entry before returning the value.
@@ -168,7 +166,6 @@ class Tag(object):
         Arguments:
             fileobj (buffer): a python file object
             byteorder (string): `">"` if big-endian used else `"<"`
-            db (dict): authorized tag database
         Returns:
             `Tyf.ifd.Tag`
         """
@@ -178,7 +175,6 @@ class Tag(object):
             fmt, fileobj.read(struct.calcsize(fmt))
         )
         cls = Tag(tag)
-        cls.key, cls._types, cls.default, cls.comment = tags.get(tag)[-1]
         cls.type = typ
         # extract value_or_offset
         value_or_offset = fileobj.read(struct.calcsize("=L"))
@@ -210,6 +206,8 @@ class Tag(object):
             else:
                 value = b"".join(value)
         cls._v = value
+        if cls.tag is False:
+            print(f"unknown tag {tag} type {cls._types}: {cls} ignored")
         return cls
 
     def calcsize(self):
@@ -370,7 +368,7 @@ class Ifd(dict):
     def __init__(self, **kwargs):
         dict.__init__(self)
         self.tag_family = kwargs.pop(
-            "tag_family", [tags.bTT, tags.xTT, tags.pTT]
+            "tag_family", ["bTT", "xTT", "pTT"]
         )
 
     def __delattr__(self, attr):
@@ -444,15 +442,14 @@ class Ifd(dict):
         return default
 
     def append(self, tag):
-        for dic in self.tag_family:
-            if tag.tag in dic:
+        for family in self.tag_family:
+            if tags.in_family(tag.key, family):
                 return dict.__setitem__(self, tag.key, tag)
-        for name in ["exfT", "gpsT", "itrT"]:
-            dic = getattr(tags, "_" + name, {})
-            if tag.key in dic:
-                if not hasattr(self, name):
-                    setattr(self, name, Ifd(tag_family=[getattr(tags, name)]))
-                return dict.__setitem__(getattr(self, name), tag.key, tag)
+        for family in ["exfT", "gpsT", "itrT"]:
+            if tags.in_family(tag.key, family):
+                if not hasattr(self, family):
+                    setattr(self, family, Ifd(tag_family=[family]))
+                return dict.__setitem__(getattr(self, family), tag.key, tag)
 
     def tags(self):
         """
@@ -529,7 +526,7 @@ class Ifd(dict):
             alt (float): altitude in meters
         """
         if not hasattr(self, "gpsT"):
-            setattr(self, "gpsT", Ifd(tag_family=[tags.gpsT]))
+            setattr(self, "gpsT", Ifd(tag_family=["gpsT"]))
         if "GPSVersionID" not in self:
             dict.__setitem__(self.gpsT, "GPSVersionID", Tag("GPSVersionID"))
         self["GPSLatitudeRef"] = "n" if lat >= 0 else "s"
@@ -621,10 +618,10 @@ class Ifd(dict):
         Arguments:
             name (str): a valid filepath
             url (str): map provider url containing `%(lon)f` and `%(lat)f`
-                       format expression to be replaced by longitude and
-                       latitude found in GPS data
+                format expression to be replaced by longitude and latitude
+                found in GPS data
             **kwargs (dict): key-value pairs to match entries in url according
-                             to python string formatting
+                to python string formatting
         """
         with io.open(name, "wb") as fileobj:
             fileobj.write(self.url_load_location(url, **kwargs))
@@ -657,14 +654,12 @@ class Ifd(dict):
         return lambda x, y, z=0., m=matrix: Transform(m, x, y, z)
 
 
-def dump_mapbox_location(
-    cls, name, zoom=15, width=400, height=300,
-    token="pk.eyJ1IjoibW91c2lraXRvcyIsImEiOiJja2k2bGw2bnkzMXZ2MnJtcHlyejFrNXd4"
-          "In0.JIyrV6sWjehsRHKVMBDFaw",
-):
+def dump_mapbox_location(cls, name, zoom=15, width=400, height=300, token=""):
     """
     Free `Tyf.ifd.Ifd.url_load_location` use case.
-    [Use your own Mapbox token](https://docs.mapbox.com/api/overview/#access-tokens-and-token-scopes).
+    [Use your own Mapbox token]
+        https://docs.mapbox.com/api/overview/#access-tokens-and-token-scopes
+    ).
 
     Arguments:
         cls (dict or Tyf.ifd.Ifd): IFD containing GPS data

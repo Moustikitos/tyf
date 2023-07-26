@@ -3,7 +3,8 @@
 # Bibliography
  + [Tiff 6.0 spec](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)
  + [GeoTiFF 1.8.1 spec](https://htmlpreview.github.io/?https://github.com/OSGeo/libgeotiff/blob/master/geotiff/html/spec/geotiff2.6.html)
- + [JPEG FIF 1.02](https://www.w3.org/Graphics/JPEG/jfif3.pdf)
+ + [JPEG FIF 1.02 spec](https://www.w3.org/Graphics/JPEG/jfif3.pdf)
+ + [XMP spec](https://developer.adobe.com/xmp/docs/XMPSpecifications/)
 
 Tyf package aims to provide pythonic way to interact with metadata in TIFF and
 JPEG files.
@@ -13,7 +14,7 @@ JPEG files.
 ```
 """
 
-__copyright__ = """Copyright © 2015-2020 - BSD Licence"""
+__copyright__ = """Copyright © 2015-2023 - BSD Licence"""
 __author__ = "THOORENS Bruno"
 __tiff__ = (6, 0)
 __geotiff__ = (1, 8, 1)
@@ -27,7 +28,6 @@ import operator
 import xml.etree.ElementTree as xmp
 
 __PY3__ = sys.version_info[0] >= 3
-
 __XMP__ = True
 
 #: Adobe namespaces mapping related to TIFF and JPEG File
@@ -46,7 +46,7 @@ XmpNamespace = dict(
 class InvalidFileError(Exception):
     """
     Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a
-    bigtiff
+    bigtiff.
     """
 
 
@@ -79,7 +79,7 @@ else:
     reduce = __builtins__["reduce"]
 
 # here to avoid circular import
-from Tyf import ifd, gkd, tags
+from Tyf import ifd, gkd
 
 
 def unpack(fmt, fileobj):
@@ -90,7 +90,7 @@ def pack(fmt, fileobj, value):
     return fileobj.write(struct.pack(fmt, *value))
 
 
-def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
+def _read_IFD(obj, fileobj, offset, byteorder="<"):
     "Read IFD from file object and return next IFD offset."
     # fileobj seek must be on the start offset
     fileobj.seek(offset)
@@ -99,12 +99,11 @@ def _read_IFD(obj, fileobj, offset, byteorder="<", db=None):
     next_ifd_offset = offset + struct.calcsize("=H" + nb_entry*"HHLL")
     # for each entry
     for i in range(nb_entry):
-        obj.append(ifd.Tag.read(fileobj, byteorder, db=db))
+        obj.append(ifd.Tag.read(fileobj, byteorder))
     # return next ifd offset, if =0 then end of TIFF
     return next_ifd_offset
 
 
-# TODO: improve speed
 def _from_buffer(obj, fileobj, offset, byteorder="<"):
     "Read IFD and sub IFD from file object and return next IFD offset."
     # read data from offset and get next ifd offset
@@ -112,16 +111,7 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
     # read sub IFD if any
     for key in set(["GPS IFD", "Exif IFD", "Interoperability IFD"]) \
             & set(obj.keys()):
-        dic = getattr(
-            tags,
-            "gpsT" if "GPS" in key else
-            "exfT" if "Exif" in key else
-            "itrT"
-        )
-        _read_IFD(
-            obj, fileobj, obj[key], byteorder,
-            db=dict((k, v[0]) for k, v in dic.items())
-        )
+        _read_IFD(obj, fileobj, obj[key], byteorder)
     fileobj.seek(next_ifd_offset)
     next_ifd, = unpack(byteorder+"L", fileobj)
     return next_ifd
@@ -259,6 +249,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
 
 
 def _fileobj(f, mode):
+    #: returns fileobj from a path or a stringIO
     if hasattr(f, "close"):
         fileobj = f
         _close = False
@@ -270,11 +261,13 @@ def _fileobj(f, mode):
 
 def open(f):
     """
-    Return JpegFile or TiffFile according to `f`. If it is a file object,
-    it is not closed.
+    Return `JpegFile` or `TiffFile` instance according to argument.
 
-    Arguments:
-        f (buffer or string): a valid file path or a python file object
+    Args:
+        f (buffer or string): a valid file path or a python file object.
+
+    Returns:
+        Tyf.JpegFile|Tyf.TiffFile: JPEG or TIFF instance.
     """
     fileobj, _close = _fileobj(f, "rb")
 
@@ -298,6 +291,7 @@ def open(f):
 
 
 def getGeokeyDirectories(cls):
+    #: create _geokey_directories or return it
     if not hasattr(cls, "_geokey_directories"):
         setattr(cls, "_geokey_directories", [
             gkd.Gkd.from_ifd(ifd) for ifd in cls
@@ -307,7 +301,11 @@ def getGeokeyDirectories(cls):
 
 class TiffFile(list):
     """
-    List of IFD found in TIFF file.
+    This class is is a list of all Image File Directories defining the TIFF
+    file.
+
+    Args:
+        fileobj (buffer): a python file object.
 
     ```python
     >>> tif = Tyf.open("test/CEA.tif")
@@ -355,7 +353,7 @@ class TiffFile(list):
         ifds = []
         next_ifd, = unpack(byteorder+"L", fileobj)
         while next_ifd != 0:
-            i = ifd.Ifd(tag_family=[tags.bTT, tags.pTT, tags.xTT])
+            i = ifd.Ifd(tag_family=["bTT", "pTT", "xTT"])
             next_ifd = _from_buffer(i, fileobj, next_ifd, byteorder)
             ifds.append(i)
 
@@ -379,15 +377,14 @@ class TiffFile(list):
 
     def save(self, f, byteorder="<", idx=None, ifd1=None):
         """
-        Save object as a TIFF file. If `f` is a file object, it is not
-        closed.
+        Save object into a TIFF file.
 
         Arguments:
-            f (buffer or string): a valid file path or a python file object
+            f (buffer|string): a valid file path or a python file object
             byteorder (string): `">"` if big-endian used else `"<"`
             idx (int): IFD index to save
             ifd1 (Tyf.ifd.Ifd): IFD to be used as thumbnail (only needed with
-                                JPEG saving)
+                JPEG saving)
         """
         self.load_raster()
         fileobj, _close = _fileobj(f, "wb")
@@ -410,9 +407,12 @@ class TiffFile(list):
 class JpegFile(list):
     """
     List of JPEG segment tuple (marker, segment) defining the JPEG file. Tyf
-    manage to extract xmd data as python `ElementTree` object and EXIF data
+    manage to extract xmp data as python `ElementTree` object and EXIF data
     as IFD. `ifd0` is a shortcut to JPEF Exif, `ifd1` is a shortcut to JPEG
     Thumbnail and `xmp` is a shortcut to XMP data.
+
+    Args:
+        fileobj (buffer): a python file object.
 
     ```python
     >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
@@ -439,16 +439,13 @@ class JpegFile(list):
 
     @property
     def xmp(obj):
+        "readonly XMP attribute"
         try:
             return list.__getitem__(obj, obj.__xmp_idx)[-1]
         except AttributeError:
             return None
 
     def __init__(self, fileobj):
-        """
-        Arguments:
-            fileobj: a python file object
-        """
         sgmt = []
 
         fileobj.seek(0)
@@ -508,7 +505,7 @@ class JpegFile(list):
         """
         Set xmp tag value. Custom namespace can be used.
 
-        Arguments:
+        Args:
             tag (str): tag.
             value (str): tag value.
             ns (url): xml namespace url (default to
@@ -532,7 +529,7 @@ class JpegFile(list):
         """
         Get xmp tag value. Custom namespace can be used.
 
-        Arguments:
+        Args:
             tag (str): tag.
             ns (url): xml namespace url (default to
                 http://ns.adobe.com/exif/1.0/).
@@ -548,8 +545,7 @@ class JpegFile(list):
     def save(self, f):
         """
         Save object as a JPEG file. All segmet are writed in current order,
-        only `ifd0`, `ifd1` and `xmp` are recomputed. If `f` is a file
-        object, it is not closed.
+        only `ifd0`, `ifd1` and `xmp` are recomputed.
 
         Arguments:
             f (buffer or string): a valid file path or a python file object
@@ -598,7 +594,7 @@ class JpegFile(list):
     def save_thumbnail(self, f):
         """
         Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
-        automatically appended. If `f` is a file object, it is not closed.
+        automatically appended.
 
         Arguments:
             f (buffer or string): a valid file path or a python file object
@@ -642,17 +638,6 @@ class JpegFile(list):
         if _close:
             fileobj.close()
             del fileobj
-
-    def strip_exif(self):
-        """
-        Remove EXIF from JPEG, keeping XMP segment untouched.
-        """
-        ifd = self.ifd
-        ifd0 = self.ifd0
-        while len(ifd) > 1:
-            ifd.pop(-1)
-        for key in list(k for k in dict.__iter__(ifd0) if k not in tags.bTT):
-            ifd0.pop(key)
 
 
 # if PIL exists do some overridings
