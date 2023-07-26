@@ -257,3 +257,7 @@ def GPSDateStamp(value):
         raise EncodingException(
             "%s is not a valide time object" % (value, )
         )
+
+
+def XMP(value):
+    return tuple(bytearray(value.encode("utf-8")))

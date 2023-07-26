@@ -115,3 +115,9 @@ def GPSTimeStamp(value):
 def GPSDateStamp(value):
     dt = datetime.datetime.strptime(_2(value), "%Y:%m:%d")
     return datetime.date(dt.year, dt.month, dt.day)
+
+
+# XMP tag
+
+def XMP(value):
+    return bytearray(value).decode("utf-8")
