@@ -110,3 +110,4 @@ debug.py
 .vscode
 .generated-files.txt
 site/
+.venv/

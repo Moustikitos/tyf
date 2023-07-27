@@ -8,5 +8,5 @@ repo_name: GitHub
 repo_url: https://github.com/Moustikitos/Tyf
 site_name: The Tyf Project
 theme:
-  name: mkdocs
+  name: readthedocs
   nav_style: light

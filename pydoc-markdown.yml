@@ -35,5 +35,5 @@ renderer:
     repo_name: GitHub
     copyright: Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence
     theme:
-      name: mkdocs
+      name: readthedocs
       nav_style: light
