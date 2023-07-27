@@ -1,124 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="None">
-        
-        
-        <link rel="shortcut icon" href="img/favicon.ico">
-        <title>The Tyf Project</title>
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <link href="css/font-awesome.min.css" rel="stylesheet">
-        <link href="css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-
-        <script src="js/jquery-1.10.2.min.js" defer></script>
-        <script src="js/bootstrap.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-        <script>hljs.initHighlightingOnLoad();</script> 
-    </head>
-
-    <body class="homepage">
-        <div class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" href=".">The Tyf Project</a>
-                <!-- Expander button -->
-                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <!-- Expanded navigation -->
-                <div id="navbar-collapse" class="navbar-collapse collapse">
-                        <!-- Main navigation -->
-                        <ul class="nav navbar-nav">
-                            <li class="navitem active">
-                                <a href="." class="nav-link">Overview</a>
-                            </li>
-                            <li class="navitem">
-                                <a href="api/" class="nav-link">API</a>
-                            </li>
-                            <li class="navitem">
-                                <a href="core/" class="nav-link">Core</a>
-                            </li>
-                        </ul>
-
-                    <ul class="nav navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
-                                <i class="fa fa-search"></i> Search
-                            </a>
-                        </li>
-                            <li class="nav-item">
-                                <a rel="prev" class="nav-link disabled">
-                                    <i class="fa fa-arrow-left"></i> Previous
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a rel="next" href="api/" class="nav-link">
-                                    Next <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://github.com/Moustikitos/Tyf/edit/master/docs/index.md" class="nav-link"><i class="fa fa-github"></i> Edit on GitHub</a>
-                            </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="row">
-                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
-            <span class="fa fa-angle-down"></span>
-        </button>
-    </div>
-
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>The Tyf Project</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
-    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
-        <ul class="nav flex-column">
-            
-            <li class="nav-item" data-level="1"><a href="#tyf" class="nav-link">Tyf</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#copyright" class="nav-link">Copyright</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#distribution" class="nav-link">Distribution</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#support-this-project" class="nav-link">Support this project</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#why-this-package" class="nav-link">Why this package ?</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#documentation" class="nav-link">Documentation</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#quick-view" class="nav-link">Quick view</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#contribute" class="nav-link">Contribute</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-        </ul>
-    </div>
-</div></div>
-                    <div class="col-md-9" role="main">
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Overview";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
 
-<h1 id="tyf"><code>Tyf</code></h1>
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> The Tyf Project
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href=".">Overview</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#copyright">Copyright</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#distribution">Distribution</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#support-this-project">Support this project</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#why-this-package">Why this package ?</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#read-write-exif-and-ifd-data">Read / write EXIF and IFD data</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#do-more-with-jpeg-and-tiff-files">Do more with JPEG and TIFF files</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#quick-view">Quick view</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#tyfifdifd-class">Tyf.ifd.Ifd class</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#contribute">Contribute</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#bug-report-feedback">Bug report &amp; feedback</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#add-modify-fix-code">Add / modify / fix code</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api/">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="core/">Core</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">The Tyf Project</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
+      <li>Overview</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Moustikitos/Tyf/edit/master/docs/index.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="tyf"><code>Tyf</code></h1>
 <h2 id="copyright">Copyright</h2>
 <p><a href="https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html"><img alt="pypi" src="https://img.shields.io/pypi/l/Tyf.svg" /></a></p>
 <h2 id="distribution">Distribution</h2>
@@ -127,10 +117,11 @@
 <a href="https://pypi.python.org/pypi/Tyf"><img alt="pypi" src="https://img.shields.io/badge/wheel-yes-brightgreen.svg" /></a>
 <a href="https://pepy.tech/project/tyf"><img alt="Downloads" src="https://pepy.tech/badge/Tyf/week" /></a></p>
 <h2 id="support-this-project">Support this project</h2>
+<p><a href="https://liberapay.com/Toons/donate"><img alt="Liberapay receiving" src="https://img.shields.io/liberapay/goal/Toons?logo=liberapay" /></a></p>
 <p><a href="https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT">Buy &#1126;</a> and:</p>
 <ul>
 <li>[X] Send &#1126; to <code>AUahWfkfr5J4tYakugRbfow7RWVTK35GPW</code></li>
-<li>[X] Vote <code>arky</code> on <a href="https://explorer.ark.io">Ark blockchain</a> and <a href="http://arky-delegate.info/arky">earn &#1126; weekly</a></li>
+<li>[X] Vote <code>arky</code> on <a href="https://explorer.ark.io">Ark blockchain</a> and <a href="http://dpos.arky-delegate.info/arky">earn &#1126; weekly</a></li>
 </ul>
 <h2 id="why-this-package">Why this package ?</h2>
 <p>Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.</p>
@@ -141,14 +132,13 @@
 <li>read / edit EXIF data from JPEG images</li>
 <li>read / edit IFD data from TIFF images</li>
 <li>read / edit GEOTIFF data from IFD</li>
-<li>read / edit XMP data from IFD</li>
+<li>read / edit XMP data from IFD and JPEG images</li>
 <li>work directly with python numbers, string and datetime</li>
 <li>interpolate map coordinates using GEOTIFF ModelTransformation</li>
 </ul>
 <h3 id="do-more-with-jpeg-and-tiff-files">Do more with JPEG and TIFF files</h3>
 <ul>
 <li>extract TIFF or JPEG thumbnails from JPEG files</li>
-<li>strip EXIF data from JPEG File</li>
 <li>dump EXIF data from JPEG into file</li>
 <li>dump location thumbnail using any map provider API</li>
 </ul>
@@ -158,13 +148,30 @@
 &gt;&gt;&gt; jpg.__class__
 &lt;class 'Tyf.JpegFile'&gt;
 &gt;&gt;&gt; print(Tyf.xmp.tostring(jpg.xmp).decode()) 
-&lt;ns0:xmpmeta xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:ns0=&quot;adobe:ns:meta/&quot; xmlns:ns3=&quot;http://ns.adobe.com/xap/1.0/&quot; xmlns:ns4=&quot;http://ns.microsoft.com/photo/1.0/&quot; xmlns:rdf=&quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;&gt;&lt;rdf:RDF&gt;&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;&lt;dc:title&gt;&lt;rdf:Alt&gt;&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;
-  &lt;/dc:title&gt;&lt;dc:description&gt;&lt;rdf:Alt&gt;&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;
-  &lt;/dc:description&gt;&lt;dc:creator&gt;&lt;rdf:Seq&gt;&lt;rdf:li&gt;THOORENS Bruno&lt;/rdf:li&gt;&lt;/rdf:Seq&gt;
-  &lt;/dc:creator&gt;&lt;dc:rights&gt;&lt;rdf:Alt&gt;&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;THOORENS Bruno&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;
-  &lt;/dc:rights&gt;&lt;/rdf:Description&gt;&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot; /&gt;&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;&lt;ns3:Rating&gt;4&lt;/ns3:Rating&gt;&lt;/rdf:Description&gt;&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;&lt;ns4:Rating&gt;75&lt;/ns4:Rating&gt;&lt;ns4:LastKeywordXMP&gt;&lt;rdf:Bag&gt;&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
-  &lt;/ns4:LastKeywordXMP&gt;&lt;/rdf:Description&gt;&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;&lt;dc:subject&gt;&lt;rdf:Bag&gt;&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
-  &lt;/dc:subject&gt;&lt;/rdf:Description&gt;&lt;/rdf:RDF&gt;&lt;/ns0:xmpmeta&gt;
+&lt;ns0:xmpmeta
+ xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot;
+ xmlns:ns0=&quot;adobe:ns:meta/&quot; xmlns:ns3=&quot;http://ns.adobe.com/xap/1.0/&quot;
+ xmlns:ns4=&quot;http://ns.microsoft.com/photo/1.0/&quot;
+ xmlns:rdf=&quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;&gt;&lt;rdf:RDF&gt;
+&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
+&lt;dc:title&gt;&lt;rdf:Alt&gt;&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;
+&lt;/rdf:Alt&gt;&lt;/dc:title&gt;&lt;dc:description&gt;&lt;rdf:Alt&gt;
+&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;
+&lt;/dc:description&gt;&lt;dc:creator&gt;&lt;rdf:Seq&gt;&lt;rdf:li&gt;THOORENS Bruno&lt;/rdf:li&gt;
+&lt;/rdf:Seq&gt;&lt;/dc:creator&gt;&lt;dc:rights&gt;&lt;rdf:Alt&gt;
+&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;THOORENS Bruno&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;&lt;/dc:rights&gt;
+&lt;/rdf:Description&gt;
+&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot; /&gt;
+&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
+&lt;ns3:Rating&gt;4&lt;/ns3:Rating&gt;&lt;/rdf:Description&gt;
+&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
+&lt;ns4:Rating&gt;75&lt;/ns4:Rating&gt;&lt;ns4:LastKeywordXMP&gt;&lt;rdf:Bag&gt;
+&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
+&lt;/ns4:LastKeywordXMP&gt;&lt;/rdf:Description&gt;
+&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
+&lt;dc:subject&gt;&lt;rdf:Bag&gt;&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
+&lt;/dc:subject&gt;&lt;/rdf:Description&gt;
+&lt;/rdf:RDF&gt;&lt;/ns0:xmpmeta&gt;
 &gt;&gt;&gt; jpg.save_thumbnail(&quot;test/test_thumb&quot;) # extension automatically added
 </code></pre>
 <p><img alt="EXIF thumbnail" src="https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg" /></p>
@@ -269,90 +276,58 @@ True
 <li>start a pull request</li>
 </ul>
 </li>
-</ol></div>
+</ol>
+              
             </div>
-        </div>
-
-        <footer class="col-md-12">
-            <hr>
-                <p>Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence</p>
-            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
-        </footer>
-        <script>
-            var base_url = ".",
-                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
-        </script>
-        <script src="js/base.js" defer></script>
-        <script src="search/main.js" defer></script>
-
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="searchModalLabel">Search</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            </div>
-            <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form>
-                    <div class="form-group">
-                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
-                    </div>
-                </form>
-                <div id="mkdocs-search-results"></div>
-            </div>
-            <div class="modal-footer">
-            </div>
-        </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            </div>
-            <div class="modal-body">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th style="width: 20%;">Keys</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="help shortcut"><kbd>?</kbd></td>
-                    <td>Open this help</td>
-                  </tr>
-                  <tr>
-                    <td class="next shortcut"><kbd>n</kbd></td>
-                    <td>Next page</td>
-                  </tr>
-                  <tr>
-                    <td class="prev shortcut"><kbd>p</kbd></td>
-                    <td>Previous page</td>
-                  </tr>
-                  <tr>
-                    <td class="search shortcut"><kbd>s</kbd></td>
-                    <td>Search</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="modal-footer">
-            </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
         </div>
-    </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Moustikitos/Tyf" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+      <span><a href="api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
-    </body>
+</body>
 </html>
 
 <!--
-MkDocs version : 1.1.2
-Build Date UTC : 2020-12-28 19:19:10.497940+00:00
+MkDocs version : 1.4.3
+Build Date UTC : 2023-07-27 15:52:09.065738+00:00
 -->

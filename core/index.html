@@ -1,106 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        
-        
-        <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Core - The Tyf Project</title>
-        <link href="../css/bootstrap.min.css" rel="stylesheet">
-        <link href="../css/font-awesome.min.css" rel="stylesheet">
-        <link href="../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-
-        <script src="../js/jquery-1.10.2.min.js" defer></script>
-        <script src="../js/bootstrap.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-        <script>hljs.initHighlightingOnLoad();</script> 
-    </head>
-
-    <body>
-        <div class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" href="..">The Tyf Project</a>
-                <!-- Expander button -->
-                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <!-- Expanded navigation -->
-                <div id="navbar-collapse" class="navbar-collapse collapse">
-                        <!-- Main navigation -->
-                        <ul class="nav navbar-nav">
-                            <li class="navitem">
-                                <a href=".." class="nav-link">Overview</a>
-                            </li>
-                            <li class="navitem">
-                                <a href="../api/" class="nav-link">API</a>
-                            </li>
-                            <li class="navitem active">
-                                <a href="./" class="nav-link">Core</a>
-                            </li>
-                        </ul>
-
-                    <ul class="nav navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
-                                <i class="fa fa-search"></i> Search
-                            </a>
-                        </li>
-                            <li class="nav-item">
-                                <a rel="prev" href="../api/" class="nav-link">
-                                    <i class="fa fa-arrow-left"></i> Previous
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a rel="next" class="nav-link disabled">
-                                    Next <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="https://github.com/Moustikitos/Tyf/edit/master/docs/core.md" class="nav-link"><i class="fa fa-github"></i> Edit on GitHub</a>
-                            </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="row">
-                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
-            <span class="fa fa-angle-down"></span>
-        </button>
-    </div>
-
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Core - The Tyf Project</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
-    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
-        <ul class="nav flex-column">
-            
-            <li class="nav-item" data-level="1"><a href="#tyfifd" class="nav-link">Tyf.ifd</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#tag-objects" class="nav-link">Tag Objects</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#ifd-objects" class="nav-link">Ifd Objects</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-        </ul>
-    </div>
-</div></div>
-                    <div class="col-md-9" role="main">
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Core";
+        var mkdocs_page_input_path = "core.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
 
-<p><a name="Tyf.ifd"></a></p>
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> The Tyf Project
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Overview</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../api/">API</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Core</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#geokeymodel">GeoKeyModel</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#transform">Transform</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#tag-objects">Tag Objects</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#info">info</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#__init__">__init__</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#read">read</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcsize">calcsize</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pack">pack</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ifd-objects">Ifd Objects</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#raster_loaded">raster_loaded</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tiepoints">tiepoints</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tags">tags</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#set_location">set_location</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#get_location">get_location</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#url_load_location">url_load_location</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dump_location">dump_location</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">The Tyf Project</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
+      <li>Core</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/Moustikitos/Tyf/edit/master/docs/core.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <p><a id="Tyf.ifd"></a></p>
 <h1 id="tyfifd">Tyf.ifd</h1>
-<p><a name="Tyf.ifd.GeoKeyModel"></a></p>
+<p><a id="Tyf.ifd.GeoKeyModel"></a></p>
 <h4 id="geokeymodel">GeoKeyModel</h4>
 <p>Mapping of named tuple to be used with geotiff <code>ModelPixelScaleTag</code>,
 <code>ModelTiepointTag</code> and <code>ModelTransformationTag</code>.</p>
@@ -112,9 +128,9 @@ ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.1667844, Y=4255884.54380, Z=0.0)
 &gt;&gt;&gt; ifd.GeoKeyModel[&quot;ModelPixelScaleTag&quot;](*tif[0][&quot;ModelPixelScaleTag&quot;])
 ModelPixelScale(ScaleX=60.022136983193, ScaleY=60.022136983193, ScaleZ=0.0)
 </code></pre>
-<p><a name="Tyf.ifd.Transform"></a></p>
+<p><a id="Tyf.ifd.Transform"></a></p>
 <h4 id="transform">Transform</h4>
-<pre><code class="language-python">Transform(obj, x=0., y=0., z=0.)
+<pre><code class="language-python">def Transform(obj, x=0., y=0., z=0.)
 </code></pre>
 <p>Transformation between raster and model space using a model transformation
 matrix applied to raster coordinates plus altitude.</p>
@@ -133,19 +149,19 @@ matrix applied to raster coordinates plus altitude.</p>
 </code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>obj</code> <em>GeoKeyModel["ModelTransformationTag"]</em> - transformation matrix</li>
-<li><code>x</code> <em>float</em> - pixel column index from left</li>
-<li><code>y</code> <em>float</em> - pixel row index from top</li>
-<li><code>z</code> <em>float</em> - altitude value</li>
+<li><code>obj</code> <em>GeoKeyModel["ModelTransformationTag"]</em> - transformation matrix.</li>
+<li><code>x</code> <em>float</em> - pixel column index from left.</li>
+<li><code>y</code> <em>float</em> - pixel row index from top.</li>
+<li><code>z</code> <em>float</em> - altitude value.</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>projeted coordinates X, Y, Z</p>
-<p><a name="Tyf.ifd.Tag"></a></p>
+<ul>
+<li><code>tuple</code> - projeted coordinates X, Y, Z.</li>
+</ul>
+<p><a id="Tyf.ifd.Tag"></a></p>
 <h2 id="tag-objects">Tag Objects</h2>
 <pre><code class="language-python">class Tag(object)
 </code></pre>
-<p><a name="Tyf.ifd.Tag.value"></a></p>
-<h4 id="value">value</h4>
 <p>Encode and decode on the fly the <code>_v</code> attribute (see <code>Tyf.encoders</code> and
 <code>Tyf.decoders</code> modules).</p>
 <pre><code class="language-python">&gt;&gt;&gt; tag = ifd.Tag(&quot;GPSLongitude&quot;)
@@ -155,7 +171,7 @@ matrix applied to raster coordinates plus altitude.</p>
 &gt;&gt;&gt; tag.value
 5.62347
 </code></pre>
-<p><a name="Tyf.ifd.Tag.info"></a></p>
+<p><a id="Tyf.ifd.Tag.info"></a></p>
 <h4 id="info">info</h4>
 <p>Meaning of tag value if any (see <code>Tyf.values</code> module).</p>
 <pre><code class="language-python">&gt;&gt;&gt; ifd.Tag(&quot;PhotometricInterpretation&quot;, value=3).info
@@ -163,40 +179,40 @@ matrix applied to raster coordinates plus altitude.</p>
 &gt;&gt;&gt; ifd.Tag(&quot;Flash&quot;, value=0x000F).info
 'Flash fired, compulsory flash mode, return light detected'
 </code></pre>
-<p><a name="Tyf.ifd.Tag.__init__"></a></p>
+<p><a id="Tyf.ifd.Tag.__init__"></a></p>
 <h4 id="__init__">__init__</h4>
-<pre><code class="language-python"> | __init__(tag_or_key, value=None)
+<pre><code class="language-python">def __init__(tag_or_key, value=None)
 </code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>tag_or_key</code> <em>int or string</em> - tag value or keyword</li>
+<li><code>tag_or_key</code> <em>int or string</em> - tag value or keyword.</li>
 <li><code>value</code> <em>any</em> - value of the tag. If <code>None</code> is given, it is set to
-  default value if anyone is defined else <code>_v</code> attribute
-  is not created</li>
+  default value if anyone is defined.</li>
 </ul>
-<p><a name="Tyf.ifd.Tag.read"></a></p>
+<p><a id="Tyf.ifd.Tag.read"></a></p>
 <h4 id="read">read</h4>
-<pre><code class="language-python"> | @staticmethod
- | read(fileobj, byteorder, db=None)
+<pre><code class="language-python">@staticmethod
+def read(fileobj, byteorder)
 </code></pre>
 <p>Extract an IFD tag from buffer current position. Buffer position is
 adjusted to the end of IFD entry before returning the value.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>fileobj</code> <em>buffer</em> - a python file object</li>
-<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
-<li><code>db</code> <em>dict</em> - authorized tag database</li>
+<li><code>fileobj</code> <em>buffer</em> - a python file object.</li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code>.</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p><code>Tyf.ifd.Tag</code></p>
-<p><a name="Tyf.ifd.Tag.calcsize"></a></p>
+<ul>
+<li><code>Tyf.ifd.Tag</code> - tag instance.</li>
+</ul>
+<p><a id="Tyf.ifd.Tag.calcsize"></a></p>
 <h4 id="calcsize">calcsize</h4>
-<pre><code class="language-python"> | calcsize()
+<pre><code class="language-python">def calcsize()
 </code></pre>
 <p>Return tag value size in <code>bytes</code> when packed.</p>
-<p><a name="Tyf.ifd.Tag.pack"></a></p>
+<p><a id="Tyf.ifd.Tag.pack"></a></p>
 <h4 id="pack">pack</h4>
-<pre><code class="language-python"> | pack(byteorder)
+<pre><code class="language-python">def pack(byteorder)
 </code></pre>
 <p>Return a tuple containing packed IFD base entry [tag, type, count],
 packed value and the info if value have to be written in IFD entry or
@@ -213,11 +229,13 @@ True
 </code></pre>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
+<li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code>.</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>packed ifd entry - packed value - is offset boolean</p>
-<p><a name="Tyf.ifd.Ifd"></a></p>
+<ul>
+<li><code>tuple</code> - packed ifd entry, packed value, is offset boolean</li>
+</ul>
+<p><a id="Tyf.ifd.Ifd"></a></p>
 <h2 id="ifd-objects">Ifd Objects</h2>
 <pre><code class="language-python">class Ifd(dict)
 </code></pre>
@@ -242,21 +260,21 @@ with automatic sub IFD management. <code>exfT</code>, <code>gpsT</code> and <cod
 &gt;&gt;&gt; hasattr(i, &quot;exfT&quot;)  # empty exfT sub IFD attribute removed
 False
 </code></pre>
-<p><a name="Tyf.ifd.Ifd.raster_loaded"></a></p>
+<p><a id="Tyf.ifd.Ifd.raster_loaded"></a></p>
 <h4 id="raster_loaded">raster_loaded</h4>
 <p><code>True</code> if raster is loaded</p>
-<p><a name="Tyf.ifd.Ifd.tiepoints"></a></p>
+<p><a id="Tyf.ifd.Ifd.tiepoints"></a></p>
 <h4 id="tiepoints">tiepoints</h4>
 <p>Geotiff tiepoint list</p>
-<p><a name="Tyf.ifd.Ifd.tags"></a></p>
+<p><a id="Tyf.ifd.Ifd.tags"></a></p>
 <h4 id="tags">tags</h4>
-<pre><code class="language-python"> | tags()
+<pre><code class="language-python">def tags()
 </code></pre>
 <p>Return iterator over all IFD values including sub IFD ones in the
 order: <code>exfT</code> - <code>gpsT</code> - <code>itrT</code>.</p>
-<p><a name="Tyf.ifd.Ifd.set_location"></a></p>
+<p><a id="Tyf.ifd.Ifd.set_location"></a></p>
 <h4 id="set_location">set_location</h4>
-<pre><code class="language-python"> | set_location(lon, lat, alt=0.)
+<pre><code class="language-python">def set_location(lon, lat, alt=0.)
 </code></pre>
 <p>Set GPS IFD tags according to given longitude, latitude and altitude.
 If no GPS IFD exists, it is created according to version
@@ -279,9 +297,9 @@ If no GPS IFD exists, it is created according to version
 <li><code>lat</code> <em>float</em> - latitude in decimal degrees</li>
 <li><code>alt</code> <em>float</em> - altitude in meters</li>
 </ul>
-<p><a name="Tyf.ifd.Ifd.get_location"></a></p>
+<p><a id="Tyf.ifd.Ifd.get_location"></a></p>
 <h4 id="get_location">get_location</h4>
-<pre><code class="language-python"> | get_location()
+<pre><code class="language-python">def get_location()
 </code></pre>
 <pre><code class="language-python">&gt;&gt;&gt; i = ifd.Ifd()
 &gt;&gt;&gt; i.get_location()
@@ -295,12 +313,16 @@ Exception: No location data found
 (5.62347, 45.21345, 12.0)
 </code></pre>
 <p><strong>Returns</strong>:</p>
-<p>longitude - latitude - altitude</p>
+<ul>
+<li><code>tuple</code> - longitude, latitude and altitude.</li>
+</ul>
 <p><strong>Raises</strong>:</p>
-<p>Exception if no GPS IFD found</p>
-<p><a name="Tyf.ifd.Ifd.url_load_location"></a></p>
+<ul>
+<li><code>Exception</code> - if no GPS IFD found.</li>
+</ul>
+<p><a id="Tyf.ifd.Ifd.url_load_location"></a></p>
 <h4 id="url_load_location">url_load_location</h4>
-<pre><code class="language-python"> | url_load_location(url, **kwargs)
+<pre><code class="language-python">def url_load_location(url, **kwargs)
 </code></pre>
 <p>Return a static map image data from map provider.</p>
 <pre><code class="language-python">&gt;&gt;&gt; from Tyf import ifd
@@ -320,105 +342,75 @@ Exception: No location data found
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>url</code> <em>str</em> - map provider url containing <code>%(lon)f</code> and <code>%(lat)f</code>
-  format expression to be replaced by longitude and
-  latitude found in GPS data</li>
+  format expression to be replaced by longitude and latitude
+  found in GPS data.</li>
 <li><code>**kwargs</code> <em>dict</em> - key-value pairs to match entries in url according
-  to python string formatting</li>
+  to python string formatting.</li>
 </ul>
 <p><strong>Returns</strong>:</p>
-<p>Image data as <code>bytes</code> (py3) or <code>str</code> (py2)</p>
-<p><a name="Tyf.ifd.Ifd.dump_location"></a></p>
+<ul>
+<li><code>bytes|str</code> - Image data.</li>
+</ul>
+<p><a id="Tyf.ifd.Ifd.dump_location"></a></p>
 <h4 id="dump_location">dump_location</h4>
-<pre><code class="language-python"> | dump_location(name, url, **kwargs)
+<pre><code class="language-python">def dump_location(name, url, **kwargs)
 </code></pre>
 <p>Dump a static map image from map provider into filesystem.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>name</code> <em>str</em> - a valid filepath</li>
+<li><code>name</code> <em>str</em> - a valid filepath.</li>
 <li><code>url</code> <em>str</em> - map provider url containing <code>%(lon)f</code> and <code>%(lat)f</code>
-  format expression to be replaced by longitude and
-  latitude found in GPS data</li>
+  format expression to be replaced by longitude and latitude
+  found in GPS data.</li>
 <li><code>**kwargs</code> <em>dict</em> - key-value pairs to match entries in url according
-  to python string formatting</li>
-</ul></div>
+  to python string formatting.</li>
+</ul>
+              
             </div>
-        </div>
-
-        <footer class="col-md-12">
-            <hr>
-                <p>Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence</p>
-            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
-        </footer>
-        <script>
-            var base_url = "..",
-                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
-        </script>
-        <script src="../js/base.js" defer></script>
-        <script src="../search/main.js" defer></script>
-
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="searchModalLabel">Search</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            </div>
-            <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form>
-                    <div class="form-group">
-                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
-                    </div>
-                </form>
-                <div id="mkdocs-search-results"></div>
-            </div>
-            <div class="modal-footer">
-            </div>
-        </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../api/" class="btn btn-neutral float-left" title="API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            </div>
-            <div class="modal-body">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th style="width: 20%;">Keys</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="help shortcut"><kbd>?</kbd></td>
-                    <td>Open this help</td>
-                  </tr>
-                  <tr>
-                    <td class="next shortcut"><kbd>n</kbd></td>
-                    <td>Next page</td>
-                  </tr>
-                  <tr>
-                    <td class="prev shortcut"><kbd>p</kbd></td>
-                    <td>Previous page</td>
-                  </tr>
-                  <tr>
-                    <td class="search shortcut"><kbd>s</kbd></td>
-                    <td>Search</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="modal-footer">
-            </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; 2015-2020 THOORENS Bruno - BSD licence</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
         </div>
-    </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Moustikitos/Tyf" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../api/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
 </div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
-    </body>
+</body>
 </html>
