@@ -14,7 +14,7 @@ JPEG files.
 ```
 """
 
-__copyright__ = """Copyright © 2015-2023 - BSD Licence"""
+__copyright__ = "Copyright © 2015-2023 - BSD Licence"
 __author__ = "THOORENS Bruno"
 __tiff__ = (6, 0)
 __geotiff__ = (1, 8, 1)
@@ -48,10 +48,12 @@ class InvalidFileError(Exception):
     Raise when the input file is not valid, e.g. not a tiff or jpeg, or is a
     bigtiff.
     """
+    pass
 
 
 class XmpDataNotFound(Exception):
     "Raise when no xmp data found in JPEG file"
+    pass
 
 
 #: Type definition linking tag type value to python `struct` format
@@ -139,20 +141,19 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     # compute exif, gps and interoperability offsets
     ifd_size = ifds["root"]["size"]
     ifd_values = ifds["root"]["data"]
-
     # where to put ifd values
     ifd_offset_values = offset + ifd_size
     # where to put the sub ifds
     sub_ifd_offset = ifd_offset_values + len(ifd_values)
 
     # compute all possible sub ifd offsets
-    for name in [n for n in ["exfT", "gpsT", "itrT"] if n in ifds]:
+    for name in set(["exfT", "gpsT", "itrT"]) & set(ifds.keys()):
         i = ifds[name]
-        tag = \
-            "Exif IFD" if name == "exfT" else \
-            "GPS IFD" if name == "gpsT" else \
+        obj[
+            "Exif IFD" if name == "exfT" else
+            "GPS IFD" if name == "gpsT" else
             "Interoperability IFD"
-        obj[tag] = sub_ifd_offset
+        ] = sub_ifd_offset
         # increment the next sub ifd offset
         sub_ifd_offset += i["size"] + len(i["data"])
 
@@ -167,11 +168,9 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         raster_offset = sub_ifd_offset
 
     # compute raster positions
-    for tag in [
-        t for t in
+    for tag in set(
         ["StripOffsets", "TileOffsets", "FreeOffsets", "JPEGInterchangeFormat"]
-        if t in dict.keys(obj)
-    ]:
+    ) & set(dict.keys(obj)):
         if "Offset" in tag:  # StripOffsets, TileOffsets or FreeOffsets
             raster_offsets = (raster_offset,)
             tagname = tag.replace("Offsets", "ByteCounts")
@@ -191,10 +190,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 
     # write IFDs
-    for key in [
-        k for k in ["root", "exfT", "gpsT", "itrT"]
-        if k in ifds
-    ]:
+    for key in set(["root", "exfT", "gpsT", "itrT"]) & set(ifds.keys()):
         packed = ifds[key]
         # go to according [SUB]IFD offset and determine associated data offset
         if key == "root":
@@ -207,12 +203,11 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
                 "Interoperability IFD"
             ]
             fileobj.seek(sub_ifd_offset)
-            data_offset = \
-                sub_ifd_offset + packed["size"]
+            data_offset = sub_ifd_offset + packed["size"]
 
         tags = packed["tags"]
         # write number of entries
-        pack(byteorder+"H", fileobj, (len(tags),))
+        pack(byteorder + "H", fileobj, (len(tags),))
         # write all ifd entries and data
         for entry, data, is_offset in tags:
             fileobj.write(entry)
@@ -220,19 +215,19 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
                 fileobj.write(data)
             else:
                 # put offset and shift it by len(data) for next offset value
-                pack(byteorder+"L", fileobj, (data_offset, ))
+                pack(byteorder + "L", fileobj, (data_offset, ))
                 data_offset += len(data)
 
         if key == "root":
             next_ifd_offset = fileobj.tell()
-        pack(byteorder+"L", fileobj, (0, ))
+        pack(byteorder + "L", fileobj, (0, ))
         fileobj.write(packed["data"])
 
     # write IFD1 (this should only be used with Jpeg exif thumbnail)
     if "ifd1" in ifds:
         ifd1_offset = fileobj.tell()
         fileobj.seek(next_ifd_offset)
-        pack(byteorder+"L", fileobj, (ifd1_offset, ))
+        pack(byteorder + "L", fileobj, (ifd1_offset, ))
         _write_IFD(ifd1, fileobj, ifd1_offset, byteorder="<", ifd1=None)
 
     # write raster data
@@ -294,15 +289,6 @@ def open(f):
         return obj
 
 
-def getGeokeyDirectories(cls):
-    #: create _geokey_directories or return it
-    if not hasattr(cls, "_geokey_directories"):
-        setattr(cls, "_geokey_directories", [
-            gkd.Gkd.from_ifd(ifd) for ifd in cls
-        ])
-    return getattr(cls, "_geokey_directories")
-
-
 class TiffFile(list):
     """
     This class is is a list of all Image File Directories defining the TIFF
@@ -327,7 +313,7 @@ class TiffFile(list):
 
     #: shortcut to geokey directories
     gkd = property(
-        lambda obj: getGeokeyDirectories(obj),
+        lambda obj: gkd.getGeokeyDirectories(obj),
         None, None, "Geotiff IFD"
     )
 
@@ -444,12 +430,9 @@ class JpegFile(list):
     @property
     def xmp(obj):
         "readonly XMP attribute"
-        try:
-            return list.__getitem__(obj, obj.__xmp_idx)[-1]
-        except AttributeError:
-            raise XmpDataNotFound(
-                "JPEG file does not contains any XMP segment"
-            )
+        if not hasattr(obj, "_JpegFile__xmp_ns"):
+            raise XmpDataNotFound("no XMP segment found")
+        return list.__getitem__(obj, obj.__xmp_idx)[-1]
 
     def __init__(self, fileobj):
         sgmt = []
@@ -472,13 +455,13 @@ class JpegFile(list):
                     string = StringIO(data[6:])
                     self.ifd = TiffFile(string)
                     string.close()
-                    sgmt.append((0xffe1, self.ifd))
+                    sgmt.append((marker, self.ifd))
                 elif b"ns.adobe.com" in data[:30]:
                     xmp_data_idx = data.find(b"\x00")
                     self.__xmp_idx = len(sgmt)
                     self.__xmp_ns = data[:xmp_data_idx]
                     sgmt.append(
-                        (0xffe1, xmp.fromstring(data[xmp_data_idx+1:]))
+                        (marker, xmp.fromstring(data[xmp_data_idx+1:]))
                     )
             else:
                 sgmt.append((marker, fileobj.read(count-2)))
@@ -507,15 +490,18 @@ class JpegFile(list):
         """
         return self.ifd1.get(item, default)
 
-    def set_xmp(self, tag, value, ns="http://ns.adobe.com/exif/1.0/"):
+    def set_xmp(self, tag, value, **attributes):
         """
         Set xmp tag value. Custom namespace can be used.
 
         Args:
             tag (str): tag.
             value (str): tag value.
-            ns (url): xml namespace url (default to
-                http://ns.adobe.com/exif/1.0/).
+            **attributes: all elements to be set using `attributes` arg on
+                `xml.etree.ElementTree.Element` creation.
+
+        Returns:
+            xml.etree.ElementTree.Element: tag element.
         """
         # create the xmp segment if no one found
         if not hasattr(self, "_JpegFile__xmp_ns"):
@@ -524,6 +510,8 @@ class JpegFile(list):
             elem = xmp.Element("{adobe:ns:meta/}xmpmeta")
             xmp.SubElement(elem, "{%s}RDF" % XmpNamespace["RDF"])
             list.insert(self, self.__xmp_idx, (65505, elem))
+        # get namespace
+        ns = attributes.pop("ns", "http://ns.adobe.com/exif/1.0/")
         ns = XmpNamespace.get(ns, ns)
         # try to get a parent node containing at least one tag with the
         # according namespace
@@ -534,7 +522,7 @@ class JpegFile(list):
                 self.xmp[0], "{%s}Description" % XmpNamespace["RDF"]
             )
         # add element with the appropriate namespace
-        elem = xmp.SubElement(parent, "{%s}%s" % (ns, tag))
+        elem = xmp.SubElement(parent, "{%s}%s" % (ns, tag), **attributes)
         elem.text = "%s" % value
         parent.append(elem)
         return elem
@@ -544,17 +532,14 @@ class JpegFile(list):
         Get xmp tag value. Custom namespace can be used.
 
         Args:
-            tag (str): tag.
+            tag (str): tag name.
             ns (url): xml namespace url (default to
                 http://ns.adobe.com/exif/1.0/).
 
         Returns:
-            str: tag value.
+            xml.etree.ElementTree.Element: tag element.
         """
-        item = "{%s}%s" % (XmpNamespace.get(ns, ns), tag)
-        elem = self.xmp.find(".//" + item)
-        if elem is not None:
-            return elem.text
+        return self.xmp.find(".//{%s}%s" % (XmpNamespace.get(ns, ns), tag))
 
     def save(self, f):
         """
@@ -660,17 +645,28 @@ try:
 except ImportError:
     pass
 else:
+
+    def _getmeta(im):
+        for _, data in im.applist:
+            if data[:6] == b'Exif\x00\x00':
+                fileobj = io.BytesIO(data[6:])
+                setattr(im, "ifd", TiffFile(fileobj))
+                fileobj.close()
+            elif data[:29] == b'http://ns.adobe.com/xap/1.0/\x00':
+                setattr(im, "xmp", xmp.fromstring(data[29:]))
+
     def _getexif(im):
-        try:
-            data = im.info["exif"]
-        except KeyError:
-            return None
-        # b'Exif\x00\x00' -> 6 bytes
-        fileobj = io.BytesIO(data[6:])
-        exif = TiffFile(fileobj)
-        fileobj.close()
-        del fileobj
-        return exif
+        if not hasattr(im, "ifd"):
+            try:
+                data = im.info["exif"]
+            except KeyError:
+                return None
+            # b'Exif\x00\x00' -> 6 bytes
+            fileobj = io.BytesIO(data[6:])
+            setattr(im, "ifd", TiffFile(fileobj))
+            fileobj.close()
+            del fileobj
+        return im.ifd
 
     class Image(_Image.Image):
         """
@@ -682,7 +678,9 @@ else:
 
         @staticmethod
         def open(*args, **kwargs):
-            return _Image.open(*args, **kwargs)
+            img = _Image.open(*args, **kwargs)
+            img._getmeta()
+            return img
 
         def save(self, fp, format=None, **params):
             if (
@@ -692,9 +690,9 @@ else:
                 isinstance(format, str) and
                 format.lower() == "jpeg"
             ) and not params.pop("strip_exif", False):
+                self._getexif()
                 stringio = StringIO()
-                ifd = self._getexif()
-                ifd.save(stringio, idx=0, ifd1=ifd[1])
+                self.ifd.save(stringio, idx=0, ifd1=self.ifd[1])
                 data = stringio.getvalue()
                 params["exif"] = b'Exif\x00\x00' + (
                     data if isinstance(data, bytes) else
@@ -702,12 +700,15 @@ else:
                 )
                 stringio.close()
                 del stringio, data
+            if hasattr(self, "xmp"):
+                params["xmp"] = b'http://ns.adobe.com/xap/1.0/\x00' + \
+                    xmp.tostring(self.xmp)
             return Image._image_.save(self, fp, format, **params)
 
     #: Pillow override
     _Image.Image = Image
 
     from PIL import JpegImagePlugin
-    JpegImagePlugin._getexif_ = JpegImagePlugin._getexif
     JpegImagePlugin._getexif = _getexif
-    del _getexif
+    JpegImagePlugin.JpegImageFile._getmeta = _getmeta
+    del _getexif, _getmeta
