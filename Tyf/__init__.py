@@ -50,6 +50,10 @@ class InvalidFileError(Exception):
     """
 
 
+class XmpDataNotFound(Exception):
+    "Raise when no xmp data found in JPEG file"
+
+
 #: Type definition linking tag type value to python `struct` format
 TYPES = {
     1:  ("B",  "UCHAR or USHORT"),
@@ -443,7 +447,9 @@ class JpegFile(list):
         try:
             return list.__getitem__(obj, obj.__xmp_idx)[-1]
         except AttributeError:
-            return None
+            raise XmpDataNotFound(
+                "JPEG file does not contains any XMP segment"
+            )
 
     def __init__(self, fileobj):
         sgmt = []
@@ -511,6 +517,13 @@ class JpegFile(list):
             ns (url): xml namespace url (default to
                 http://ns.adobe.com/exif/1.0/).
         """
+        # create the xmp segment if no one found
+        if not hasattr(self, "__xmp_ns"):
+            self.__xmp_ns = b"http://ns.adobe.com/xap/1.0/"
+            self.__xmp_idx = 2
+            elem = xmp.Element("{adobe:ns:meta/}xmpmeta")
+            xmp.SubElement(elem, "{%s}RDF" % XmpNamespace["RDF"])
+            list.insert(self, self.__xmp_idx, (65505, elem))
         ns = XmpNamespace.get(ns, ns)
         # try to get a parent node containing at least one tag with the
         # according namespace
