@@ -62,17 +62,22 @@ _2TAG = dict((v[0], t) for t, v in _TAGS.items())
 _2KEY = dict((v, k) for k, v in _2TAG.items())
 
 
+def getGeokeyDirectories(cls):
+    #: create _geokey_directories or return it
+    if not hasattr(cls, "_geokey_directories"):
+        setattr(cls, "_geokey_directories", [
+            Gkd.from_ifd(ifd) for ifd in cls
+        ])
+    return getattr(cls, "_geokey_directories")
+
+
 class GkdTag:
-    #: 
     strict = True
-    #: 
     info = property(
         lambda cls: getattr(
             values, _2KEY.get(cls.tag, cls.key), {}
         ).get(cls._decode(), None),
-        None,
-        None,
-        ""
+        None, None, ""
     )
 
     def __init__(self, tag, value=None):

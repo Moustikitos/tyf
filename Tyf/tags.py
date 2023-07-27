@@ -6,6 +6,7 @@ import sqlite3
 
 from functools import reduce
 
+
 def to_sqlite(elem):
     return pickle.dumps(elem)
 

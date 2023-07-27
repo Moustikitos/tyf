@@ -56,13 +56,14 @@ def Transform(obj, x=0., y=0., z=0.):
     (-27892.945414580587, 4255284.32243236, 0.0)
     ```
 
-    Arguments:
-        obj (GeoKeyModel["ModelTransformationTag"]): transformation matrix
-        x (float): pixel column index from left
-        y (float): pixel row index from top
-        z (float): altitude value
+    Args:
+        obj (GeoKeyModel["ModelTransformationTag"]): transformation matrix.
+        x (float): pixel column index from left.
+        y (float): pixel row index from top.
+        z (float): altitude value.
+
     Returns:
-        projeted coordinates X, Y, Z
+        tuple: projeted coordinates X, Y, Z.
     """
     return (
         obj[0] * x + obj[1] * y + obj[2] * z + obj[3] * 1.,
@@ -72,16 +73,19 @@ def Transform(obj, x=0., y=0., z=0.):
 
 
 class Tag(object):
-    #: Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
-    #: `Tyf.decoders` modules).
-    #: ```python
-    #: >>> tag = ifd.Tag("GPSLongitude")
-    #: >>> tag.value = 5.62347
-    #: >>> tag._v
-    #: (5, 1, 37, 1, 6123, 250)  # 5/1 deg + 37/1 min + 6123/250 sec
-    #: >>> tag.value
-    #: 5.62347
-    #: ```
+    """
+    Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
+    `Tyf.decoders` modules).
+
+    ```python
+    >>> tag = ifd.Tag("GPSLongitude")
+    >>> tag.value = 5.62347
+    >>> tag._v
+    (5, 1, 37, 1, 6123, 250)  # 5/1 deg + 37/1 min + 6123/250 sec
+    >>> tag.value
+    5.62347
+    ```
+    """
     value = property(
         lambda cls: cls._getvalue(),
         lambda cls, v: cls._setvalue(v),
@@ -139,11 +143,10 @@ class Tag(object):
 
     def __init__(self, tag_or_key, value=None):
         """
-        Arguments:
-            tag_or_key (int or string): tag value or keyword
+        Args:
+            tag_or_key (int or string): tag value or keyword.
             value (any): value of the tag. If `None` is given, it is set to
-                         default value if anyone is defined else `_v` attribute
-                         is not created
+                default value if anyone is defined.
         """
         self.tag, (self.key, self._types, default, self.comment) = \
             tags.get(tag_or_key)
@@ -163,11 +166,12 @@ class Tag(object):
         Extract an IFD tag from buffer current position. Buffer position is
         adjusted to the end of IFD entry before returning the value.
 
-        Arguments:
-            fileobj (buffer): a python file object
-            byteorder (string): `">"` if big-endian used else `"<"`
+        Args:
+            fileobj (buffer): a python file object.
+            byteorder (string): `">"` if big-endian used else `"<"`.
+
         Returns:
-            `Tyf.ifd.Tag`
+            `Tyf.ifd.Tag`: tag instance.
         """
         # read tag, type and count
         fmt = byteorder + "HHL"
@@ -234,10 +238,11 @@ class Tag(object):
         True
         ```
 
-        Arguments:
-            byteorder (string): `">"` if big-endian used else `"<"`
+        Args:
+            byteorder (string): `">"` if big-endian used else `"<"`.
+
         Returns:
-            packed ifd entry - packed value - is offset boolean
+            tuple: packed ifd entry, packed value, is offset boolean
         """
         tag, typ, cnt = self.tag, self.type, self.count
         info = struct.pack(byteorder + "HHL", tag, typ, cnt)
@@ -301,21 +306,16 @@ def _load_raster(obj, fileobj):
 
 def getModelTiePoints(cls):
     """
-    Return tiepoint list found in `ModelTiepointTag` tags. This function
-    creates a list of all points in private attribute `_model_tiepoints` on
-    first call.
+    Return tiepoint list found in `ModelTiepointTag` tags.
 
-    ```
-    ModelTiepointTag = (I1, J1, K1, X1, Y1, Z1, ...In, Jn, Kn, Xn, Yn, Zn)
-    _model_tiepoints = [(I1, J1, K1, X1, Y1, Z1), ...(In, Jn, Kn, Xn, Yn, Zn)]
-    ```
+    Args:
+        cls (dict or Tyf.ifd.Ifd): image file directory.
 
-    Arguments:
-        cls (dict or Tyf.ifd.Ifd): image file directory
     Returns:
-        Tiepoint `list`
+        list: Tiepoint.
+
     Raises:
-        KeyError if no `ModelTiepointTag` defined
+        KeyError: if no `ModelTiepointTag` defined.
     """
     if not hasattr(cls, "_model_tiepoints"):
         setattr(cls, "_model_tiepoints", [
@@ -520,7 +520,7 @@ class Ifd(dict):
         <IFD tag GPSAltitude:12.0>
         ```
 
-        Arguments:
+        Args:
             lon (float): longitude in decimal degrees
             lat (float): latitude in decimal degrees
             alt (float): altitude in meters
@@ -552,9 +552,10 @@ class Ifd(dict):
         ```
 
         Returns:
-            longitude - latitude - altitude
+            tuple: longitude, latitude and altitude.
+
         Raises:
-            Exception if no GPS IFD found
+            Exception: if no GPS IFD found.
         """
         ifd = getattr(self, "gpsT", {})
         if set([
@@ -593,14 +594,15 @@ class Ifd(dict):
         ...    f.write(data)
         ```
 
-        Arguments:
+        Args:
             url (str): map provider url containing `%(lon)f` and `%(lat)f`
-                       format expression to be replaced by longitude and
-                       latitude found in GPS data
+                format expression to be replaced by longitude and latitude
+                found in GPS data.
             **kwargs (dict): key-value pairs to match entries in url according
-                             to python string formatting
+                to python string formatting.
+
         Returns:
-            Image data as `bytes` (py3) or `str` (py2)
+            bytes|str: Image data.
         """
         lon, lat, alt = self.get_location()
         kwargs.update(lon=lon, lat=lat, alt=alt)
@@ -616,19 +618,17 @@ class Ifd(dict):
         Dump a static map image from map provider into filesystem.
 
         Arguments:
-            name (str): a valid filepath
+            name (str): a valid filepath.
             url (str): map provider url containing `%(lon)f` and `%(lat)f`
                 format expression to be replaced by longitude and latitude
-                found in GPS data
+                found in GPS data.
             **kwargs (dict): key-value pairs to match entries in url according
-                to python string formatting
+                to python string formatting.
         """
         with io.open(name, "wb") as fileobj:
             fileobj.write(self.url_load_location(url, **kwargs))
 
     def getModelTransformation(self, tie_idx=0):
-        """
-        """
         if "ModelTransformationTag" in self:
             matrix = GeoKeyModel["ModelTransformationTag"](
                *self["ModelTransformationTag"]
@@ -662,12 +662,12 @@ def dump_mapbox_location(cls, name, zoom=15, width=400, height=300, token=""):
     ).
 
     Arguments:
-        cls (dict or Tyf.ifd.Ifd): IFD containing GPS data
-        name (str): filename to use
-        zoom (int): map zoom level
-        width (int): image width in pixel
-        height (int): image height in pixel
-        token (str): a valid Mapbox API token
+        cls (dict or Tyf.ifd.Ifd): IFD containing GPS data.
+        name (str): filename to use.
+        zoom (int): map zoom level.
+        width (int): image width in pixel.
+        height (int): image height in pixel.
+        token (str): a valid Mapbox API token.
     """
     return cls.dump_location(
         name,
