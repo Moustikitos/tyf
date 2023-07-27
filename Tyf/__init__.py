@@ -518,7 +518,7 @@ class JpegFile(list):
                 http://ns.adobe.com/exif/1.0/).
         """
         # create the xmp segment if no one found
-        if not hasattr(self, "__xmp_ns"):
+        if not hasattr(self, "_JpegFile__xmp_ns"):
             self.__xmp_ns = b"http://ns.adobe.com/xap/1.0/"
             self.__xmp_idx = 2
             elem = xmp.Element("{adobe:ns:meta/}xmpmeta")
@@ -536,6 +536,7 @@ class JpegFile(list):
         # add element with the appropriate namespace
         elem = xmp.SubElement(parent, "{%s}%s" % (ns, tag))
         elem.text = "%s" % value
+        parent.append(elem)
         return elem
 
     def get_xmp(self, tag, ns="http://ns.adobe.com/exif/1.0/"):
