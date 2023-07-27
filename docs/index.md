@@ -9,10 +9,12 @@
 [![Downloads](https://pepy.tech/badge/Tyf/week)](https://pepy.tech/project/tyf)
 
 ## Support this project
+[![Liberapay receiving](https://img.shields.io/liberapay/goal/Toons?logo=liberapay)](https://liberapay.com/Toons/donate)
+
 [Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
 
  + [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
- + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://arky-delegate.info/arky)
+ + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://dpos.arky-delegate.info/arky)
 
 ## Why this package ?
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
@@ -24,13 +26,12 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
  + read / edit EXIF data from JPEG images
  + read / edit IFD data from TIFF images
  + read / edit GEOTIFF data from IFD
- + read / edit XMP data from IFD
+ + read / edit XMP data from IFD and JPEG images
  + work directly with python numbers, string and datetime
  + interpolate map coordinates using GEOTIFF ModelTransformation
 
 ### Do more with JPEG and TIFF files
  + extract TIFF or JPEG thumbnails from JPEG files
- + strip EXIF data from JPEG File
  + dump EXIF data from JPEG into file
  + dump location thumbnail using any map provider API
 
@@ -41,13 +42,30 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
 >>> jpg.__class__
 <class 'Tyf.JpegFile'>
 >>> print(Tyf.xmp.tostring(jpg.xmp).decode()) 
-<ns0:xmpmeta xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="adobe:ns:meta/" xmlns:ns3="http://ns.adobe.com/xap/1.0/" xmlns:ns4="http://ns.microsoft.com/photo/1.0/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:title><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
-  </dc:title><dc:description><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
-  </dc:description><dc:creator><rdf:Seq><rdf:li>THOORENS Bruno</rdf:li></rdf:Seq>
-  </dc:creator><dc:rights><rdf:Alt><rdf:li xml:lang="x-default">THOORENS Bruno</rdf:li></rdf:Alt>
-  </dc:rights></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" /><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns3:Rating>4</ns3:Rating></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-  </ns4:LastKeywordXMP></rdf:Description><rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b"><dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-  </dc:subject></rdf:Description></rdf:RDF></ns0:xmpmeta>
+<ns0:xmpmeta
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:ns0="adobe:ns:meta/" xmlns:ns3="http://ns.adobe.com/xap/1.0/"
+ xmlns:ns4="http://ns.microsoft.com/photo/1.0/"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF>
+<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
+<dc:title><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li>
+</rdf:Alt></dc:title><dc:description><rdf:Alt>
+<rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
+</dc:description><dc:creator><rdf:Seq><rdf:li>THOORENS Bruno</rdf:li>
+</rdf:Seq></dc:creator><dc:rights><rdf:Alt>
+<rdf:li xml:lang="x-default">THOORENS Bruno</rdf:li></rdf:Alt></dc:rights>
+</rdf:Description>
+<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" />
+<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
+<ns3:Rating>4</ns3:Rating></rdf:Description>
+<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
+<ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag>
+<rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
+</ns4:LastKeywordXMP></rdf:Description>
+<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
+<dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
+</dc:subject></rdf:Description>
+</rdf:RDF></ns0:xmpmeta>
 >>> jpg.save_thumbnail("test/test_thumb") # extension automatically added
 ```
 
@@ -55,9 +73,9 @@ Tyf package provides pythonic way to work with embeded data in TIFF and JPEG ima
 
 There are 3 attributes to access data within `Tyf.JpegFile` :
 
- + ``ifd0`` containing picture IFD, EXIF and eventually GPS data 
- + ``ifd1`` containing thubnail data
- + ``xmp`` containing XMP data
++ ``ifd0`` containing picture IFD, EXIF and eventually GPS data 
++ ``ifd1`` containing thubnail data
++ ``xmp`` containing XMP data
 
 `ifd0` and `ifd1` are shortcut to the first and second IFD in `ifd` attribute which is itself a `Tyf.TiffFile`.
 

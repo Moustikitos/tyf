@@ -1,7 +1,9 @@
-<a name="Tyf.ifd"></a>
+<a id="Tyf.ifd"></a>
+
 # Tyf.ifd
 
-<a name="Tyf.ifd.GeoKeyModel"></a>
+<a id="Tyf.ifd.GeoKeyModel"></a>
+
 #### GeoKeyModel
 
 Mapping of named tuple to be used with geotiff `ModelPixelScaleTag`,
@@ -16,11 +18,12 @@ ModelTiepoint(I=0.0, J=0.0, K=0.0, X=-28493.1667844, Y=4255884.54380, Z=0.0)
 ModelPixelScale(ScaleX=60.022136983193, ScaleY=60.022136983193, ScaleZ=0.0)
 ```
 
-<a name="Tyf.ifd.Transform"></a>
+<a id="Tyf.ifd.Transform"></a>
+
 #### Transform
 
 ```python
-Transform(obj, x=0., y=0., z=0.)
+def Transform(obj, x=0., y=0., z=0.)
 ```
 
 Transformation between raster and model space using a model transformation
@@ -44,27 +47,27 @@ matrix applied to raster coordinates plus altitude.
 
 **Arguments**:
 
-- `obj` _GeoKeyModel["ModelTransformationTag"]_ - transformation matrix
-- `x` _float_ - pixel column index from left
-- `y` _float_ - pixel row index from top
-- `z` _float_ - altitude value
+- `obj` _GeoKeyModel["ModelTransformationTag"]_ - transformation matrix.
+- `x` _float_ - pixel column index from left.
+- `y` _float_ - pixel row index from top.
+- `z` _float_ - altitude value.
+  
 
 **Returns**:
 
-  projeted coordinates X, Y, Z
+- `tuple` - projeted coordinates X, Y, Z.
 
-<a name="Tyf.ifd.Tag"></a>
+<a id="Tyf.ifd.Tag"></a>
+
 ## Tag Objects
 
 ```python
 class Tag(object)
 ```
 
-<a name="Tyf.ifd.Tag.value"></a>
-#### value
-
 Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
 `Tyf.decoders` modules).
+
 ```python
 >>> tag = ifd.Tag("GPSLongitude")
 >>> tag.value = 5.62347
@@ -74,7 +77,8 @@ Encode and decode on the fly the `_v` attribute (see `Tyf.encoders` and
 5.62347
 ```
 
-<a name="Tyf.ifd.Tag.info"></a>
+<a id="Tyf.ifd.Tag.info"></a>
+
 #### info
 
 Meaning of tag value if any (see `Tyf.values` module).
@@ -85,26 +89,27 @@ Meaning of tag value if any (see `Tyf.values` module).
 'Flash fired, compulsory flash mode, return light detected'
 ```
 
-<a name="Tyf.ifd.Tag.__init__"></a>
+<a id="Tyf.ifd.Tag.__init__"></a>
+
 #### \_\_init\_\_
 
 ```python
- | __init__(tag_or_key, value=None)
+def __init__(tag_or_key, value=None)
 ```
 
 **Arguments**:
 
-- `tag_or_key` _int or string_ - tag value or keyword
+- `tag_or_key` _int or string_ - tag value or keyword.
 - `value` _any_ - value of the tag. If `None` is given, it is set to
-  default value if anyone is defined else `_v` attribute
-  is not created
+  default value if anyone is defined.
 
-<a name="Tyf.ifd.Tag.read"></a>
+<a id="Tyf.ifd.Tag.read"></a>
+
 #### read
 
 ```python
- | @staticmethod
- | read(fileobj, byteorder, db=None)
+@staticmethod
+def read(fileobj, byteorder)
 ```
 
 Extract an IFD tag from buffer current position. Buffer position is
@@ -112,28 +117,30 @@ adjusted to the end of IFD entry before returning the value.
 
 **Arguments**:
 
-- `fileobj` _buffer_ - a python file object
-- `byteorder` _string_ - `">"` if big-endian used else `"<"`
-- `db` _dict_ - authorized tag database
+- `fileobj` _buffer_ - a python file object.
+- `byteorder` _string_ - `">"` if big-endian used else `"<"`.
+  
 
 **Returns**:
 
-  `Tyf.ifd.Tag`
+- ``Tyf.ifd.Tag`` - tag instance.
 
-<a name="Tyf.ifd.Tag.calcsize"></a>
+<a id="Tyf.ifd.Tag.calcsize"></a>
+
 #### calcsize
 
 ```python
- | calcsize()
+def calcsize()
 ```
 
 Return tag value size in `bytes` when packed.
 
-<a name="Tyf.ifd.Tag.pack"></a>
+<a id="Tyf.ifd.Tag.pack"></a>
+
 #### pack
 
 ```python
- | pack(byteorder)
+def pack(byteorder)
 ```
 
 Return a tuple containing packed IFD base entry [tag, type, count],
@@ -155,13 +162,15 @@ True
 
 **Arguments**:
 
-- `byteorder` _string_ - `">"` if big-endian used else `"<"`
+- `byteorder` _string_ - `">"` if big-endian used else `"<"`.
+  
 
 **Returns**:
 
-  packed ifd entry - packed value - is offset boolean
+- `tuple` - packed ifd entry, packed value, is offset boolean
 
-<a name="Tyf.ifd.Ifd"></a>
+<a id="Tyf.ifd.Ifd"></a>
+
 ## Ifd Objects
 
 ```python
@@ -192,31 +201,35 @@ with automatic sub IFD management. `exfT`, `gpsT` and `itrT` are
 False
 ```
 
-<a name="Tyf.ifd.Ifd.raster_loaded"></a>
+<a id="Tyf.ifd.Ifd.raster_loaded"></a>
+
 #### raster\_loaded
 
 `True` if raster is loaded
 
-<a name="Tyf.ifd.Ifd.tiepoints"></a>
+<a id="Tyf.ifd.Ifd.tiepoints"></a>
+
 #### tiepoints
 
 Geotiff tiepoint list
 
-<a name="Tyf.ifd.Ifd.tags"></a>
+<a id="Tyf.ifd.Ifd.tags"></a>
+
 #### tags
 
 ```python
- | tags()
+def tags()
 ```
 
 Return iterator over all IFD values including sub IFD ones in the
 order: `exfT` - `gpsT` - `itrT`.
 
-<a name="Tyf.ifd.Ifd.set_location"></a>
+<a id="Tyf.ifd.Ifd.set_location"></a>
+
 #### set\_location
 
 ```python
- | set_location(lon, lat, alt=0.)
+def set_location(lon, lat, alt=0.)
 ```
 
 Set GPS IFD tags according to given longitude, latitude and altitude.
@@ -244,11 +257,12 @@ If no GPS IFD exists, it is created according to version
 - `lat` _float_ - latitude in decimal degrees
 - `alt` _float_ - altitude in meters
 
-<a name="Tyf.ifd.Ifd.get_location"></a>
+<a id="Tyf.ifd.Ifd.get_location"></a>
+
 #### get\_location
 
 ```python
- | get_location()
+def get_location()
 ```
 
 
@@ -267,17 +281,19 @@ Exception: No location data found
 
 **Returns**:
 
-  longitude - latitude - altitude
+- `tuple` - longitude, latitude and altitude.
+  
 
 **Raises**:
 
-  Exception if no GPS IFD found
+- `Exception` - if no GPS IFD found.
 
-<a name="Tyf.ifd.Ifd.url_load_location"></a>
+<a id="Tyf.ifd.Ifd.url_load_location"></a>
+
 #### url\_load\_location
 
 ```python
- | url_load_location(url, **kwargs)
+def url_load_location(url, **kwargs)
 ```
 
 Return a static map image data from map provider.
@@ -302,30 +318,32 @@ Return a static map image data from map provider.
 **Arguments**:
 
 - `url` _str_ - map provider url containing `%(lon)f` and `%(lat)f`
-  format expression to be replaced by longitude and
-  latitude found in GPS data
+  format expression to be replaced by longitude and latitude
+  found in GPS data.
 - `**kwargs` _dict_ - key-value pairs to match entries in url according
-  to python string formatting
+  to python string formatting.
+  
 
 **Returns**:
 
-  Image data as `bytes` (py3) or `str` (py2)
+- `bytes|str` - Image data.
 
-<a name="Tyf.ifd.Ifd.dump_location"></a>
+<a id="Tyf.ifd.Ifd.dump_location"></a>
+
 #### dump\_location
 
 ```python
- | dump_location(name, url, **kwargs)
+def dump_location(name, url, **kwargs)
 ```
 
 Dump a static map image from map provider into filesystem.
 
 **Arguments**:
 
-- `name` _str_ - a valid filepath
+- `name` _str_ - a valid filepath.
 - `url` _str_ - map provider url containing `%(lon)f` and `%(lat)f`
-  format expression to be replaced by longitude and
-  latitude found in GPS data
+  format expression to be replaced by longitude and latitude
+  found in GPS data.
 - `**kwargs` _dict_ - key-value pairs to match entries in url according
-  to python string formatting
+  to python string formatting.
 
