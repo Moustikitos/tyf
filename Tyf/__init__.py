@@ -25,7 +25,8 @@ import sys
 import struct
 import operator
 
-import xml.etree.ElementTree as xmp
+import xml.etree.ElementTree as ET
+from typing import IO, AnyStr, Union
 
 __PY3__ = sys.version_info[0] >= 3
 __XMP__ = True
@@ -88,29 +89,34 @@ else:
 from Tyf import ifd, gkd
 
 
-def unpack(fmt, fileobj):
+def unpack(fmt: str, fileobj: IO[AnyStr]) -> tuple:
     return struct.unpack(fmt, fileobj.read(struct.calcsize(fmt)))
 
 
-def pack(fmt, fileobj, value):
+def pack(fmt: str, fileobj: IO[AnyStr], value: tuple):
     return fileobj.write(struct.pack(fmt, *value))
 
 
-def _read_IFD(obj, fileobj, offset, byteorder="<"):
+def _read_IFD(
+        obj: ifd.Ifd, fileobj: IO[AnyStr],
+        offset: int, byteorder: str = "<") -> int:
     "Read IFD from file object and return next IFD offset."
     # fileobj seek must be on the start offset
     fileobj.seek(offset)
     # get number of entry
     nb_entry, = unpack(byteorder+"H", fileobj)
+    # next ifd offset value is at the end of all entries
     next_ifd_offset = offset + struct.calcsize("=H" + nb_entry*"HHLL")
-    # for each entry
+    # for each entry add new tag to ifd
     for i in range(nb_entry):
         obj.append(ifd.Tag.read(fileobj, byteorder))
     # return next ifd offset, if =0 then end of TIFF
     return next_ifd_offset
 
 
-def _from_buffer(obj, fileobj, offset, byteorder="<"):
+def _from_buffer(
+        obj: ifd.Ifd, fileobj: IO[AnyStr],
+        offset: int, byteorder: str = "<") -> int:
     "Read IFD and sub IFD from file object and return next IFD offset."
     # read data from offset and get next ifd offset
     next_ifd_offset = _read_IFD(obj, fileobj, offset, byteorder)
@@ -123,7 +129,9 @@ def _from_buffer(obj, fileobj, offset, byteorder="<"):
     return next_ifd
 
 
-def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
+def _write_IFD(
+        obj: ifd.Ifd, fileobj: IO[AnyStr], offset: int,
+        byteorder: str = "<", ifd1: ifd.Ifd = None):
     "Write IFD in file object and return next ifd offset."
     # compute geotiff ifd if any found
     geokey = gkd.Gkd.from_ifd(obj)
@@ -141,19 +149,20 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     # compute exif, gps and interoperability offsets
     ifd_size = ifds["root"]["size"]
     ifd_values = ifds["root"]["data"]
+
     # where to put ifd values
     ifd_offset_values = offset + ifd_size
     # where to put the sub ifds
     sub_ifd_offset = ifd_offset_values + len(ifd_values)
 
     # compute all possible sub ifd offsets
-    for name in set(["exfT", "gpsT", "itrT"]) & set(ifds.keys()):
+    for name in [n for n in ["exfT", "gpsT", "itrT"] if n in ifds]:
         i = ifds[name]
-        obj[
-            "Exif IFD" if name == "exfT" else
-            "GPS IFD" if name == "gpsT" else
+        tag = \
+            "Exif IFD" if name == "exfT" else \
+            "GPS IFD" if name == "gpsT" else \
             "Interoperability IFD"
-        ] = sub_ifd_offset
+        obj[tag] = sub_ifd_offset
         # increment the next sub ifd offset
         sub_ifd_offset += i["size"] + len(i["data"])
 
@@ -168,9 +177,11 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
         raster_offset = sub_ifd_offset
 
     # compute raster positions
-    for tag in set(
+    for tag in [
+        t for t in
         ["StripOffsets", "TileOffsets", "FreeOffsets", "JPEGInterchangeFormat"]
-    ) & set(dict.keys(obj)):
+        if t in dict.keys(obj)
+    ]:
         if "Offset" in tag:  # StripOffsets, TileOffsets or FreeOffsets
             raster_offsets = (raster_offset,)
             tagname = tag.replace("Offsets", "ByteCounts")
@@ -190,7 +201,10 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     raster_offset += len(ifds["root"]["data"]) - len(ifd_values)
 
     # write IFDs
-    for key in set(["root", "exfT", "gpsT", "itrT"]) & set(ifds.keys()):
+    for key in [
+        k for k in ["root", "exfT", "gpsT", "itrT"]
+        if k in ifds
+    ]:
         packed = ifds[key]
         # go to according [SUB]IFD offset and determine associated data offset
         if key == "root":
@@ -203,11 +217,12 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
                 "Interoperability IFD"
             ]
             fileobj.seek(sub_ifd_offset)
-            data_offset = sub_ifd_offset + packed["size"]
+            data_offset = \
+                sub_ifd_offset + packed["size"]
 
         tags = packed["tags"]
         # write number of entries
-        pack(byteorder + "H", fileobj, (len(tags),))
+        pack(byteorder+"H", fileobj, (len(tags),))
         # write all ifd entries and data
         for entry, data, is_offset in tags:
             fileobj.write(entry)
@@ -215,19 +230,19 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
                 fileobj.write(data)
             else:
                 # put offset and shift it by len(data) for next offset value
-                pack(byteorder + "L", fileobj, (data_offset, ))
+                pack(byteorder+"L", fileobj, (data_offset, ))
                 data_offset += len(data)
 
         if key == "root":
             next_ifd_offset = fileobj.tell()
-        pack(byteorder + "L", fileobj, (0, ))
+        pack(byteorder+"L", fileobj, (0, ))
         fileobj.write(packed["data"])
 
     # write IFD1 (this should only be used with Jpeg exif thumbnail)
     if "ifd1" in ifds:
         ifd1_offset = fileobj.tell()
         fileobj.seek(next_ifd_offset)
-        pack(byteorder + "L", fileobj, (ifd1_offset, ))
+        pack(byteorder+"L", fileobj, (ifd1_offset, ))
         _write_IFD(ifd1, fileobj, ifd1_offset, byteorder="<", ifd1=None)
 
     # write raster data
@@ -247,7 +262,7 @@ def _write_IFD(obj, fileobj, offset, byteorder="<", ifd1=None):
     return next_ifd_offset
 
 
-def _fileobj(f, mode):
+def _fileobj(f: Union[str, IO[AnyStr]], mode: str) -> tuple:
     #: returns fileobj from a path or a stringIO
     if hasattr(f, "close"):
         fileobj = f
@@ -258,44 +273,13 @@ def _fileobj(f, mode):
     return fileobj, _close
 
 
-def open(f):
-    """
-    Return `JpegFile` or `TiffFile` instance according to argument.
-
-    Args:
-        f (buffer or string): a valid file path or a python file object.
-
-    Returns:
-        Tyf.JpegFile|Tyf.TiffFile: JPEG or TIFF instance.
-    """
-    fileobj, _close = _fileobj(f, "rb")
-
-    first, = unpack(">H", fileobj)
-    fileobj.seek(0)
-
-    if first == 0xffd8:
-        obj = JpegFile(fileobj)
-    elif first in [0x4d4d, 0x4949]:
-        obj = TiffFile(fileobj)
-    else:
-        obj = None
-
-    if _close:
-        fileobj.close()
-
-    if obj is None:
-        raise InvalidFileError("file is not a valid JPEG nor TIFF image")
-    else:
-        return obj
-
-
 class TiffFile(list):
     """
     This class is is a list of all Image File Directories defining the TIFF
     file.
 
     Args:
-        fileobj (buffer): a python file object.
+        fileobj (IO[AnyStr]): a python file object.
 
     ```python
     >>> tif = Tyf.open("test/CEA.tif")
@@ -325,7 +309,7 @@ class TiffFile(list):
         None, None, "True if all raster data loaded"
     )
 
-    def __init__(self, fileobj):
+    def __init__(self, fileobj: IO[AnyStr]) -> None:
         # determine byteorder
         first, = unpack(">H", fileobj)
         byteorder = "<" if first == 0x4949 else ">"
@@ -357,7 +341,7 @@ class TiffFile(list):
 
         list.__init__(self, ifds)
 
-    def load_raster(self, idx=None):
+    def load_raster(self, idx: int = None) -> None:
         if hasattr(self, "_filename"):
             in_, c_ = _fileobj(self._filename, "rb")
             for item in iter(self) if idx is None else [self[idx]]:
@@ -365,15 +349,17 @@ class TiffFile(list):
                     ifd._load_raster(item, in_)
             in_.close()
 
-    def save(self, f, byteorder="<", idx=None, ifd1=None):
+    def save(
+            self, f: Union[str, IO[AnyStr]], byteorder: str = "<",
+            idx: int = None, ifd1: ifd.Ifd = None) -> None:
         """
-        Save object into a TIFF file.
+        Save object into a buffer.
 
         Arguments:
-            f (buffer|string): a valid file path or a python file object
+            f (str|IO[AnyStr]): a valid file path or a python file object
             byteorder (string): `">"` if big-endian used else `"<"`
             idx (int): IFD index to save
-            ifd1 (Tyf.ifd.Ifd): IFD to be used as thumbnail (only needed with
+            ifd1 (ifd.Ifd): IFD to be used as thumbnail (only needed with
                 JPEG saving)
         """
         self.load_raster()
@@ -402,7 +388,7 @@ class JpegFile(list):
     Thumbnail and `xmp` is a shortcut to XMP data.
 
     Args:
-        fileobj (buffer): a python file object.
+        fileobj (IO[AnyStr]): a python file object.
 
     ```python
     >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
@@ -415,26 +401,24 @@ class JpegFile(list):
     ```
     """
 
-    #: shortcut to JPEG EXIF data
-    ifd0 = property(
-        lambda obj: getattr(obj, "ifd", [{}, {}])[0],
-        None, None, "readonly image IFD attribute"
-    )
+    @property
+    def ifd0(obj):
+        "Shortcut to JPEG EXIF data."
+        return getattr(obj, "ifd", [{}, {}])[0]
 
-    #: shortcut to JPEG thumbnail
-    ifd1 = property(
-        lambda obj: getattr(obj, "ifd", [{}, {}])[1],
-        None, None, "readonly thumbnail IFD attribute"
-    )
+    @property
+    def ifd1(obj):
+        "Shortcut to JPEG thumbnail."
+        return getattr(obj, "ifd", [{}, {}])[1]
 
     @property
     def xmp(obj):
-        "readonly XMP attribute"
+        "Shortcut to XMP attribute."
         if not hasattr(obj, "_JpegFile__xmp_ns"):
             raise XmpDataNotFound("no XMP segment found")
         return list.__getitem__(obj, obj.__xmp_idx)[-1]
 
-    def __init__(self, fileobj):
+    def __init__(self, fileobj: IO[AnyStr]) -> None:
         sgmt = []
 
         fileobj.seek(0)
@@ -461,16 +445,20 @@ class JpegFile(list):
                     self.__xmp_idx = len(sgmt)
                     self.__xmp_ns = data[:xmp_data_idx]
                     sgmt.append(
-                        (marker, xmp.fromstring(data[xmp_data_idx+1:]))
+                        (marker, ET.fromstring(data[xmp_data_idx+1:]))
                     )
             else:
                 sgmt.append((marker, fileobj.read(count-2)))
 
         list.__init__(self, sgmt)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Union[int, str]) -> ifd.Tag:
         """
-        Return item from `ifd0`.
+        Args:
+            item (int|str): tag number or key.
+
+        Returns:
+            ifd.Tag: ifd.Tag instance from `ifd0`.
 
         ```python
         >>> jpg["GPSLongitude"]
@@ -479,9 +467,13 @@ class JpegFile(list):
         """
         return self.ifd0.get(item, None)
 
-    def get(self, item, default=None):
+    def get(self, item: Union[int, str], default=None) -> ifd.Tag:
         """
-        Return item from `ifd1`.
+        Args:
+            item (int|str): tag number or key.
+
+        Returns:
+            ifd.Tag: ifd.Tag instance from `ifd1`.
 
         ```python
         >>> jpg.get("ImageWidth")
@@ -490,7 +482,7 @@ class JpegFile(list):
         """
         return self.ifd1.get(item, default)
 
-    def set_xmp(self, tag, value, **attributes):
+    def set_xmp(self, tag: str, value: str, **attributes) -> ET.SubElement:
         """
         Set xmp tag value. Custom namespace can be used.
 
@@ -507,8 +499,8 @@ class JpegFile(list):
         if not hasattr(self, "_JpegFile__xmp_ns"):
             self.__xmp_ns = b"http://ns.adobe.com/xap/1.0/"
             self.__xmp_idx = 2
-            elem = xmp.Element("{adobe:ns:meta/}xmpmeta")
-            xmp.SubElement(elem, "{%s}RDF" % XmpNamespace["RDF"])
+            elem = ET.Element("{adobe:ns:meta/}xmpmeta")
+            ET.SubElement(elem, "{%s}RDF" % XmpNamespace["RDF"])
             list.insert(self, self.__xmp_idx, (65505, elem))
         # get namespace
         ns = attributes.pop("ns", "http://ns.adobe.com/exif/1.0/")
@@ -518,16 +510,16 @@ class JpegFile(list):
         parent = self.xmp.find(".//{%s}*/..." % ns)
         if parent is None:
             # create a 'Description' node in root element with rdf namespace
-            parent = xmp.SubElement(
+            parent = ET.SubElement(
                 self.xmp[0], "{%s}Description" % XmpNamespace["RDF"]
             )
         # add element with the appropriate namespace
-        elem = xmp.SubElement(parent, "{%s}%s" % (ns, tag), **attributes)
+        elem = ET.SubElement(parent, "{%s}%s" % (ns, tag), **attributes)
         elem.text = "%s" % value
         parent.append(elem)
         return elem
 
-    def get_xmp(self, tag, ns="http://ns.adobe.com/exif/1.0/"):
+    def get_xmp(self, tag: str, ns: str = "EXIF") -> ET.Element:
         """
         Get xmp tag value. Custom namespace can be used.
 
@@ -541,13 +533,13 @@ class JpegFile(list):
         """
         return self.xmp.find(".//{%s}%s" % (XmpNamespace.get(ns, ns), tag))
 
-    def save(self, f):
+    def save(self, f: Union[str, IO[AnyStr]]) -> None:
         """
         Save object as a JPEG file. All segmet are writed in current order,
         only `ifd0`, `ifd1` and `xmp` are recomputed.
 
         Arguments:
-            f (buffer or string): a valid file path or a python file object
+            f (str|IO[AnyStr]): a valid file path or a python file object
         """
         fileobj, _close = _fileobj(f, "wb")
         pack(">H", fileobj, (0xffd8,))
@@ -569,8 +561,8 @@ class JpegFile(list):
                         else data.encode("utf-8")
                     )
                     string.close()
-                elif isinstance(value, xmp.Element):
-                    data = xmp.tostring(self.xmp)
+                elif isinstance(value, ET.Element):
+                    data = ET.tostring(self.xmp)
                     value = self.__xmp_ns + b"\x00" + (
                         data if isinstance(data, bytes)
                         else data.encode("utf-8")
@@ -590,13 +582,13 @@ class JpegFile(list):
             fileobj.close()
             del fileobj
 
-    def save_thumbnail(self, f):
+    def save_thumbnail(self, f: Union[str, IO[AnyStr]]) -> None:
         """
         Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
         automatically appended.
 
         Arguments:
-            f (buffer or string): a valid file path or a python file object
+            f (str|IO[AnyStr]): a valid file path or a python file object
         """
         try:
             ifd = self.ifd1
@@ -624,7 +616,7 @@ class JpegFile(list):
                 fileobj.close()
                 del fileobj
 
-    def dump_exif(self, f):
+    def dump_exif(self, f: Union[str, IO[AnyStr]]) -> None:
         """
         Save EXIF data in a separated file. If `f` is a file object, it is
         not closed.
@@ -637,6 +629,40 @@ class JpegFile(list):
         if _close:
             fileobj.close()
             del fileobj
+
+
+def open(f: Union[str, IO[AnyStr]]) -> Union[TiffFile, JpegFile]:
+    """
+    Return `JpegFile` or `TiffFile` instance according to argument.
+
+    Args:
+        f (str|IO[AnyStr]): a valid file path or a python file object.
+
+    Returns:
+        Tyf.JpegFile|Tyf.TiffFile: JPEG or TIFF instance.
+
+    Raises:
+        InvalidFileError: if file is neither a JPEG nor a TIFF file.
+    """
+    fileobj, _close = _fileobj(f, "rb")
+
+    first, = unpack(">H", fileobj)
+    fileobj.seek(0)
+
+    if first == 0xffd8:
+        obj = JpegFile(fileobj)
+    elif first in [0x4d4d, 0x4949]:
+        obj = TiffFile(fileobj)
+    else:
+        obj = None
+
+    if _close:
+        fileobj.close()
+
+    if obj is None:
+        raise InvalidFileError("file is not a valid JPEG nor TIFF image")
+    else:
+        return obj
 
 
 # if PIL exists do some overridings
@@ -653,7 +679,7 @@ else:
                 setattr(im, "ifd", TiffFile(fileobj))
                 fileobj.close()
             elif data[:29] == b'http://ns.adobe.com/xap/1.0/\x00':
-                setattr(im, "xmp", xmp.fromstring(data[29:]))
+                setattr(im, "xmp", ET.fromstring(data[29:]))
 
     def _getexif(im):
         if not hasattr(im, "ifd"):
@@ -702,7 +728,7 @@ else:
                 del stringio, data
             if hasattr(self, "xmp"):
                 params["xmp"] = b'http://ns.adobe.com/xap/1.0/\x00' + \
-                    xmp.tostring(self.xmp)
+                    ET.tostring(self.xmp)
             return Image._image_.save(self, fp, format, **params)
 
     #: Pillow override
