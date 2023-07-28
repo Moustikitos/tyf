@@ -12,13 +12,13 @@ kw.update(**{
     "version": f.read().strip(),
     "name": "Tyf",
     "keywords": [
-        "ifd", "tiff", "jpeg", "exif", "gps", "geotiff", "PIL", "Pillow"
+        "ifd", "tiff", "jpeg", "exif", "gps", "geotiff", "PIL", "Pillow", "xmp"
     ],
     "author": "Bruno THOORENS",
     "author_email": "moustikitos@gmail.com",
     "maintainer": "Bruno THOORENS",
     "maintainer_email": "moustikitos@gmail.com",
-    "url": "https://Moustikitos.github.io/tyf/",
+    "url": "https://github.com/Moustikitos/Tyf",
     "download_url": "https://github.com/Moustikitos/tyf/archive/master.zip",
     "description": "Pythonic way to read and edit IFD and EXIF tags.",
     "long_description": long_description.read(),
