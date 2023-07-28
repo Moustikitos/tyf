@@ -6,9 +6,6 @@
  + [JPEG FIF 1.02 spec](https://www.w3.org/Graphics/JPEG/jfif3.pdf)
  + [XMP spec](https://developer.adobe.com/xmp/docs/XMPSpecifications/)
 
-Tyf package aims to provide pythonic way to interact with metadata in TIFF and
-JPEG files.
-
 ```python
 >>> import Tyf
 ```
@@ -525,8 +522,8 @@ class JpegFile(list):
 
         Args:
             tag (str): tag name.
-            ns (url): xml namespace url (default to
-                http://ns.adobe.com/exif/1.0/).
+            ns (url): xml namespace url (default value is
+            `http://ns.adobe.com/exif/1.0/`).
 
         Returns:
             xml.etree.ElementTree.Element: tag element.

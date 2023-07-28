@@ -1,71 +1,77 @@
 # `Tyf`
-## Copyright
-[![pypi](https://img.shields.io/pypi/l/Tyf.svg)](https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html)
 
-## Distribution
+[![pypi](https://img.shields.io/pypi/l/Tyf.svg)](https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html)
 [![pypi](https://img.shields.io/pypi/pyversions/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/pypi/v/Tyf.svg)](https://pypi.python.org/pypi/Tyf)
 [![pypi](https://img.shields.io/badge/wheel-yes-brightgreen.svg)](https://pypi.python.org/pypi/Tyf)
 [![Downloads](https://pepy.tech/badge/Tyf/week)](https://pepy.tech/project/tyf)
 
 ## Support this project
+
 [![Liberapay receiving](https://img.shields.io/liberapay/goal/Toons?logo=liberapay)](https://liberapay.com/Toons/donate)
 
-[Buy &#1126;](https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT) and:
-
- + [X] Send &#1126; to `AUahWfkfr5J4tYakugRbfow7RWVTK35GPW`
- + [X] Vote `arky` on [Ark blockchain](https://explorer.ark.io) and [earn &#1126; weekly](http://dpos.arky-delegate.info/arky)
-
 ## Why this package ?
+
 Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.
 
 ## Documentation
+
 [The Tyf Project [WIP]](https://moustikitos.github.io/tyf/)
 
 ### Read / write EXIF and IFD data
- + read / edit EXIF data from JPEG images
- + read / edit IFD data from TIFF images
- + read / edit GEOTIFF data from IFD
- + read / edit XMP data from IFD and JPEG images
- + work directly with python numbers, string and datetime
- + interpolate map coordinates using GEOTIFF ModelTransformation
+
++ read / edit EXIF and XMP data from JPEG images
++ read / edit IFD and XMP data from TIFF images
++ read / edit / use GEOTIFF data from IFD
++ work directly with python types
 
 ### Do more with JPEG and TIFF files
- + extract TIFF or JPEG thumbnails from JPEG files
- + dump EXIF data from JPEG into file
- + dump location thumbnail using any map provider API
+
++ extract TIFF or JPEG thumbnails from JPEG files
++ dump EXIF data from JPEG into file
++ dump location thumbnail using any map provider API
 
 ## Quick view
+
 ```python
 >>> import Tyf
+>>> tif = Tyf.open("test/CEA.tif")
+>>> tif.__class__
+<class 'Tyf.TiffFile'>
+>>> for key in tif.gkd[0]: print(key)
+... 
+<GKD tag GTModelTypeGeoKey:(1,) - Projection Coordinate System>
+<GKD tag GTRasterTypeGeoKey:(1,) - Raster pixel is area>
+<GKD tag GTCitationGeoKey:b'unnamed'>
+<GKD tag GeographicTypeGeoKey:(4267,) - NAD27>
+<GKD tag GeogCitationGeoKey:b'NAD27'>
+<GKD tag GeogAngularUnitsGeoKey:(9102,) - degree>
+<GKD tag ProjectedCSTypeGeoKey:(32767,) - User-defined>
+<GKD tag ProjectionGeoKey:(32767,) - User-defined>
+<GKD tag ProjCoordTransGeoKey:(28,) - User-defined>
+<GKD tag ProjLinearUnitsGeoKey:(9001,) - metre>
+<GKD tag ProjStdParallel1GeoKey:(33.75,)>
+<GKD tag ProjNatOriginLongGeoKey:(-117.333333333333,)>
+<GKD tag ProjFalseEastingGeoKey:(0.0,)>
+<GKD tag ProjFalseNorthingGeoKey:(0.0,)>
+>>> tr = tif[0].getModelTransformation()
+>>> tr(tif[0]["ImageWidth"]/2, tif[0]["ImageLength"]/2) 
+(-13067.47757973173, 4240428.8435290195, 0.0)
 >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
+unknown tag 18246 type [7]: <IFD tag Undefined:4> ignored
+unknown tag 18249 type [7]: <IFD tag Undefined:75> ignored
 >>> jpg.__class__
 <class 'Tyf.JpegFile'>
->>> print(Tyf.xmp.tostring(jpg.xmp).decode()) 
-<ns0:xmpmeta
- xmlns:dc="http://purl.org/dc/elements/1.1/"
- xmlns:ns0="adobe:ns:meta/" xmlns:ns3="http://ns.adobe.com/xap/1.0/"
- xmlns:ns4="http://ns.microsoft.com/photo/1.0/"
- xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF>
-<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
-<dc:title><rdf:Alt><rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li>
-</rdf:Alt></dc:title><dc:description><rdf:Alt>
-<rdf:li xml:lang="x-default">Beautifull Rainbow</rdf:li></rdf:Alt>
-</dc:description><dc:creator><rdf:Seq><rdf:li>THOORENS Bruno</rdf:li>
-</rdf:Seq></dc:creator><dc:rights><rdf:Alt>
-<rdf:li xml:lang="x-default">THOORENS Bruno</rdf:li></rdf:Alt></dc:rights>
-</rdf:Description>
-<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b" />
-<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
-<ns3:Rating>4</ns3:Rating></rdf:Description>
-<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
-<ns4:Rating>75</ns4:Rating><ns4:LastKeywordXMP><rdf:Bag>
-<rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-</ns4:LastKeywordXMP></rdf:Description>
-<rdf:Description rdf:about="uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b">
-<dc:subject><rdf:Bag><rdf:li>Rainbow</rdf:li><rdf:li>Belgium</rdf:li></rdf:Bag>
-</dc:subject></rdf:Description>
-</rdf:RDF></ns0:xmpmeta>
+>>> jpg["XPComment"]
+<IFD tag XPComment:'For testing purpose only !'>
+>>> jpg.xmp
+<Element '{adobe:ns:meta/}xmpmeta' at 0x000001D6A2404130>
+>>> jpg.get_xmp("Rating", ns="ADOBE").text
+'4'
+>>> jpg.set_xmp("UserComment", "Simple comment") 
+<Element '{http://ns.adobe.com/exif/1.0/}UserComment' at 0x000001D6A24062F0>
+>>> jpg.get_xmp("UserComment").text 
+'Simple comment'
 >>> jpg.save_thumbnail("test/test_thumb") # extension automatically added
 ```
 

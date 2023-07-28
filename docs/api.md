@@ -9,31 +9,9 @@ __Bibliography__
  + [JPEG FIF 1.02 spec](https://www.w3.org/Graphics/JPEG/jfif3.pdf)
  + [XMP spec](https://developer.adobe.com/xmp/docs/XMPSpecifications/)
 
-Tyf package aims to provide pythonic way to interact with metadata in TIFF and
-JPEG files.
-
 ```python
 >>> import Tyf
 ```
-
-<a id="Tyf.open"></a>
-
-#### open
-
-```python
-def open(f)
-```
-
-Return `JpegFile` or `TiffFile` instance according to argument.
-
-**Arguments**:
-
-- `f` _buffer or string_ - a valid file path or a python file object.
-  
-
-**Returns**:
-
-- `Tyf.JpegFile|Tyf.TiffFile` - JPEG or TIFF instance.
 
 <a id="Tyf.TiffFile"></a>
 
@@ -48,7 +26,7 @@ file.
 
 **Arguments**:
 
-- `fileobj` _buffer_ - a python file object.
+- `fileobj` _IO[AnyStr]_ - a python file object.
   
 ```python
 >>> tif = Tyf.open("test/CEA.tif")
@@ -80,17 +58,20 @@ shortcut to geokey directories
 #### save
 
 ```python
-def save(f, byteorder="<", idx=None, ifd1=None)
+def save(f: Union[str, IO[AnyStr]],
+         byteorder: str = "<",
+         idx: int = None,
+         ifd1: ifd.Ifd = None) -> None
 ```
 
-Save object into a TIFF file.
+Save object into a buffer.
 
 **Arguments**:
 
-- `f` _buffer|string_ - a valid file path or a python file object
+- `f` _str|IO[AnyStr]_ - a valid file path or a python file object
 - `byteorder` _string_ - `">"` if big-endian used else `"<"`
 - `idx` _int_ - IFD index to save
-- `ifd1` _Tyf.ifd.Ifd_ - IFD to be used as thumbnail (only needed with
+- `ifd1` _ifd.Ifd_ - IFD to be used as thumbnail (only needed with
   JPEG saving)
 
 <a id="Tyf.JpegFile"></a>
@@ -108,7 +89,7 @@ Thumbnail and `xmp` is a shortcut to XMP data.
 
 **Arguments**:
 
-- `fileobj` _buffer_ - a python file object.
+- `fileobj` _IO[AnyStr]_ - a python file object.
   
 ```python
 >>> jpg = Tyf.open("test/IMG_20150730_210115.jpg")
@@ -124,13 +105,23 @@ Thumbnail and `xmp` is a shortcut to XMP data.
 
 #### ifd0
 
-shortcut to JPEG EXIF data
+```python
+@property
+def ifd0(obj)
+```
+
+Shortcut to JPEG EXIF data.
 
 <a id="Tyf.JpegFile.ifd1"></a>
 
 #### ifd1
 
-shortcut to JPEG thumbnail
+```python
+@property
+def ifd1(obj)
+```
+
+Shortcut to JPEG thumbnail.
 
 <a id="Tyf.JpegFile.xmp"></a>
 
@@ -141,18 +132,25 @@ shortcut to JPEG thumbnail
 def xmp(obj)
 ```
 
-readonly XMP attribute
+Shortcut to XMP attribute.
 
 <a id="Tyf.JpegFile.__getitem__"></a>
 
 #### \_\_getitem\_\_
 
 ```python
-def __getitem__(item)
+def __getitem__(item: Union[int, str]) -> ifd.Tag
 ```
 
-Return item from `ifd0`.
+**Arguments**:
 
+- `item` _int|str_ - tag number or key.
+  
+
+**Returns**:
+
+- `ifd.Tag` - ifd.Tag instance from `ifd0`.
+  
 ```python
 >>> jpg["GPSLongitude"]
 <IFD tag GPSLongitude:5.1872093>
@@ -163,11 +161,18 @@ Return item from `ifd0`.
 #### get
 
 ```python
-def get(item, default=None)
+def get(item: Union[int, str], default=None) -> ifd.Tag
 ```
 
-Return item from `ifd1`.
+**Arguments**:
 
+- `item` _int|str_ - tag number or key.
+  
+
+**Returns**:
+
+- `ifd.Tag` - ifd.Tag instance from `ifd1`.
+  
 ```python
 >>> jpg.get("ImageWidth")
 <IFD tag ImageWidth:320>
@@ -178,7 +183,7 @@ Return item from `ifd1`.
 #### set\_xmp
 
 ```python
-def set_xmp(tag, value, **attributes)
+def set_xmp(tag: str, value: str, **attributes) -> ET.SubElement
 ```
 
 Set xmp tag value. Custom namespace can be used.
@@ -200,7 +205,7 @@ Set xmp tag value. Custom namespace can be used.
 #### get\_xmp
 
 ```python
-def get_xmp(tag, ns="http://ns.adobe.com/exif/1.0/")
+def get_xmp(tag: str, ns: str = "EXIF") -> ET.Element
 ```
 
 Get xmp tag value. Custom namespace can be used.
@@ -208,8 +213,8 @@ Get xmp tag value. Custom namespace can be used.
 **Arguments**:
 
 - `tag` _str_ - tag name.
-- `ns` _url_ - xml namespace url (default to
-  http://ns.adobe.com/exif/1.0/).
+- `ns` _url_ - xml namespace url (default value is
+  `http://ns.adobe.com/exif/1.0/`).
   
 
 **Returns**:
@@ -221,7 +226,7 @@ Get xmp tag value. Custom namespace can be used.
 #### save
 
 ```python
-def save(f)
+def save(f: Union[str, IO[AnyStr]]) -> None
 ```
 
 Save object as a JPEG file. All segmet are writed in current order,
@@ -229,14 +234,14 @@ only `ifd0`, `ifd1` and `xmp` are recomputed.
 
 **Arguments**:
 
-- `f` _buffer or string_ - a valid file path or a python file object
+- `f` _str|IO[AnyStr]_ - a valid file path or a python file object
 
 <a id="Tyf.JpegFile.save_thumbnail"></a>
 
 #### save\_thumbnail
 
 ```python
-def save_thumbnail(f)
+def save_thumbnail(f: Union[str, IO[AnyStr]]) -> None
 ```
 
 Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
@@ -244,14 +249,14 @@ automatically appended.
 
 **Arguments**:
 
-- `f` _buffer or string_ - a valid file path or a python file object
+- `f` _str|IO[AnyStr]_ - a valid file path or a python file object
 
 <a id="Tyf.JpegFile.dump_exif"></a>
 
 #### dump\_exif
 
 ```python
-def dump_exif(f)
+def dump_exif(f: Union[str, IO[AnyStr]]) -> None
 ```
 
 Save EXIF data in a separated file. If `f` is a file object, it is
@@ -260,4 +265,28 @@ not closed.
 **Arguments**:
 
 - `f` _buffer or string_ - a valid file path or a python file object
+
+<a id="Tyf.open"></a>
+
+#### open
+
+```python
+def open(f: Union[str, IO[AnyStr]]) -> Union[TiffFile, JpegFile]
+```
+
+Return `JpegFile` or `TiffFile` instance according to argument.
+
+**Arguments**:
+
+- `f` _str|IO[AnyStr]_ - a valid file path or a python file object.
+  
+
+**Returns**:
+
+- `Tyf.JpegFile|Tyf.TiffFile` - JPEG or TIFF instance.
+  
+
+**Raises**:
+
+- `InvalidFileError` - if file is neither a JPEG nor a TIFF file.
 
