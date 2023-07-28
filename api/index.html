@@ -47,8 +47,6 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">API</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#open">open</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#tifffile-objects">TiffFile Objects</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#gkd">gkd</a>
@@ -80,6 +78,8 @@
     <li class="toctree-l3"><a class="reference internal" href="#save_thumbnail">save_thumbnail</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#dump_exif">dump_exif</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#open">open</a>
     </li>
         </ul>
     </li>
@@ -123,23 +123,8 @@
 <li><a href="https://www.w3.org/Graphics/JPEG/jfif3.pdf">JPEG FIF 1.02 spec</a></li>
 <li><a href="https://developer.adobe.com/xmp/docs/XMPSpecifications/">XMP spec</a></li>
 </ul>
-<p>Tyf package aims to provide pythonic way to interact with metadata in TIFF and
-JPEG files.</p>
 <pre><code class="language-python">&gt;&gt;&gt; import Tyf
 </code></pre>
-<p><a id="Tyf.open"></a></p>
-<h4 id="open">open</h4>
-<pre><code class="language-python">def open(f)
-</code></pre>
-<p>Return <code>JpegFile</code> or <code>TiffFile</code> instance according to argument.</p>
-<p><strong>Arguments</strong>:</p>
-<ul>
-<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object.</li>
-</ul>
-<p><strong>Returns</strong>:</p>
-<ul>
-<li><code>Tyf.JpegFile|Tyf.TiffFile</code> - JPEG or TIFF instance.</li>
-</ul>
 <p><a id="Tyf.TiffFile"></a></p>
 <h2 id="tifffile-objects">TiffFile Objects</h2>
 <pre><code class="language-python">class TiffFile(list)
@@ -148,7 +133,7 @@ JPEG files.</p>
 file.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>fileobj</code> <em>buffer</em> - a python file object.</li>
+<li><code>fileobj</code> <em>IO[AnyStr]</em> - a python file object.</li>
 </ul>
 <pre><code class="language-python">&gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
 &gt;&gt;&gt; tif[0][&quot;BitsPerSample&quot;]
@@ -169,15 +154,18 @@ file.</p>
 <p><code>True</code> if raster data loaded</p>
 <p><a id="Tyf.TiffFile.save"></a></p>
 <h4 id="save">save</h4>
-<pre><code class="language-python">def save(f, byteorder=&quot;&lt;&quot;, idx=None, ifd1=None)
+<pre><code class="language-python">def save(f: Union[str, IO[AnyStr]],
+         byteorder: str = &quot;&lt;&quot;,
+         idx: int = None,
+         ifd1: ifd.Ifd = None) -&gt; None
 </code></pre>
-<p>Save object into a TIFF file.</p>
+<p>Save object into a buffer.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer|string</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>str|IO[AnyStr]</em> - a valid file path or a python file object</li>
 <li><code>byteorder</code> <em>string</em> - <code>"&gt;"</code> if big-endian used else <code>"&lt;"</code></li>
 <li><code>idx</code> <em>int</em> - IFD index to save</li>
-<li><code>ifd1</code> <em>Tyf.ifd.Ifd</em> - IFD to be used as thumbnail (only needed with
+<li><code>ifd1</code> <em>ifd.Ifd</em> - IFD to be used as thumbnail (only needed with
   JPEG saving)</li>
 </ul>
 <p><a id="Tyf.JpegFile"></a></p>
@@ -190,7 +178,7 @@ as IFD. <code>ifd0</code> is a shortcut to JPEF Exif, <code>ifd1</code> is a sho
 Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>fileobj</code> <em>buffer</em> - a python file object.</li>
+<li><code>fileobj</code> <em>IO[AnyStr]</em> - a python file object.</li>
 </ul>
 <pre><code class="language-python">&gt;&gt;&gt; jpg = Tyf.open(&quot;test/IMG_20150730_210115.jpg&quot;)
 &gt;&gt;&gt; jpg.ifd0[&quot;GPS IFD&quot;]
@@ -202,35 +190,55 @@ Thumbnail and <code>xmp</code> is a shortcut to XMP data.</p>
 </code></pre>
 <p><a id="Tyf.JpegFile.ifd0"></a></p>
 <h4 id="ifd0">ifd0</h4>
-<p>shortcut to JPEG EXIF data</p>
+<pre><code class="language-python">@property
+def ifd0(obj)
+</code></pre>
+<p>Shortcut to JPEG EXIF data.</p>
 <p><a id="Tyf.JpegFile.ifd1"></a></p>
 <h4 id="ifd1">ifd1</h4>
-<p>shortcut to JPEG thumbnail</p>
+<pre><code class="language-python">@property
+def ifd1(obj)
+</code></pre>
+<p>Shortcut to JPEG thumbnail.</p>
 <p><a id="Tyf.JpegFile.xmp"></a></p>
 <h4 id="xmp">xmp</h4>
 <pre><code class="language-python">@property
 def xmp(obj)
 </code></pre>
-<p>readonly XMP attribute</p>
+<p>Shortcut to XMP attribute.</p>
 <p><a id="Tyf.JpegFile.__getitem__"></a></p>
 <h4 id="__getitem__">__getitem__</h4>
-<pre><code class="language-python">def __getitem__(item)
+<pre><code class="language-python">def __getitem__(item: Union[int, str]) -&gt; ifd.Tag
 </code></pre>
-<p>Return item from <code>ifd0</code>.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>item</code> <em>int|str</em> - tag number or key.</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<ul>
+<li><code>ifd.Tag</code> - ifd.Tag instance from <code>ifd0</code>.</li>
+</ul>
 <pre><code class="language-python">&gt;&gt;&gt; jpg[&quot;GPSLongitude&quot;]
 &lt;IFD tag GPSLongitude:5.1872093&gt;
 </code></pre>
 <p><a id="Tyf.JpegFile.get"></a></p>
 <h4 id="get">get</h4>
-<pre><code class="language-python">def get(item, default=None)
+<pre><code class="language-python">def get(item: Union[int, str], default=None) -&gt; ifd.Tag
 </code></pre>
-<p>Return item from <code>ifd1</code>.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>item</code> <em>int|str</em> - tag number or key.</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<ul>
+<li><code>ifd.Tag</code> - ifd.Tag instance from <code>ifd1</code>.</li>
+</ul>
 <pre><code class="language-python">&gt;&gt;&gt; jpg.get(&quot;ImageWidth&quot;)
 &lt;IFD tag ImageWidth:320&gt;
 </code></pre>
 <p><a id="Tyf.JpegFile.set_xmp"></a></p>
 <h4 id="set_xmp">set_xmp</h4>
-<pre><code class="language-python">def set_xmp(tag, value, **attributes)
+<pre><code class="language-python">def set_xmp(tag: str, value: str, **attributes) -&gt; ET.SubElement
 </code></pre>
 <p>Set xmp tag value. Custom namespace can be used.</p>
 <p><strong>Arguments</strong>:</p>
@@ -246,14 +254,14 @@ def xmp(obj)
 </ul>
 <p><a id="Tyf.JpegFile.get_xmp"></a></p>
 <h4 id="get_xmp">get_xmp</h4>
-<pre><code class="language-python">def get_xmp(tag, ns=&quot;http://ns.adobe.com/exif/1.0/&quot;)
+<pre><code class="language-python">def get_xmp(tag: str, ns: str = &quot;EXIF&quot;) -&gt; ET.Element
 </code></pre>
 <p>Get xmp tag value. Custom namespace can be used.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>tag</code> <em>str</em> - tag name.</li>
-<li><code>ns</code> <em>url</em> - xml namespace url (default to
-  http://ns.adobe.com/exif/1.0/).</li>
+<li><code>ns</code> <em>url</em> - xml namespace url (default value is
+  <code>http://ns.adobe.com/exif/1.0/</code>).</li>
 </ul>
 <p><strong>Returns</strong>:</p>
 <ul>
@@ -261,33 +269,50 @@ def xmp(obj)
 </ul>
 <p><a id="Tyf.JpegFile.save"></a></p>
 <h4 id="save_1">save</h4>
-<pre><code class="language-python">def save(f)
+<pre><code class="language-python">def save(f: Union[str, IO[AnyStr]]) -&gt; None
 </code></pre>
 <p>Save object as a JPEG file. All segmet are writed in current order,
 only <code>ifd0</code>, <code>ifd1</code> and <code>xmp</code> are recomputed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>str|IO[AnyStr]</em> - a valid file path or a python file object</li>
 </ul>
 <p><a id="Tyf.JpegFile.save_thumbnail"></a></p>
 <h4 id="save_thumbnail">save_thumbnail</h4>
-<pre><code class="language-python">def save_thumbnail(f)
+<pre><code class="language-python">def save_thumbnail(f: Union[str, IO[AnyStr]]) -&gt; None
 </code></pre>
 <p>Save JPEG thumbnail in a separated TIFF or JPEG file, file extention
 automatically appended.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
+<li><code>f</code> <em>str|IO[AnyStr]</em> - a valid file path or a python file object</li>
 </ul>
 <p><a id="Tyf.JpegFile.dump_exif"></a></p>
 <h4 id="dump_exif">dump_exif</h4>
-<pre><code class="language-python">def dump_exif(f)
+<pre><code class="language-python">def dump_exif(f: Union[str, IO[AnyStr]]) -&gt; None
 </code></pre>
 <p>Save EXIF data in a separated file. If <code>f</code> is a file object, it is
 not closed.</p>
 <p><strong>Arguments</strong>:</p>
 <ul>
 <li><code>f</code> <em>buffer or string</em> - a valid file path or a python file object</li>
+</ul>
+<p><a id="Tyf.open"></a></p>
+<h4 id="open">open</h4>
+<pre><code class="language-python">def open(f: Union[str, IO[AnyStr]]) -&gt; Union[TiffFile, JpegFile]
+</code></pre>
+<p>Return <code>JpegFile</code> or <code>TiffFile</code> instance according to argument.</p>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>f</code> <em>str|IO[AnyStr]</em> - a valid file path or a python file object.</li>
+</ul>
+<p><strong>Returns</strong>:</p>
+<ul>
+<li><code>Tyf.JpegFile|Tyf.TiffFile</code> - JPEG or TIFF instance.</li>
+</ul>
+<p><strong>Raises</strong>:</p>
+<ul>
+<li><code>InvalidFileError</code> - if file is neither a JPEG nor a TIFF file.</li>
 </ul>
               
             </div>

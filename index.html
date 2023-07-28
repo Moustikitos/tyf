@@ -43,10 +43,6 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href=".">Overview</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#copyright">Copyright</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#distribution">Distribution</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#support-this-project">Support this project</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#why-this-package">Why this package ?</a>
@@ -109,32 +105,23 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="tyf"><code>Tyf</code></h1>
-<h2 id="copyright">Copyright</h2>
-<p><a href="https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html"><img alt="pypi" src="https://img.shields.io/pypi/l/Tyf.svg" /></a></p>
-<h2 id="distribution">Distribution</h2>
-<p><a href="https://pypi.python.org/pypi/Tyf"><img alt="pypi" src="https://img.shields.io/pypi/pyversions/Tyf.svg" /></a>
+<p><a href="https://htmlpreview.github.io/?https://github.com/Moustikitos/tyf/blob/master/tyf.html"><img alt="pypi" src="https://img.shields.io/pypi/l/Tyf.svg" /></a>
+<a href="https://pypi.python.org/pypi/Tyf"><img alt="pypi" src="https://img.shields.io/pypi/pyversions/Tyf.svg" /></a>
 <a href="https://pypi.python.org/pypi/Tyf"><img alt="pypi" src="https://img.shields.io/pypi/v/Tyf.svg" /></a>
 <a href="https://pypi.python.org/pypi/Tyf"><img alt="pypi" src="https://img.shields.io/badge/wheel-yes-brightgreen.svg" /></a>
 <a href="https://pepy.tech/project/tyf"><img alt="Downloads" src="https://pepy.tech/badge/Tyf/week" /></a></p>
 <h2 id="support-this-project">Support this project</h2>
 <p><a href="https://liberapay.com/Toons/donate"><img alt="Liberapay receiving" src="https://img.shields.io/liberapay/goal/Toons?logo=liberapay" /></a></p>
-<p><a href="https://bittrex.com/Account/Register?referralCode=NW5-DQO-QMT">Buy &#1126;</a> and:</p>
-<ul>
-<li>[X] Send &#1126; to <code>AUahWfkfr5J4tYakugRbfow7RWVTK35GPW</code></li>
-<li>[X] Vote <code>arky</code> on <a href="https://explorer.ark.io">Ark blockchain</a> and <a href="http://dpos.arky-delegate.info/arky">earn &#1126; weekly</a></li>
-</ul>
 <h2 id="why-this-package">Why this package ?</h2>
 <p>Tyf package provides pythonic way to work with embeded data in TIFF and JPEG images.</p>
 <h2 id="documentation">Documentation</h2>
 <p><a href="https://moustikitos.github.io/tyf/">The Tyf Project [WIP]</a></p>
 <h3 id="read-write-exif-and-ifd-data">Read / write EXIF and IFD data</h3>
 <ul>
-<li>read / edit EXIF data from JPEG images</li>
-<li>read / edit IFD data from TIFF images</li>
-<li>read / edit GEOTIFF data from IFD</li>
-<li>read / edit XMP data from IFD and JPEG images</li>
-<li>work directly with python numbers, string and datetime</li>
-<li>interpolate map coordinates using GEOTIFF ModelTransformation</li>
+<li>read / edit EXIF and XMP data from JPEG images</li>
+<li>read / edit IFD and XMP data from TIFF images</li>
+<li>read / edit / use GEOTIFF data from IFD</li>
+<li>work directly with python types</li>
 </ul>
 <h3 id="do-more-with-jpeg-and-tiff-files">Do more with JPEG and TIFF files</h3>
 <ul>
@@ -144,34 +131,43 @@
 </ul>
 <h2 id="quick-view">Quick view</h2>
 <pre><code class="language-python">&gt;&gt;&gt; import Tyf
+&gt;&gt;&gt; tif = Tyf.open(&quot;test/CEA.tif&quot;)
+&gt;&gt;&gt; tif.__class__
+&lt;class 'Tyf.TiffFile'&gt;
+&gt;&gt;&gt; for key in tif.gkd[0]: print(key)
+... 
+&lt;GKD tag GTModelTypeGeoKey:(1,) - Projection Coordinate System&gt;
+&lt;GKD tag GTRasterTypeGeoKey:(1,) - Raster pixel is area&gt;
+&lt;GKD tag GTCitationGeoKey:b'unnamed'&gt;
+&lt;GKD tag GeographicTypeGeoKey:(4267,) - NAD27&gt;
+&lt;GKD tag GeogCitationGeoKey:b'NAD27'&gt;
+&lt;GKD tag GeogAngularUnitsGeoKey:(9102,) - degree&gt;
+&lt;GKD tag ProjectedCSTypeGeoKey:(32767,) - User-defined&gt;
+&lt;GKD tag ProjectionGeoKey:(32767,) - User-defined&gt;
+&lt;GKD tag ProjCoordTransGeoKey:(28,) - User-defined&gt;
+&lt;GKD tag ProjLinearUnitsGeoKey:(9001,) - metre&gt;
+&lt;GKD tag ProjStdParallel1GeoKey:(33.75,)&gt;
+&lt;GKD tag ProjNatOriginLongGeoKey:(-117.333333333333,)&gt;
+&lt;GKD tag ProjFalseEastingGeoKey:(0.0,)&gt;
+&lt;GKD tag ProjFalseNorthingGeoKey:(0.0,)&gt;
+&gt;&gt;&gt; tr = tif[0].getModelTransformation()
+&gt;&gt;&gt; tr(tif[0][&quot;ImageWidth&quot;]/2, tif[0][&quot;ImageLength&quot;]/2) 
+(-13067.47757973173, 4240428.8435290195, 0.0)
 &gt;&gt;&gt; jpg = Tyf.open(&quot;test/IMG_20150730_210115.jpg&quot;)
+unknown tag 18246 type [7]: &lt;IFD tag Undefined:4&gt; ignored
+unknown tag 18249 type [7]: &lt;IFD tag Undefined:75&gt; ignored
 &gt;&gt;&gt; jpg.__class__
 &lt;class 'Tyf.JpegFile'&gt;
-&gt;&gt;&gt; print(Tyf.xmp.tostring(jpg.xmp).decode()) 
-&lt;ns0:xmpmeta
- xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot;
- xmlns:ns0=&quot;adobe:ns:meta/&quot; xmlns:ns3=&quot;http://ns.adobe.com/xap/1.0/&quot;
- xmlns:ns4=&quot;http://ns.microsoft.com/photo/1.0/&quot;
- xmlns:rdf=&quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;&gt;&lt;rdf:RDF&gt;
-&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
-&lt;dc:title&gt;&lt;rdf:Alt&gt;&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;
-&lt;/rdf:Alt&gt;&lt;/dc:title&gt;&lt;dc:description&gt;&lt;rdf:Alt&gt;
-&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;Beautifull Rainbow&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;
-&lt;/dc:description&gt;&lt;dc:creator&gt;&lt;rdf:Seq&gt;&lt;rdf:li&gt;THOORENS Bruno&lt;/rdf:li&gt;
-&lt;/rdf:Seq&gt;&lt;/dc:creator&gt;&lt;dc:rights&gt;&lt;rdf:Alt&gt;
-&lt;rdf:li xml:lang=&quot;x-default&quot;&gt;THOORENS Bruno&lt;/rdf:li&gt;&lt;/rdf:Alt&gt;&lt;/dc:rights&gt;
-&lt;/rdf:Description&gt;
-&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot; /&gt;
-&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
-&lt;ns3:Rating&gt;4&lt;/ns3:Rating&gt;&lt;/rdf:Description&gt;
-&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
-&lt;ns4:Rating&gt;75&lt;/ns4:Rating&gt;&lt;ns4:LastKeywordXMP&gt;&lt;rdf:Bag&gt;
-&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
-&lt;/ns4:LastKeywordXMP&gt;&lt;/rdf:Description&gt;
-&lt;rdf:Description rdf:about=&quot;uuid:faf5bdd5-ba3d-11da-ad31-d33d75182f1b&quot;&gt;
-&lt;dc:subject&gt;&lt;rdf:Bag&gt;&lt;rdf:li&gt;Rainbow&lt;/rdf:li&gt;&lt;rdf:li&gt;Belgium&lt;/rdf:li&gt;&lt;/rdf:Bag&gt;
-&lt;/dc:subject&gt;&lt;/rdf:Description&gt;
-&lt;/rdf:RDF&gt;&lt;/ns0:xmpmeta&gt;
+&gt;&gt;&gt; jpg[&quot;XPComment&quot;]
+&lt;IFD tag XPComment:'For testing purpose only !'&gt;
+&gt;&gt;&gt; jpg.xmp
+&lt;Element '{adobe:ns:meta/}xmpmeta' at 0x000001D6A2404130&gt;
+&gt;&gt;&gt; jpg.get_xmp(&quot;Rating&quot;, ns=&quot;ADOBE&quot;).text
+'4'
+&gt;&gt;&gt; jpg.set_xmp(&quot;UserComment&quot;, &quot;Simple comment&quot;) 
+&lt;Element '{http://ns.adobe.com/exif/1.0/}UserComment' at 0x000001D6A24062F0&gt;
+&gt;&gt;&gt; jpg.get_xmp(&quot;UserComment&quot;).text 
+'Simple comment'
 &gt;&gt;&gt; jpg.save_thumbnail(&quot;test/test_thumb&quot;) # extension automatically added
 </code></pre>
 <p><img alt="EXIF thumbnail" src="https://raw.githubusercontent.com/Moustikitos/tyf/master/test/test_thumb.jpg" /></p>
@@ -329,5 +325,5 @@ True
 
 <!--
 MkDocs version : 1.4.3
-Build Date UTC : 2023-07-27 15:52:09.065738+00:00
+Build Date UTC : 2023-07-28 15:21:55.856891+00:00
 -->
